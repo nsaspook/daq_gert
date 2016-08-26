@@ -1,0 +1,225 @@
+A Comedi RPi Debian based distro howto:
+
+Login as root ,use sudo or other means to get root access.
+
+This version requires you to patch the kernel source so we can get 
+direct access to the SPI master.
+I unhook spidev and point it to my module.
+
+Install the Comedi software via the Debian apt or dselect command:
+libcomedi-dev
+libcomedi0
+python-comedilib
+
+ * git clone https://github.com/raspberrypi/linux.git in /usr/src for the latest
+ * linux kernel source tree
+ * 
+ * cd to the linux kernel source directory: /usr/src/linux etc...
+ * copy the daq_gert.diff patch file from the daq_gert directory to here
+ * copy RPI2.config or RPi.confg the from the daq_gert directory to .config in the Linux source directory
+ * 
+ * patch the kernel source with the daq_gert.diff patch file
+ * patch -p1 <daq_gert.diff
+ * 
+ *  make -j4 for a RPi 2
+ *  make modules_install
+ *  to recompile the Linux kernel and to make the needed daq_gert module 
+ *  then copy the Image file to the /boot directory with a new kernel image name
+ *  and modify the boot file to use that image
+ *  after the reboot: modprobe daq_gert if needed then setup the comedi device: comedi_config /dev/comedi0 daq_gert
+ *  dmesg should the the kernel module messages
+ *  run the test program: bmc_test_program to see if it's working
+
+Install the github daq_gert branch:
+git clone https://github.com/nsaspook/daq_gert.git
+cd daq_gert
+
+Read the instructions in the daq_gert.c source file for system setup instructions
+
+Run the dmesg command: You should see a similar message at the end.
+[278631.474122] comedi: module is from the staging directory, the quality is unknown, you have been warned.
+[278631.480882] comedi: version 0.7.76 - http://www.comedi.org
+[278631.484498] daq_gert: module is from the staging directory, the quality is unknown, you have been warned.
+
+This will attach the daq_gert module to the /dev/comedi0 device file.
+
+dmesg should show something like this.
+[278729.086442] comedi comedi0: Gert Board Detected
+[278729.086482] comedi comedi0: RPi Board Rev 3, Serial 00000000c57dd1ee
+[278729.086513] comedi comedi0: daq_gert: daq_gert, iobase 0x20200000, ioremap 0xcea30000
+
+Run the comedi_test command: 
+
+
+I: Comedi version: 0.7.76
+I: Comedilib version: unknown =)
+I: driver name: daq_gert
+I: device name: daq_gert
+I:
+I: subdevice 0
+I: testing info...
+rev 1
+I: subdevice type: 5 (digital I/O)
+  number of channels: 17
+  max data value: 1
+  ranges:
+    all chans: [0,5]
+I: testing insn_read...
+rev 1
+comedi_do_insn returned 1, good
+I: testing insn_read_0...
+comedi_do_insn returned 0, good
+I: testing insn_read_time...
+rev 1
+comedi_do_insn: 3
+read time: 5 us
+I: testing cmd_no_cmd...
+got EIO, good
+I: testing cmd_probe_src_mask...
+not applicable
+I: testing cmd_probe_fast_1chan...
+not applicable
+I: testing cmd_read_fast_1chan...
+not applicable
+I: testing cmd_write_fast_1chan...
+not applicable
+I: testing cmd_logic_bug...
+not applicable
+I: testing cmd_fifo_depth_check...
+not applicable
+I: testing cmd_start_inttrig...
+not applicable
+I: testing mmap...
+not applicable
+I: testing read_select...
+not applicable
+I: testing bufconfig...
+buffer length is 0, good
+I:
+I: subdevice 1
+I: testing info...
+rev 1
+I: subdevice type: 1 (analog input)
+  number of channels: 2
+  max data value: 4095
+  ranges:
+    all chans: [0,3.3]
+I: testing insn_read...
+rev 1
+comedi_do_insn returned 1, good
+I: testing insn_read_0...
+comedi_do_insn returned 0, good
+I: testing insn_read_time...
+rev 1
+comedi_do_insn: 3
+read time: 102 us
+I: testing cmd_no_cmd...
+not applicable
+I: testing cmd_probe_src_mask...
+rev 1
+command source mask:
+  start: now
+  scan_begin: follow
+  convert: timer
+  scan_end: count
+  stop: none
+I: testing cmd_probe_fast_1chan...
+command fast 1chan:
+  start: now 0
+  scan_begin: follow 0
+  convert: timer 0
+  scan_end: count 1
+  stop: none 0
+I: testing cmd_read_fast_1chan...
+I: testing cmd_write_fast_1chan...
+not applicable
+I: testing cmd_logic_bug...
+rev 1
+not applicable (no source choices)
+I: testing cmd_fifo_depth_check...
+64, 0
+128, 0
+256, 0
+512, 0
+1024, 0
+2048, 0
+4096, 0
+8192, 0
+16384, 0
+32768, 0
+I: testing cmd_start_inttrig...
+  not supported
+I: testing mmap...
+0x76fa7000 ok
+0x76fa8000 ok
+0x76fa9000 ok
+0x76faa000 ok
+0x76fab000 ok
+compare ok
+0x76fa7000 segfaulted (ok)
+0x76fa8000 segfaulted (ok)
+0x76fa9000 segfaulted (ok)
+0x76faa000 segfaulted (ok)
+0x76fab000 segfaulted (ok)
+I: testing read_select...
+I: testing bufconfig...
+buffer size 2097152
+max buffer size 20971520
+setting buffer size to 4096
+buffer size set to 4096
+buffer size now at 4096
+setting buffer size past limit, 20975616
+got EPERM, good
+setting buffer size to max, 20971520
+buffer size now at 20971520
+I:
+I: subdevice 2
+I: testing info...
+rev 1
+I: subdevice type: 2 (analog output)
+  number of channels: 2
+  max data value: 4095
+  ranges:
+    all chans: [0,2.048]
+I: testing insn_read...
+rev 1
+comedi_do_insn returned 1, good
+I: testing insn_read_0...
+comedi_do_insn returned 0, good
+I: testing insn_read_time...
+rev 1
+comedi_do_insn: 3
+read time: 3 us
+I: testing cmd_no_cmd...
+got EIO, good
+I: testing cmd_probe_src_mask...
+not applicable
+I: testing cmd_probe_fast_1chan...
+not applicable
+I: testing cmd_read_fast_1chan...
+not applicable
+I: testing cmd_write_fast_1chan...
+not applicable
+I: testing cmd_logic_bug...
+not applicable
+I: testing cmd_fifo_depth_check...
+not applicable
+I: testing cmd_start_inttrig...
+not applicable
+I: testing mmap...
+not applicable
+I: testing read_select...
+not applicable
+I: testing bufconfig...
+buffer length is 0, good
+At this point a program that uses the comedi lib should work:
+
+daqgert_test
+./bmc/bmc/dist/Debug/GNU-Linux-x86/bmc
+
+Subdev AI  1 Analog  Channels 16 Maxdata 1023 Ranges 1 : ad_range .min = 0.0, max = 3.3
+Subdev AO  2 Analog  Channels 2 Maxdata 255 Ranges 1 
+Subdev DIO 0 Digital Channels 17 Maxdata 1 Ranges 1 
+ 1.65V 1.65V 1.65V 1.65V 1.65V 1.65V 1.65V 0 0 1 1
+
+Ctrl-C to stop.

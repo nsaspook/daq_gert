@@ -1,0 +1,1044 @@
+*Please note that User Registration has been temporarily disabled due to
+a recent increase in automated registrations. If anyone needs an
+account, please contact request one here: RequestAccount
+</Special:RequestAccount>. Thanks for your patience! --Wmat </User:Wmat>
+14:15, 20 September 2012 (UTC)*
+
+
+  RPi Low-level peripherals
+
+
+      From eLinux.org
+
+Jump to: navigation <#column-one>, search <#searchInput>
+
+
+    Contents
+
+[hide <javascript:toggleToc()>]
+
+  * 1 Introduction <#Introduction>
+  * 2 General Purpose Input/Output (GPIO)
+    <#General_Purpose_Input.2FOutput_.28GPIO.29>
+      o 2.1 Referring to pins on the Expansion header
+        <#Referring_to_pins_on_the_Expansion_header>
+      o 2.2 Power pins <#Power_pins>
+      o 2.3 GPIO hardware hacking <#GPIO_hardware_hacking>
+      o 2.4 P2 header <#P2_header>
+      o 2.5 P3 header <#P3_header>
+      o 2.6 P5 header <#P5_header>
+      o 2.7 P6 header <#P6_header>
+      o 2.8 Driver support <#Driver_support>
+      o 2.9 Graphical User Interfaces <#Graphical_User_Interfaces>
+          + 2.9.1 WebIOPi <#WebIOPi>
+  * 3 GPIO Code examples <#GPIO_Code_examples>
+      o 3.1 GPIO Driving Example (C) <#GPIO_Driving_Example_.28C.29>
+      o 3.2 GPIO Pull Up/Pull Down Register Example
+        <#GPIO_Pull_Up.2FPull_Down_Register_Example>
+      o 3.3 GPIO Driving Example (Python)
+        <#GPIO_Driving_Example_.28Python.29>
+      o 3.4 GPIO Driving Example (Java) <#GPIO_Driving_Example_.28Java.29>
+      o 3.5 GPIO Driving Example (Java webapp via http)
+        <#GPIO_Driving_Example_.28Java_webapp_via_http.29>
+      o 3.6 GPIO Driving Example (Shell script)
+        <#GPIO_Driving_Example_.28Shell_script.29>
+      o 3.7 GPIO Driving Example (Shell script - take 2)
+        <#GPIO_Driving_Example_.28Shell_script_-_take_2.29>
+      o 3.8 GPIO Driving Example (C) <#GPIO_Driving_Example_.28C.29_2>
+      o 3.9 GPIO Driving Example (Perl) <#GPIO_Driving_Example_.28Perl.29>
+      o 3.10 GPIO Driving Example (C#) <#GPIO_Driving_Example_.28C.23.29>
+      o 3.11 GPIO Driving Example (Ruby) <#GPIO_Driving_Example_.28Ruby.29>
+  * 4 MIPI CSI-2 <#MIPI_CSI-2>
+  * 5 DSI <#DSI>
+  * 6 CEC <#CEC>
+  * 7 References <#References>
+
+Back to the Hub </R-Pi_Hub>.
+
+
+*Hardware & Peripherals:*
+
+/Hardware </RPi_Hardware> and Hardware History </RPi_HardwareHistory>./
+
+/*Low-level Peripherals* and Expansion Boards </RPi_Expansion_Boards>./
+
+/Screens </RPi_Screens>, Cases </RPi_Cases> and Other Peripherals
+</RPi_VerifiedPeripherals>./
+
+
+    Introduction
+
+In addition to the familiar USB, Ethernet and HDMI ports, the R-Pi
+offers lower-level interfaces intended to connect more directly with
+chips and subsystem modules. These GPIO (general purpose I/O) signals on
+the 2x13 header pins include SPI, I2C, serial UART, 3V3 and 5V power.
+These interfaces are not "plug and play" but require care to avoid
+miswiring. The pins use a 3V3 logic level and are not tolerant of 5V
+levels, such as you might find on a 5V powered Arduino. Not yet
+software-enabled are the flex cable connectors with CSI (camera serial
+interface) and DSI (display serial interface), and a serial link inside
+the HDMI connector called CEC (consumer electronics control).
+
+
+    General Purpose Input/Output (GPIO)
+
+</File:GPIOs.png>
+</File:GPIOs.png>
+The layout of the Raspberry Pi Revision 1 P1 pin-header seen from the
+top, containing pins useable for general purpose I/O. Colour coded to
+the table. Source
+<https://sites.google.com/site/burngatehouse/home/drawings/GPIOs2.gif>
+
+General Purpose Input/Output (a.k.a. GPIO) is a generic pin on a chip
+whose behavior (including whether it is an input or output pin) can be
+controlled (programmed) through software.
+
+The Raspberry Pi allows peripherals and expansion boards (such as the
+Rpi Gertboard </Rpi_Gertboard>) to access the CPU by exposing the inputs
+and outputs.
+
+For further general information about GPIOs, see:the wikipedia article
+<http://en.wikipedia.org/wiki/GPIO>.
+
+The production Raspberry Pi board has a 26-pin 2.54 mm (100 mil)^[1]
+<#cite_note-0> expansion header, marked as P1, arranged in a 2x13 strip.
+They provide 8 GPIO pins plus access to I²C, SPI, UART), as well as
++3.3 V, +5 V and GND supply lines. Pin one is the pin in the first
+column and on the bottom row. ^[2] <#cite_note-1>
+
+*GPIO voltage levels are 3.3 V and are not 5 V tolerant. There is no
+over-voltage protection on the board* - the intention is that people
+interested in serious interfacing will use an external board with
+buffers, level conversion and analog I/O rather than soldering directly
+onto the main board.
+
+All the GPIO pins can be reconfigured to provide alternate functions,
+SPI, PWM, I²C and so. At reset only pins GPIO 14 & 15 are assigned to
+the alternate function UART, these two can be switched back to GPIO to
+provide a total of 17 GPIO pins^[3] <#cite_note-2> . Each of their
+functions and full details of how to access are detailed in the chipset
+datasheet ^[4] <#cite_note-3> .
+
+Each GPIO can interrupt, high/low/rise/fall/change.^[5] <#cite_note-4>
+^[6] <#cite_note-5> There is currently no support for GPIO interrupts in
+the official kernel, howewer a patch exists, requiring compilation of
+modified source tree.^[7] <#cite_note-6>
+
+GPIO input hysteresis (Schmitt trigger) can be on or off, output slew
+rate can be fast or limited, and source and sink current is configurable
+from 2 mA up to 16 mA. Note that chipset GPIO pins 0-27 are in the same
+block and these properties are set per block, not per pin. See GPIO
+Datasheet Addendum - GPIO Pads Control
+<http://www.scribd.com/doc/101830961/GPIO-Pads-Control2>. Particular
+attention should be applied to the note regarding SSO (Simultaneous
+Switching Outputs): to avoid interference, driving currents should be
+kept as low as possible.
+
+The available alternative functions </RPi_BCM2835_GPIOs> and their
+corresponding pins are detailed below. These numbers are in reference to
+the chipset documentation and may not match the numbers exposed in
+Linux. Only fully usable functions are detailed, for some alternative
+functions not all the necessary pins are available for the funtionality
+to be actually used.
+
+There is also some information on the Tutorial on Easy GPIO Hardware &
+Software </RPi_Tutorial_Easy_GPIO_Hardware_%26_Software>.
+
+Kernel boot messages go to the UART </RPi_Serial_Connection> at
+115200 bit/s.
+
+*R-Pi PCB Revision 2 UPDATE:* According to Eben at [1]
+<http://www.raspberrypi.org/archives/1929#comment-31646> the R-Pi Rev.2
+board being rolled out starting in September 2012 adds 4 more GPIO on a
+new connector called P5, and changes some of the existing P1 GPIO
+pinouts. On Rev2, GPIO_GEN2 [BCM2835/GPIO27] is routed to P1 pin 13, and
+changes what was SCL0/SDA0 to SCL1/SDA1: SCL1 [BCM2835/GPIO3] is routed
+to P1 pin 5, SDA1 [BCM2835/GPIO2] is routed to P1 pin 3. Also the power
+and ground connections previously marked "Do Not Connect" on P1 will
+remain as connected, specifically: P1-04:+5V0, P1-09:GND, P1-14:GND,
+P1-17:+3V3, P1-20:GND, P1-25:GND. According to this comment [2]
+<http://www.raspberrypi.org/archives/2081#comment-33577> the P1 pinout
+is not expected to change in future beyond the current Rev.2 layout.
+
+*Header Pinout, top row:*
+
+*Pin Number* 	*Pin Name Rev1* 	*Pin Name Rev2* 	*Hardware Notes* 	*Alt 0
+Function* 	*Other Alternative Functions*
+P1-02 	5V0 	5V0 	Supply through input poly fuse
+P1-04 	5V0 	5V0 	Supply through input poly fuse
+P1-06 	GND 	GND
+P1-08 	GPIO 14 	GPIO 14 	Boot to Alt 0 -> 	UART0_TXD 	ALT5 = UART1_TXD
+P1-10 	GPIO 15 	GPIO 15 	Boot to Alt 0 -> 	UART0_RXD 	ALT5 = UART1_RXD
+P1-12 	GPIO 18 	GPIO 18 			ALT4 SPI1_CE0_N ALT5 = PWM0
+P1-14 	GND 	GND
+P1-16 	GPIO23 	GPIO23 			ALT3 = SD1_CMD ALT4 = ARM_RTCK
+P1-18 	GPIO24 	GPIO24 			ALT3 = SD1_DATA0 ALT4 = ARM_TDO
+P1-20 	GND 	GND
+P1-22 	GPIO25 	GPIO25 			ALT4 = ARM_TCK
+P1-24 	GPIO08 	GPIO08 		SPI0_CE0_N 	
+P1-26 	GPIO07 	GPIO07 		SPI0_CE1_N 	
+
+
+*Header Pinout, bottom row:*
+
+*Pin Number* 	*Pin Name Rev1* 	*Pin Name Rev2* 	*Hardware Notes* 	*Alt 0
+Function* 	*Other Alternative Functions*
+P1-01 	3.3 V 	3.3 V 	50 mA max (01 & 17)
+P1-03 	GPIO 0 	*GPIO 2*	1K8 pull up resistor 	I2C0_SDA 	I2C0_SDA / I2C1_SDA
+P1-05 	GPIO 1 	*GPIO 3*	1K8 pull up resistor 	I2C0_SCL 	I2C0_SCL / I2C1_SCL
+P1-07 	GPIO 4 	GPIO 4 			GPCLK0
+P1-09 	GND 	GND
+P1-11 	GPIO17 	GPIO17 			ALT3 = UART0_RTS, ALT5 = UART1_RTS
+P1-13 	GPIO21 	*GPIO27* 		PCM_DIN 	ALT5 = GPCLK1
+P1-15 	GPIO22 	GPIO22 			ALT3 = SD1_CLK ALT4 = ARM_TRST
+P1-17 	3.3 V 	3.3 V 	50 mA max (01 & 17)
+P1-19 	GPIO10 	GPIO10 		SPI0_MOSI 	
+P1-21 	GPIO9 	GPIO9 		SPI0_MISO 	
+P1-23 	GPIO11 	GPIO11 		SPI0_SCLK 	
+P1-25 	GND 	GND
+
+
+Colour legend
++5 V
++3.3 V
+Ground, 0V
+UART
+GPIO
+SPI
+I²C
+
+KiCad symbol: File:Conn-raspberry.lib </File:Conn-raspberry.lib>
+
+^[8] <#cite_note-7>
+
+Pin 3 (SDA0) and Pin 5 (SCL0) are preset to be used as an I²C interface.
+So there are 1.8 kilohm pulls up resistors on the board for these
+pins.^[9] <#cite_note-8>
+
+Pin 12 supports PWM.
+
+It is also possible to reconfigure GPIO connector pins P1-7, 15, 16, 18,
+22 (chipset GPIOs 4 and 22 to 25) to provide an ARM JTAG interface.^[10]
+<#cite_note-9> However ARM_TMS isn't available on the GPIO connector
+(chipset pin 12 or 27 is needed). Chipset pin 27 is available on S5, the
+CSI camera interface however.
+
+It is also possible to reconfigure GPIO connector pins P1-12 and 13
+(chipset GPIO 18 and 21) to provide an I2S (a hardware modification may
+be required^[11] <#cite_note-I2S-10> ) or PCM interface.^[12]
+<#cite_note-11> However, PCM_FS and PCM_DIN (chipset pins 19 and 20) are
+needed for I2S or PCM.
+
+A second I²C interface (GPIO02_ALT0 is SDA1 and GPIO03_ALT0 is SCL1) and
+two further GPIOs (GPIO05_ALT0 is GPCLK1, and GPIO27) are available on
+S5, the CSI camera interface.
+
+
+      Referring to pins on the Expansion header
+
+The header is referred to as "The GPIO Connector (P1)". To avoid
+nomenclature confusion between Broadcom signal names on the SoC and pin
+names on the expansion header, the following naming is highly recommended.
+
+  * The expansion header is referred to as "Expansion Header" or "GPIO
+    Connector (P1)"
+  * Pins on the GPIO connector (P1) are referred to as P1-01, etc.
+  * Names GPIO0, GPIO1, GPIOx-ALTy, etc. refer to the signal names on
+    the SoC as enumerated in the Broadcom datasheet, where "x" matches
+    BCM2835 number (without leading zero) and "y" is the alternate
+    number column 0 to 5 on page 102-103 of the Broadcom document. For
+    example, depending on what you are describing, use either "GPIO7" to
+    refer to a row of the table, and "GPIO7-ALT0" would refer to a
+    specific cell of the table.
+  * When refering to signal names, you should modify the Broadcom name
+    slightly to minimize confusion. The Broadcom SPI bus pin names are
+    fine, such as "SPI0_*" and "SPI1_*", but they didn't do the same on
+    the I²C and UART pins. Instead of using "SDA0" and "SCL0", you
+    should use "I2C0_SDA" and "I2C0_SCL"; and instead of "TX" or "TXD"
+    and "RX" or "RXD", you should use "UART0_TXD" and "UART0_RXD". 
+
+
+      Power pins
+
+The maximum permitted current draw from the 3.3 V pins is 50 mA.
+
+Maximum permitted current draw from the 5 V pin is the USB input current
+(usually 1 A) minus any current draw from the rest of the board.^[13]
+<#cite_note-12>
+
+  * Model A: 1000 mA - 500 mA -> max current draw: 500 mA
+  * Model B: 1000 mA - 700 mA -> max current draw: 300 mA 
+
+Be very careful with the 5 V pin, because if you short it to any other
+P1 pin you may permanently damage your RasPi. Before probing P1, it's a
+good idea to strip a short piece of insulation off a wire and push it
+over the 5 V pin so you don't accidentally touch it with a probe.
+
+
+      GPIO hardware hacking
+
+The complete list of chipset GPIO pins </RPi_BCM2835_GPIOs> which are
+available on the GPIO connector is:
+
+    0 </RPi_BCM2835_GPIOs#GPIO0>, 1 </RPi_BCM2835_GPIOs#GPIO1>, 4
+    </RPi_BCM2835_GPIOs#GPIO4>, 7 </RPi_BCM2835_GPIOs#GPIO7>, 8
+    </RPi_BCM2835_GPIOs#GPIO8>, 9 </RPi_BCM2835_GPIOs#GPIO9>, 10
+    </RPi_BCM2835_GPIOs#GPIO10>, 11 </RPi_BCM2835_GPIOs#GPIO11>, 14
+    </RPi_BCM2835_GPIOs#GPIO14>, 15 </RPi_BCM2835_GPIOs#GPIO15>, 17
+    </RPi_BCM2835_GPIOs#GPIO17>, 18 </RPi_BCM2835_GPIOs#GPIO18>, 21
+    </RPi_BCM2835_GPIOs#GPIO21>, 22 </RPi_BCM2835_GPIOs#GPIO22>, 23
+    </RPi_BCM2835_GPIOs#GPIO23>, 24 </RPi_BCM2835_GPIOs#GPIO24>, 25
+    </RPi_BCM2835_GPIOs#GPIO25>
+
+As noted above, GPIO00 and 01 (SDA0 and SCL0) have 1.8 kilohm pull-up
+resistors to 3.3 V.
+
+If 17 GPIOs aren't sufficient for your project, there are a few other
+signals potentially available, with varying levels of software and
+hardware (soldering iron) hackery skills:
+
+GPIO02, 03, 05 and 27 are available on S5 (the CSI interface) when a
+camera peripheral is not connected to that socket, and are configured by
+default to provide the functions SDA1, SCL1, CAM_CLK and CAM_GPIO
+respectively. SDA1 and SCL1 have 1K6 pull-up resistors to 3.3 V.
+
+GPIO06 is LAN_RUN and is available on pad 12 of the footprint for IC3 on
+the Model A. On Model B, it is in use for the Ethernet function.
+
+There are a few other chipset GPIO pins accessible on the PCB but are in
+use:
+
+  * GPIO16 drives status LED D5 (usually SD card access indicator)
+  * GPIO28-31 are used by the board ID and are connected to resistors R3
+    to R10.
+  * GPIO40 and 45 are used by analogue audio and support PWM. They
+    connect to the analogue audio circuitry via R21 and R27 respectively.
+  * GPIO46 is HDMI hotplug detect (goes to pin 6 of IC1).
+  * GPIO47 to 53 are used by the SD card interface. In particular,
+    GPIO47 is SD card detect (this would seem to be a good candidate for
+    re-use). GPIO47 is connected to the SD card interface card detect
+    switch; GPIO48 to 53 are connected to the SD card interface via
+    resistors R45 to R50. 
+
+
+      P2 header
+
+The P2 header is the VideoCore JTAG and used only during the production
+of the board. It cannot be used as the ARM JTAG ^[14] <#cite_note-13> .
+This connector is unpopulated in Rev 2.0 boards.
+
+Useful P2 pins:
+
+  * Pin 1 - 3.3V (same as P1-01, 50 mA max current draw across both of
+    them)
+  * Pin 7 - GND
+  * Pin 8 - GND 
+
+
+      P3 header
+
+The P3 header, unpopulated, is the LAN9512 JTAG ^[15] <#cite_note-14> .
+
+
+      P5 header
+
+The P5 header was added with the release of the Revision 2.0 PCB design.
+
+  * Pin 1 - 5V
+  * Pin 2 - 3V3
+  * Pin 3 - GPIO28
+  * Pin 4 - GPIO29
+  * Pin 5 - GPIO30
+  * Pin 6 - GPIO31
+  * Pin 7 - GND
+  * Pin 8 - GND 
+
+Note that the connector is intended to be mounted on the bottom of the
+PCB, so that for those who put the connector on the top side, the pin
+numbers are swapped. Pin 1 and pin 2 are swapped, pin 3 and 4, etc.
+
+Note that the connector is placed JUST off-grid with respect to the P1
+connector.
+
+
+      P6 header
+
+The P6 header was added with the release of the Revision 2.0 PCB design.
+
+The P6 header can be used to connect a reset button to, which with the
+PI can be reset.
+
+
+      Driver support
+
+The Foundation will not include a GPIO driver in the initial release,
+standard Linux GPIO drivers should work with minimal modification.^[16]
+<#cite_note-15>
+
+The community implemented SPI and I²C drivers ^[17] <#cite_note-16> ,
+which will be integrated with the new Linux pinctrl concept in a later
+version of the kernel. A first compiled version as Linux modules is
+available to install on the 19/04/2012 Debian image, including 1-wire
+support^[18] <#cite_note-17> . The I²C and SPI driver uses the hardware
+modules of the microcontroller and interrupts for low CPU usage, the
+1-wire support uses bitbanging on the GPIO ports, which results in
+higher CPU usage.
+
+GordonH^[19] <#cite_note-18> wrote a (mostly) Arduino compatible/style
+WiringPi library <https://projects.drogon.net/raspberry-pi/wiringpi/> in
+C for controlling the GPIO pins.
+
+A useful tutorial on setting up I²C driver support can be found at Robot
+Electronics
+<http://www.robot-electronics.co.uk/htm/raspberry_pi_examples.htm> -
+look for the downloadable document rpi_i2c_setup.doc
+
+
+      Graphical User Interfaces
+
+
+        WebIOPi
+
+WebIOPi <http://code.google.com/p/webiopi/> allows you to control each
+GPIO with a simple web interface that you can use with any browser.
+Available in PHP and Python, they both require root access, but Python
+version serves HTTP itself. You can setup each GPIO as input or output
+and change their states (LOW/HIGH). WebIOPi is fully customizable, so
+you can use it for home remote control. It also work over Internet.
+UART/SPI/I2C support will be added later. If you need some computing for
+your GPIO go to code examples below.
+
+
+    GPIO Code examples
+
+
+        GPIO Driving Example (C)
+
+Gert van Loo & Dom, has provided
+<http://www.raspberrypi.org/forum/educational-applications/gertboard/page-4/#p31555>
+some tested code which accesses the GPIO pins through direct GPIO
+register manipulation in C-code. (Thanks to Dom for doing the difficult
+work of finding and testing the mapping.) Example GPIO code:
+
+//
+//  How to access GPIO registers from C-code on the Raspberry-Pi
+//  Example program
+//  15-January-2012
+//  Dom and Gert
+//
+
+
+// Access from ARM Running Linux
+
+#define BCM2708_PERI_BASE        0x20000000
+#define GPIO_BASE                (BCM2708_PERI_BASE + 0x200000) /* GPIO controller */
+
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <assert.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <unistd.h>
+
+#define PAGE_SIZE (4*1024)
+#define BLOCK_SIZE (4*1024)
+
+int  mem_fd;
+char *gpio_mem, *gpio_map;
+char *spi0_mem, *spi0_map;
+
+
+// I/O access
+volatile unsigned *gpio;
+
+
+// GPIO setup macros. Always use INP_GPIO(x) before using OUT_GPIO(x) or SET_GPIO_ALT(x,y)
+#define INP_GPIO(g) *(gpio+((g)/10)) &= ~(7<<(((g)%10)*3))
+#define OUT_GPIO(g) *(gpio+((g)/10)) |=  (1<<(((g)%10)*3))
+#define SET_GPIO_ALT(g,a) *(gpio+(((g)/10))) |= (((a)<=3?(a)+4:(a)==4?3:2)<<(((g)%10)*3))
+
+#define GPIO_SET *(gpio+7)  // sets   bits which are 1 ignores bits which are 0
+#define GPIO_CLR *(gpio+10) // clears bits which are 1 ignores bits which are 0
+
+void setup_io();
+
+int main(int argc, char **argv)
+{ 
+  int g,rep;
+
+  // Set up gpi pointer for direct register access
+  setup_io();
+
+  // Switch GPIO 7..11 to output mode
+
+ /************************************************************************\
+  * You are about to change the GPIO settings of your computer.          *
+  * Mess this up and it will stop working!                               *
+  * It might be a good idea to 'sync' before running this program        *
+  * so at least you still have your code changes written to the SD-card! *
+ \************************************************************************/
+
+  // Set GPIO pins 7-11 to output
+  for (g=7; g<=11; g++)
+  {
+    INP_GPIO(g); // must use INP_GPIO before we can use OUT_GPIO
+    OUT_GPIO(g);
+  }
+
+  for (rep=0; rep<10; rep++)
+  {
+     for (g=7; g<=11; g++)
+     {
+       GPIO_SET = 1<<g;
+       sleep(1);
+     }
+     for (g=7; g<=11; g++)
+     {
+       GPIO_CLR = 1<<g;
+       sleep(1);
+     }
+  }
+
+  return 0;
+
+} // main
+
+
+//
+// Set up a memory regions to access GPIO
+//
+void setup_io()
+{
+   /* open /dev/mem */
+   if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
+      printf("can't open /dev/mem \n");
+      exit (-1);
+   }
+
+   /* mmap GPIO */
+
+   // Allocate MAP block
+   if ((gpio_mem = malloc(BLOCK_SIZE + (PAGE_SIZE-1))) == NULL) {
+      printf("allocation error \n");
+      exit (-1);
+   }
+
+   // Make sure pointer is on 4K boundary
+   if ((unsigned long)gpio_mem % PAGE_SIZE)
+     gpio_mem += PAGE_SIZE - ((unsigned long)gpio_mem % PAGE_SIZE);
+
+   // Now map it
+   gpio_map = (unsigned char *)mmap(
+      (caddr_t)gpio_mem,
+      BLOCK_SIZE,
+      PROT_READ|PROT_WRITE,
+      MAP_SHARED|MAP_FIXED,
+      mem_fd,
+      GPIO_BASE
+   );
+
+   if ((long)gpio_map < 0) {
+      printf("mmap error %d\n", (int)gpio_map);
+      exit (-1);
+   }
+
+   // Always use volatile pointer!
+   gpio = (volatile unsigned *)gpio_map;
+
+
+} // setup_io
+
+
+        GPIO Pull Up/Pull Down Register Example
+
+   // enable pull-up on GPIO24&25
+   GPIO_PULL = 2;
+   short_wait();
+   // clock on GPIO 24 & 25 (bit 24 & 25 set)
+   GPIO_PULLCLK0 = 0x03000000;
+   short_wait();
+   GPIO_PULL = 0;
+   GPIO_PULLCLK0 = 0;
+
+
+        GPIO Driving Example (Python)
+
+This uses the Python module available at
+http://pypi.python.org/pypi/RPi.GPIO Any Python script that controls
+GPIO must be run as root.
+
+import RPi.GPIO as GPIO
+
+# Set up the GPIO channels - one input and one output
+GPIO.setup(11, GPIO.IN)
+GPIO.setup(12, GPIO.OUT)
+
+# Input from pin 11
+input_value = GPIO.input(11)
+
+# Output to pin 12
+GPIO.output(12, True)
+
+# The same script as above but using BCM GPIO 00..nn numbers
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(17, GPIO.IN)
+GPIO.setup(18, GPIO.OUT)
+input_value = GPIO.input(17)
+GPIO.output(18, True)
+
+
+        GPIO Driving Example (Java)
+
+This uses the Java library available at
+http://code.google.com/p/rpi-gpio-java/. Any Java application that
+controls GPIO must be run as root.
+
+
+public static void main(String[] args) {
+   GpioGateway gpio = new GpioGatewayImpl();
+
+   //set up the GPIO channels - one input and one output
+   gpio.setup(Boardpin.PIN11_GPIO17, Direction.IN);
+   gpio.setup(Boardpin.PIN12_GPIO18, Direction.OUT);
+
+   // input from pin 11
+   boolean input_value = gpio.getValue(Boardpin.PIN11_GPIO17);
+
+   // output to pin 12
+   gpio.setValue(Boardpin.PIN12_GPIO18, true);               
+}
+
+
+        GPIO Driving Example (Java webapp via http)
+
+This uses the Java webapp available at
+https://bitbucket.org/sbub/rpi-gpio-webapp. Any Java application that
+controls GPIO must be run as root.
+
+
+host:~ sb$ curl 'http://raspberrypi:8080/handle?g0=1&g1=0'
+{"g1":0,"g0":1}
+
+
+        GPIO Driving Example (Shell script)
+
+This must be done as root. To change to the root user:
+
+sudo -i
+
+#!/bin/sh
+
+# GPIO numbers should be from this list
+# 0, 1, 4, 7, 8, 9, 10, 11, 14, 15, 17, 18, 21, 22, 23, 24, 25
+
+# Note that the GPIO numbers that you program here refer to the pins
+# of the BCM2835 and *not* the numbers on the pin header. 
+# So, if you want to activate GPIO7 on the header you should be 
+# using GPIO4 in this script. Likewise if you want to activate GPIO0
+# on the header you should be using GPIO17 here.
+
+# Set up GPIO 4 and set to output
+echo "4" > /sys/class/gpio/export
+echo "out" > /sys/class/gpio/gpio4/direction
+
+# Set up GPIO 7 and set to input
+echo "7" > /sys/class/gpio/export
+echo "in" > /sys/class/gpio/gpio7/direction
+
+# Write output
+echo "1" > /sys/class/gpio/gpio4/value
+
+# Read from input
+cat /sys/class/gpio/gpio7/value 
+
+# Clean up
+echo "4" > /sys/class/gpio/unexport
+echo "7" > /sys/class/gpio/unexport
+
+
+        GPIO Driving Example (Shell script - take 2)
+
+You need the wiringPi library from
+https://projects.drogon.net/raspberry-pi/wiringpi/download-and-install/.
+Once installed, there is a new command *gpio* which can be used as a
+*non-root* user to control the GPIO pins.
+
+The man page
+
+man gpio
+
+has full details, but briefly:
+
+  gpio -g mode 17 out
+  gpio -g mode 18 pwm
+
+  gpio -g write 17 1
+  gpio -g pwm 18 512
+
+The *-g* flag tells the *gpio* program to use the BCM GPIO pin numbering
+scheme (otherwise it will use the wiringPi numbering scheme by default).
+
+The gpio command can also control the internal pull-up and pull-down
+resistors:
+
+  gpio -g mode 17 up
+
+This sets the pull-up resistor - however any change of mode, even
+setting a pin that's already set as an input to an input will remove the
+pull-up/pull-down resistors, so they may need to be reset.
+
+Additionally, it can export/un-export the GPIO devices for use by other
+non-root programms - e.g. Python scripts. (Although you may need to drop
+the calls to GPIO.Setup() in the Python scripts, and do the setup
+separately in a little shell script, or call the *gpio* program from
+inside Python).
+
+  gpio export 17 out
+  gpio export 18 in
+
+These exports GPIO-17 and sets it to output, and exports GPIO-18 and
+sets it to input.
+
+And when done:
+
+  gpio unexport 17
+
+The export/unexport commands always use the BCM GPIO pin numbers
+regardless of the presence of the *-g* flag or not.
+
+If you want to use the internal pull-up/down's with the /sys/class/gpio
+mechanisms, then you can set them after exporting them. So:
+
+  gpio -g export 4 in
+  gpio -g mode 4 up
+
+You can then use GPIO-4 as an input in your Python, Shell, Java, etc.
+programs without the use of an external resistor to pull the pin high.
+(If that's what you were after - for example, a simple push button
+switch taking the pin to ground.)
+
+A fully working example of a shell script using the GPIO pins can be
+found at http://project-downloads.drogon.net/files/gpioExamples/tuxx.sh.
+
+
+        GPIO Driving Example (C)
+
+This must be done as root. To change to the root user:
+
+sudo -i
+
+You must also get and install the bcm2835 library, which supports GPIO
+and SPI interfaces. Details and downloads from
+http://www.open.com.au/mikem/bcm2835
+
+
+// blink.c
+//
+// Example program for bcm2835 library
+// Blinks a pin on an off every 0.5 secs
+//
+// After installing bcm2835, you can build this 
+// with something like:
+// gcc -o blink blink.c -l bcm2835
+// sudo ./blink
+//
+// Or you can test it before installing with:
+// gcc -o blink -I ../../src ../../src/bcm2835.c blink.c
+// sudo ./blink
+//
+// Author: Mike McCauley (mikem@open.com.au)
+// Copyright (C) 2011 Mike McCauley
+// $Id: RF22.h,v 1.21 2012/05/30 01:51:25 mikem Exp $
+
+#include <bcm2835.h>
+
+// Blinks on RPi pin GPIO 11
+#define PIN RPI_GPIO_P1_11
+
+int main(int argc, char **argv)
+{
+    // If you call this, it will not actually access the GPIO
+    // Use for testing
+//    bcm2835_set_debug(1);
+
+    if (!bcm2835_init())
+	return 1;
+
+    // Set the pin to be an output
+    bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_OUTP);
+
+    // Blink
+    while (1)
+    {
+	// Turn it on
+	bcm2835_gpio_write(PIN, HIGH);
+	
+	// wait a bit
+	delay(500);
+	
+	// turn it off
+	bcm2835_gpio_write(PIN, LOW);
+	
+	// wait a bit
+	delay(500);
+    }
+
+    return 0;
+}
+
+
+        GPIO Driving Example (Perl)
+
+This must be done as root. To change to the root user:
+
+sudo su -
+
+Supports GPIO and SPI interfaces. You must also get and install the
+bcm2835 library. Details and downloads from
+http://www.open.com.au/mikem/bcm2835 You must then get and install the
+Device::BCM2835 perl library from CPAN
+http://search.cpan.org/~mikem/Device-BCM2835-1.0/lib/Device/BCM2835.pm
+
+use Device::BCM2835;
+use strict;
+
+# call set_debug(1) to do a non-destructive test on non-RPi hardware
+#Device::BCM2835::set_debug(1);
+Device::BCM2835::init() 
+ || die "Could not init library";
+
+# Blink pin 11:
+# Set RPi pin 11 to be an output
+Device::BCM2835::gpio_fsel(&Device::BCM2835::RPI_GPIO_P1_11, 
+                            &Device::BCM2835::BCM2835_GPIO_FSEL_OUTP);
+
+while (1)
+{
+    # Turn it on
+    Device::BCM2835::gpio_write(&Device::BCM2835::RPI_GPIO_P1_11, 1);
+    Device::BCM2835::delay(500); # Milliseconds
+    # Turn it off
+    Device::BCM2835::gpio_write(&Device::BCM2835::RPI_GPIO_P1_11, 0);
+    Device::BCM2835::delay(500); # Milliseconds
+}
+
+
+
+        GPIO Driving Example (C#)
+
+RaspberryPiDotNet library is available at
+https://github.com/cypherkey/RaspberryPi.Net/. The library includes a
+GPIOFile and GPIOMem class. The GPIOMem requires compiling Mike
+McCauley's bcm2835 library above in to a shared object.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using RaspberryPiDotNet;
+using System.Threading;
+
+namespace RaspPi
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // Access the GPIO pin using a static method
+            GPIOFile.Write(GPIO.GPIOPins.GPIO00, true);
+
+            // Create a new GPIO object
+            GPIOMem gpio = new GPIOMem(GPIO.GPIOPins.GPIO01);
+            gpio.Write(false);
+        }
+    }
+}
+
+
+        GPIO Driving Example (Ruby)
+
+This example uses the WiringPi Ruby Gem:
+http://pi.gadgetoid.co.uk/post/015-wiringpi-now-with-serial which you
+can install on your Pi with "gem install wiringpi"
+
+MY_PIN = 1
+
+require 'wiringpi'
+io = WiringPi::GPIO.new
+io.mode(MY_PIN,OUTPUT)
+io.write(MY_PIN,HIGH)
+io.read(MY_PIN)
+
+
+    MIPI CSI-2
+
+On the production board^[20] <#cite_note-19> , the Raspberry Pi
+Foundation design brings out the MIPI CSI-2 (Camera Serial
+Interface^[21] <#cite_note-20> ) to a 15-way flat flex connector S5,
+between the Ethernet and HDMI connectors. A compatible camera has been
+discussed as working in tests and is planned for release at a later
+date.^[22] <#cite_note-21> .
+
+
+    DSI
+
+On the production board, the Raspberry Pi Foundation design brings out
+the DSI (Display Serial Interface^[23] <#cite_note-22> ) to a 15-way
+flat flex connector labelled S2, next to Raspberry Pi logo. It has two
+data lanes and a clock lane, to drive a possible future LCD screen
+device. Some smart phone screens use DSI^[24] <#cite_note-23> .
+
+
+    CEC
+
+HDMI-CEC (Consumer Electronics Control for HDMI)
+</CEC_(Consumer_Electronics_Control)_over_HDMI> is supported by hardware
+but some driver work will be needed and currently isn't exposed into
+Linux userland. Eben notes that he has seen CEC demos on the Broadcom
+SoC they are using.
+
+libCEC with Raspberry Pi support has been included in OpenELEC and will
+be included in Raspbmc RC4.^[25] <#cite_note-24>
+
+For more information about HDMI-CEC and what you could do with it on the
+Raspberry Pi please see the CEC (Consumer Electronics Control) over HDMI
+</CEC_(Consumer_Electronics_Control)_over_HDMI> article.
+
+
+    References
+
+ 1. ↑ <#cite_ref-0>
+    http://www.raspberrypi.org/forum/features-and-requests/easy-gpio-hardware-software/page-3/#p31907
+ 2. ↑ <#cite_ref-1> http://www.raspberrypi.org/archives/384
+ 3. ↑ <#cite_ref-2> http://www.raspberrypi.org/archives/384
+ 4. ↑ <#cite_ref-3>
+    http://www.raspberrypi.org/wp-content/uploads/2012/02/BCM2835-ARM-Peripherals.pdf
+ 5. ↑ <#cite_ref-4> http://www.raspberrypi.org/archives/384#comment-5217
+ 6. ↑ <#cite_ref-5>
+    http://www.raspberrypi.org/wp-content/uploads/2012/02/BCM2835-ARM-Peripherals.pdf
+ 7. ↑ <#cite_ref-6>
+    http://www.raspberrypi.org/phpBB3/viewtopic.php?f=44&t=7509
+ 8. ↑ <#cite_ref-7>
+    http://www.raspberrypi.org/forum/projects-and-collaboration-general/gpio-header-pinout-clarification/page-2
+ 9. ↑ <#cite_ref-8>
+    http://www.raspberrypi.org/forum/features-and-requests/easy-gpio-hardware-software/page-6/#p56480
+10. ↑ <#cite_ref-9>
+    http://www.raspberrypi.org/forum?mingleforumaction=viewtopic&t=1288.1
+11. ↑ <#cite_ref-I2S_10-0> Forum:Sad about removal of I2S. Why was this
+    change made?
+    <http://www.raspberrypi.org/forum/features-and-requests/sad-about-removal-of-i2s-why-was-this-change-made>
+12. ↑ <#cite_ref-11>
+    http://www.raspberrypi.org/forum?mingleforumaction=viewtopic&t=1288.2
+13. ↑ <#cite_ref-12>
+    http://www.raspberrypi.org/forum?mingleforumaction=viewtopic&t=1536#postid-21841
+14. ↑ <#cite_ref-13>
+    http://www.raspberrypi.org/phpBB3/viewtopic.php?f=24&t=5894
+15. ↑ <#cite_ref-14>
+    http://www.raspberrypi.org/phpBB3/viewtopic.php?f=24&t=5894
+16. ↑ <#cite_ref-15>
+    http://www.raspberrypi.org/forum?mingleforumaction=viewtopic&t=1278.0
+17. ↑ <#cite_ref-16> http://www.bootc.net/projects/raspberry-pi-kernel/
+18. ↑ <#cite_ref-17>
+    http://www.raspberrypi.org/phpBB3/viewtopic.php?p=86172#p86172
+19. ↑ <#cite_ref-18>
+    http://www.raspberrypi.org/forum/general-discussion/wiring-for-the-raspberry-pis-gpio
+20. ↑ <#cite_ref-19>
+    http://www.raspberrypi.org/wp-content/uploads/2012/04/Raspberry-Pi-Schematics-R1.0.pdf
+21. ↑ <#cite_ref-20> http://www.mipi.org/specifications/camera-interface
+22. ↑ <#cite_ref-21>
+    http://www.raspberrypi.org/forum/projects-and-collaboration-general/complex-camera-peripherials#p72602
+23. ↑ <#cite_ref-22> http://www.mipi.org/specifications/display-interface
+24. ↑ <#cite_ref-23> http://en.wikipedia.org/wiki/Display_Serial_Interface
+25. ↑ <#cite_ref-24>
+    http://blog.pulse-eight.com/2012/08/01/libcec-1-8-0-a-firmware-upgrade-and-raspberry-pi-support/
+
+
+v </Template:Raspberry_Pi>*·* d </Template_talk:Raspberry_Pi>*·* e
+<http://elinux.org/index.php?title=Template:Raspberry_Pi&action=edit>
+ 
+Raspberry Pi </R-Pi_Hub>
+*Startup* 	
+Model Wizard </RPi_Model_Wizard> - Buying Guide </RPi_Buying_Guide> - SD
+Card Setup </RPi_Easy_SD_Card_Setup> - Basic Setup
+</RPi_Hardware_Basic_Setup> - Advanced Setup </RPi_Advanced_Setup> -
+Beginners Guide </RPi_Beginners> - Troubleshooting </R-Pi_Troubleshooting>
+	RpiFront.jpg </File:RpiFront.jpg>
+*Hardware* 	
+Hardware </RPi_Hardware> - Hardware History </RPi_HardwareHistory> -
+*Low-level peripherals* - Expansion Boards </RPi_Expansion_Boards>
+*Peripherals* 	
+Screens </RPi_Screens> - Cases </RPi_Cases> - Other Peripherals
+</RPi_VerifiedPeripherals>
+*Software* 	
+Software </RPi_Software> - Distributions </RPi_Distributions> - Kernel
+</RPi_Kernel_Compilation> - Performance </RPi_Performance> - Programming
+</RPi_Programming> - VideoCore APIs </RPi_VideoCore_APIs>
+*Projects* 	
+Tutorials </RPi_Tutorials> - Guides </RPi_Guides> - Projects
+</RPi_Projects> - Tasks </RPi_Tasks> - DataSheets
+</RPi_DatasheetCategories> - Education </RPi_Education> - Communities
+</RPi_Community>
+
+Retrieved from "http://elinux.org/RPi_Low-level_peripherals"
+Category </Special:Categories>: RaspberryPi </Category:RaspberryPi>
+
+
+          Views
+
+  * Page </RPi_Low-level_peripherals>
+  * Discussion </Talk:RPi_Low-level_peripherals>
+  * View source </index.php?title=RPi_Low-level_peripherals&action=edit>
+  * History </index.php?title=RPi_Low-level_peripherals&action=history>
+
+
+          Personal tools
+
+  * Log in
+    </index.php?title=Special:UserLogin&returnto=RPi_Low-level_peripherals>
+
+</Main_Page>
+
+
+          Navigation
+
+  * Main Page </Main_Page>
+  * Community portal </eLinux.org:Community_portal>
+  * Current events </eLinux.org:Current_events>
+  * Recent changes </Special:RecentChanges>
+  * Help </Help:Contents>
+  * Volunteering </Sitesupport-url>
+  * Popular Pages </Special:PopularPages>
+
+
+          Search
+
+ 
+
+
+          Toolbox
+
+  * What links here </Special:WhatLinksHere/RPi_Low-level_peripherals>
+  * Related changes </Special:RecentChangesLinked/RPi_Low-level_peripherals>
+  * Special pages </Special:SpecialPages>
+  * Printable version
+    </index.php?title=RPi_Low-level_peripherals&printable=yes>
+  * Permanent link </index.php?title=RPi_Low-level_peripherals&oldid=175226>
+
+Powered by MediaWiki <http://www.mediawiki.org/>
+a Creative Commons Attribution-ShareAlike 3.0 Unported License
+<http://creativecommons.org/licenses/by-sa/3.0/>
+
+  * This page was last modified on 29 September 2012, at 21:57.
+  * This page has been accessed 267,011 times.
+  * Content is available under a Creative Commons Attribution-ShareAlike
+    3.0 Unported License <http://creativecommons.org/licenses/by-sa/3.0/>.
+  * Privacy policy </eLinux.org:Privacy_policy>
+  * About eLinux.org </eLinux.org:About>
+  * Disclaimers </eLinux.org:General_disclaimer>
+

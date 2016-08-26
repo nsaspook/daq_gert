@@ -1,0 +1,75 @@
+/*
+ * Device Tree overlay for the spigert module used by Comedi daq_gert analog devices
+ *
+ */
+
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+    /* disable spi-dev for spi0.0 & spi0.1 */
+    fragment@0 {
+	target = <&spi0>;
+	__overlay__ {
+		status = "okay";
+
+		spidev@0{
+			status = "disabled";
+		};
+		spidev@1{
+			status = "disabled";
+		};
+	};
+    };
+
+    fragment@1 {
+	target = <&gpio>;
+	__overlay__ {
+            spi0_pins: spi0_pins {
+            brcm,pins = <7 8 9 10 11>;
+            brcm,function = <4>; /* alt0 */
+            };
+	};
+    };
+
+    fragment@2 {
+	target = <&spi0>;
+	__overlay__ {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            pinctrl-names = "default";
+            pinctrl-0 = <&spi0_pins>;
+
+            spigert@0 {
+                compatible = "spigert";
+                reg = <0>;      /* CE0 */
+                spi-max-frequency = <500000>;
+		status = "okay";
+            };
+
+            spigert@1 {
+                compatible = "spigert";
+                reg = <1>;      /* CE1 */
+                spi-max-frequency = <500000>;
+		status = "okay";
+            };
+	};
+    };
+
+    fragment@3 {
+	target = <&spi0>;
+	__overlay__ {
+            cs-gpios = <0>, <0>;
+            status = "okay";
+	};
+    };
+
+    fragment@4 {
+	target = <&spi0_cs_pins>;
+	__overlay__ {
+            brcm,pins = <8 7>;
+            brcm,function = <4>; /* alt0 */
+	};
+    };
+};

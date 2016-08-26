@@ -1,0 +1,168 @@
+diff --git a/arch/arm/boot/dts/overlays/Makefile b/arch/arm/boot/dts/overlays/Makefile
+index dbf42d0..f0b0355 100644
+--- a/arch/arm/boot/dts/overlays/Makefile
++++ b/arch/arm/boot/dts/overlays/Makefile
+@@ -100,6 +100,7 @@ dtbo-$(RPI_DT_OVERLAYS) += vga666.dtbo
+ dtbo-$(RPI_DT_OVERLAYS) += w1-gpio.dtbo
+ dtbo-$(RPI_DT_OVERLAYS) += w1-gpio-pullup.dtbo
+ dtbo-$(RPI_DT_OVERLAYS) += wittypi.dtbo
++dtbo-$(RPI_DT_OVERLAYS) += rpi-spigert.dtbo
+ 
+ targets += dtbs dtbs_install
+ targets += $(dtbo-y)
+diff --git a/arch/arm/boot/dts/overlays/rpi-spigert-overlay.dts b/arch/arm/boot/dts/overlays/rpi-spigert-overlay.dts
+new file mode 100644
+index 0000000..c8682a9
+--- /dev/null
++++ b/arch/arm/boot/dts/overlays/rpi-spigert-overlay.dts
+@@ -0,0 +1,75 @@
++/*
++ * Device Tree overlay for the spigert module used by Comedi daq_gert analog devices
++ *
++ */
++
++/dts-v1/;
++/plugin/;
++
++/ {
++    compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
++    /* disable spi-dev for spi0.0 & spi0.1 */
++    fragment@0 {
++	target = <&spi0>;
++	__overlay__ {
++		status = "okay";
++
++		spidev@0{
++			status = "disabled";
++		};
++		spidev@1{
++			status = "disabled";
++		};
++	};
++    };
++
++    fragment@1 {
++	target = <&gpio>;
++	__overlay__ {
++            spi0_pins: spi0_pins {
++            brcm,pins = <7 8 9 10 11>;
++            brcm,function = <4>; /* alt0 */
++            };
++	};
++    };
++
++    fragment@2 {
++	target = <&spi0>;
++	__overlay__ {
++            #address-cells = <1>;
++            #size-cells = <0>;
++            pinctrl-names = "default";
++            pinctrl-0 = <&spi0_pins>;
++
++            spigert@0 {
++                compatible = "spigert";
++                reg = <0>;      /* CE0 */
++                spi-max-frequency = <500000>;
++		status = "okay";
++            };
++
++            spigert@1 {
++                compatible = "spigert";
++                reg = <1>;      /* CE1 */
++                spi-max-frequency = <500000>;
++		status = "okay";
++            };
++	};
++    };
++
++    fragment@3 {
++	target = <&spi0>;
++	__overlay__ {
++            cs-gpios = <0>, <0>;
++            status = "okay";
++	};
++    };
++
++    fragment@4 {
++	target = <&spi0_cs_pins>;
++	__overlay__ {
++            brcm,pins = <8 7>;
++            brcm,function = <4>; /* alt0 */
++	};
++    };
++};
+diff --git a/drivers/spi/Kconfig b/drivers/spi/Kconfig
+index 4b09be7..27646b4 100644
+--- a/drivers/spi/Kconfig
++++ b/drivers/spi/Kconfig
+@@ -722,6 +722,14 @@ config SPI_LOOPBACK_TEST
+ 	  primarily used for development of spi_master drivers
+ 	  and to detect regressions
+ 
++config SPI_COMEDI
++        tristate "Comedi mode SPI device driver support for daq_gert"
++        help
++          This supports the daq_gert Comedi mode SPI protocol driver.
++
++          Note that this application programming interface is EXPERIMENTAL
++          and hence SUBJECT TO CHANGE WITHOUT NOTICE while it stabilizes.
++
+ config SPI_TLE62X0
+ 	tristate "Infineon TLE62X0 (for power switching)"
+ 	depends on SYSFS
+diff --git a/drivers/spi/spi.c b/drivers/spi/spi.c
+index 51ad42f..dc63dfb 100644
+--- a/drivers/spi/spi.c
++++ b/drivers/spi/spi.c
+@@ -1028,7 +1028,7 @@ static int spi_transfer_one_message(struct spi_master *master,
+ 				keep_cs = true;
+ 			} else {
+ 				spi_set_cs(msg->spi, false);
+-				udelay(10);
++				udelay(xfer->cs_change_usecs ? xfer->cs_change_usecs : 10);
+ 				spi_set_cs(msg->spi, true);
+ 			}
+ 		}
+diff --git a/drivers/staging/comedi/Kconfig b/drivers/staging/comedi/Kconfig
+index e7255f8..15ad17a 100644
+--- a/drivers/staging/comedi/Kconfig
++++ b/drivers/staging/comedi/Kconfig
+@@ -84,6 +84,14 @@ config COMEDI_SERIAL2002
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called serial2002.
+ 
++config COMEDI_DAQ_GERT
++        tristate "Driver for RPi GPIO and SPI connected hardware"
++        ---help---
++          Enable support for RPi GPIO and SPI connected hardware
++
++          To compile this driver as a module, choose M here: the module will be
++          called daq_gert.
++
+ config COMEDI_SSV_DNP
+ 	tristate "SSV Embedded Systems DIL/Net-PC support"
+ 	depends on X86_32 || COMPILE_TEST
+diff --git a/drivers/staging/comedi/drivers/Makefile b/drivers/staging/comedi/drivers/Makefile
+index 0c8cfa7..5c632eb 100644
+--- a/drivers/staging/comedi/drivers/Makefile
++++ b/drivers/staging/comedi/drivers/Makefile
+@@ -11,6 +11,7 @@ obj-$(CONFIG_COMEDI_BOND)		+= comedi_bond.o
+ obj-$(CONFIG_COMEDI_TEST)		+= comedi_test.o
+ obj-$(CONFIG_COMEDI_PARPORT)		+= comedi_parport.o
+ obj-$(CONFIG_COMEDI_SERIAL2002)		+= serial2002.o
++obj-$(CONFIG_COMEDI_DAQ_GERT)           += daq_gert.o
+ 
+ # Comedi ISA drivers
+ obj-$(CONFIG_COMEDI_AMPLC_DIO200_ISA)	+= amplc_dio200.o
+diff --git a/include/linux/spi/spi.h b/include/linux/spi/spi.h
+index 072cb2a..f8963b4 100644
+--- a/include/linux/spi/spi.h
++++ b/include/linux/spi/spi.h
+@@ -760,6 +760,7 @@ struct spi_transfer {
+ 	u32		speed_hz;
+ 
+ 	struct list_head transfer_list;
++        u8              cs_change_usecs;
+ };
+ 
+ /**

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>com.microchip.mplab.nbide.embedded.makeproject</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/make-project/1">
+            <name>nslave</name>
+<<<<<<< HEAD
+            <creation-uuid>cfc2b6cd-425e-47a1-9cda-e1c9b36d2a18</creation-uuid>
+=======
+            <creation-uuid>c104e119-197f-4d84-bddc-b56b7ff190c7</creation-uuid>
+>>>>>>> 748b11799981944c0114f10523f4e2ed8edc2f73
+            <make-project-type>0</make-project-type>
+            <c-extensions>c</c-extensions>
+            <cpp-extensions/>
+            <header-extensions/>
+            <asminc-extensions/>
+            <sourceEncoding>ISO-8859-1</sourceEncoding>
+            <make-dep-projects/>
+        </data>
+    </configuration>
+</project>
