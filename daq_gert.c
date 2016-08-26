@@ -1455,30 +1455,23 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			udelay(devpriv->ai_conv_delay_usecs); /* ADC conversion delay */
 			pdata->tx_buff[0] = CMD_ADC_DATA;
 			pdata->tx_buff[1] = CMD_ZERO;
-			pdata->tx_buff[2] = CMD_ZERO;
 			/* use three spi transfers for the message */
 			pdata->t[0].cs_change = false;
 			pdata->t[0].len = 1;
 			pdata->t[0].tx_buf = &pdata->tx_buff[0];
 			pdata->t[0].rx_buf = &pdata->rx_buff[0];
-			pdata->t[0].delay_usecs = 20;
+			pdata->t[0].delay_usecs = 5;
 			pdata->t[1].cs_change = false;
 			pdata->t[1].len = 1;
 			pdata->t[1].tx_buf = &pdata->tx_buff[1];
 			pdata->t[1].rx_buf = &pdata->rx_buff[1];
-			pdata->t[1].delay_usecs = 20;
-			pdata->t[2].cs_change = false;
-			pdata->t[2].len = 1;
-			pdata->t[2].tx_buf = &pdata->tx_buff[2];
-			pdata->t[2].rx_buf = &pdata->rx_buff[2];
-			pdata->t[2].delay_usecs = 20;			
-			
-			spi_message_init_with_transfers(&m, &pdata->t[0], 3);
+			pdata->t[1].delay_usecs = 5;		
+			spi_message_init_with_transfers(&m, &pdata->t[0], 2);
 			spi_bus_lock(spi->master);
 			spi_sync_locked(spi, &m); /* exchange SPI data */
 			spi_bus_unlock(spi->master);
-			val = pdata->rx_buff[1];
-			val += pdata->rx_buff[2] << 8;
+			val = pdata->rx_buff[0];
+			val += (pdata->rx_buff[1] << 8);
 		} else { /* read the ads1220 3 byte data result */
 			pdata->one_t.len = 4;
 			pdata->one_t.cs_change = false;
@@ -2997,7 +2990,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	/* Board  operation data */
 	dev->board_name = thisboard->name;
 	devpriv->ai_cmd_delay_usecs = 1; /* PIC slave delays */
-	devpriv->ai_conv_delay_usecs = 40;
+	devpriv->ai_conv_delay_usecs = 20;
 	devpriv->ai_neverending = true;
 	devpriv->ai_mix = false;
 	devpriv->ai_conv_delay_10nsecs = CONV_SPEED;

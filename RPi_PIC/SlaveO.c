@@ -23,6 +23,7 @@
  * have been interconnected in the standard way for a PIC18F8722 chip EET Board
  *
  * Version
+ *		0.91 update exchange protocol
  *		0.9 add 45K80 commands and ports
  *		0.8 Add zero command for cleaner transfers and allow for no LCD code	
  *		0.7 minor software cleanups.
@@ -480,6 +481,8 @@ void InterruptHandlerHigh(void)
 {
 	static uint8_t channel = 0, link, upper, command, port_tmp, char_txtmp, char_rxtmp, cmd_dummy = CMD_DUMMY, b_dummy;
 	static union Timers timer;
+
+	DLED1 = HIGH;
 #ifdef P45K80
 	/* we only get this when the master  wants data, the slave never generates one */
 	if (PIR1bits.SSPIF) { // SPI port #1 SLAVE receiver
@@ -556,10 +559,8 @@ void InterruptHandlerHigh(void)
 				spi_comm.ADC_DATA = FALSE;
 				if (data_in2 & ADC_SWAP_MASK) {
 					upper = TRUE;
-					DLED7 = LOW;
 				} else {
 					upper = FALSE;
-					DLED7 = HIGH;
 				}
 				channel = data_in2 & LO_NIBBLE;
 #ifdef P25K22
@@ -582,11 +583,9 @@ void InterruptHandlerHigh(void)
 #endif
 					adc_buffer[channel] = 0xffff; // fill with bits
 					ADCON0bits.GO = HIGH; // start a conversion
-					DLED2 = !DLED2;
 				} else {
 					ADCON0bits.GO = LOW; // stop a conversion
 					SPI_BUF = CMD_DUMMY; // Tell master  we are here
-					DLED3 = !DLED3;
 				}
 				_asm clrwdt _endasm // reset the WDT timer
 				spi_comm.REMOTE_LINK = TRUE;
@@ -600,7 +599,6 @@ void InterruptHandlerHigh(void)
 			}
 			if (data_in2 == CMD_DUMMY_CFG) {
 				SPI_BUF = CMD_DUMMY; // Tell master  we are here
-				DLED4 = !DLED4;
 			}
 
 			if ((data_in2 == CMD_ZERO) && spi_comm.ADC_DATA) { // don't sent unless we have valid data
@@ -610,7 +608,6 @@ void InterruptHandlerHigh(void)
 				} else {
 					SPI_BUF = (uint8_t) (adc_buffer[channel] >> 8); // stuff with upper 8 bits
 				}
-				DLED6 = !DLED6;
 			}
 			if (data_in2 == CMD_ADC_DATA) {
 				if (spi_comm.ADC_DATA) {
@@ -619,7 +616,6 @@ void InterruptHandlerHigh(void)
 					} else {
 						SPI_BUF = (uint8_t) adc_buffer[channel]; // stuff with lower 8 bits
 					}
-					DLED5 = !DLED5;
 					spi_stat.last_slave_int_count = spi_stat.slave_int_count;
 				} else {
 					SPI_BUF = CMD_DUMMY;
@@ -660,10 +656,15 @@ void InterruptHandlerHigh(void)
 		if (PIR1bits.ADIF) { // ADC conversion complete flag
 			PIR1bits.ADIF = LOW;
 			spi_stat.adc_count++; // just keep count
-			adc_buffer[channel] = ADRES; // data is ready but must be written to the SPI buffer after a master command is received 
+			adc_buffer[channel] = ADRES; // data is ready but must be written to the SPI buffer before a master command is received 
+			if (upper) {
+				SPI_BUF = (uint8_t) (adc_buffer[channel] >> 8); // stuff with upper 8 bits
+			} else {
+				SPI_BUF = (uint8_t) adc_buffer[channel]; // stuff with lower 8 bits
+			}
 			spi_comm.ADC_DATA = TRUE; // so the transmit buffer will not be overwritten, WCOL set
-			DLED1 = !DLED1;
 		}
+		DLED1 = LOW;
 	}
 #pragma	tmpdata
 
