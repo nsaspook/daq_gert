@@ -7,7 +7,7 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>	/* for printf() */
+#include <stdio.h> /* for printf() */
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
@@ -65,8 +65,8 @@ int main(int argc, char *argv[])
 			printf("Missing Analog AO subdevice\n");
 			return -1;
 		}
-		while (TRUE) {		
-			
+		while (TRUE) {
+
 			set_dac_volts(1, ((double) sine_wave[i])*0.007);
 			set_dac_volts(0, ((double) sine_wave[255 - i++])*0.007);
 			usleep(1);
@@ -96,8 +96,8 @@ int main(int argc, char *argv[])
 			if (blink[2]++ >= 100) {
 				printf("         \r");
 				printf(" %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %u %u %u %u %u %u raw %x, %x",
-					bmc.pv_voltage, bmc.cc_voltage, bmc.input_voltage, bmc.b1_voltage, bmc.b2_voltage, bmc.system_voltage, bmc.logic_voltage,
-					bmc.datain.D0, bmc.datain.D1, bmc.datain.D2, bmc.datain.D3, bmc.datain.D6, bmc.datain.D7, bmc.adc_sample[0], bmc.adc_sample[1]);
+				bmc.pv_voltage, bmc.cc_voltage, bmc.input_voltage, bmc.b1_voltage, bmc.b2_voltage, bmc.system_voltage, bmc.logic_voltage,
+				bmc.datain.D0, bmc.datain.D1, bmc.datain.D2, bmc.datain.D3, bmc.datain.D6, bmc.datain.D7, bmc.adc_sample[0], bmc.adc_sample[1]);
 				//        usleep(4990);
 				blink[2] = 0;
 
