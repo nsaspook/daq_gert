@@ -564,7 +564,8 @@ void InterruptHandlerHigh(void)
 				}
 				channel = data_in2 & LO_NIBBLE;
 #ifdef P25K22
-				if (channel > 4) channel += 7; // skip missing channels
+				if (channel >= 5) channel += 6; // skip missing channels
+				if (channel == 12) channel = 0; // invalid so set to 0
 				if (channel > 19) channel = 0; // invalid to set to 0
 #endif
 #ifdef P8722
@@ -587,7 +588,6 @@ void InterruptHandlerHigh(void)
 					ADCON0bits.GO = LOW; // stop a conversion
 					SPI_BUF = CMD_DUMMY; // Tell master  we are here
 				}
-				_asm clrwdt _endasm // reset the WDT timer
 				spi_comm.REMOTE_LINK = TRUE;
 				link = TRUE;
 				DLED0 = HIGH;
@@ -604,17 +604,17 @@ void InterruptHandlerHigh(void)
 			if ((data_in2 == CMD_ZERO) && spi_comm.ADC_DATA) { // don't sent unless we have valid data
 				spi_stat.last_slave_int_count = spi_stat.slave_int_count;
 				if (upper) {
-					SPI_BUF = (uint8_t) adc_buffer[channel]; // stuff with lower 8 bits
+					SPI_BUF = ADRESH;
 				} else {
-					SPI_BUF = (uint8_t) (adc_buffer[channel] >> 8); // stuff with upper 8 bits
+					SPI_BUF = ADRESL; // stuff with lower 8 bits
 				}
 			}
 			if (data_in2 == CMD_ADC_DATA) {
 				if (spi_comm.ADC_DATA) {
 					if (upper) {
-						SPI_BUF = (uint8_t) (adc_buffer[channel] >> 8); // stuff with upper 8 bits
+						SPI_BUF = ADRESL; // stuff with lower 8 bits
 					} else {
-						SPI_BUF = (uint8_t) adc_buffer[channel]; // stuff with lower 8 bits
+						SPI_BUF = ADRESH;
 					}
 					spi_stat.last_slave_int_count = spi_stat.slave_int_count;
 				} else {
@@ -630,39 +630,26 @@ void InterruptHandlerHigh(void)
 		if (INTCONbits.TMR0IF) { // check timer0 irq 1 second timer int handler
 			INTCONbits.TMR0IF = LOW; //clear interrupt flag
 			//check for TMR0 overflow
+			LATBbits.LATB7 = !LATBbits.LATB7;
 
 			timer.lt = TIMEROFFSET; // Copy timer value into union
 			TMR0H = timer.bt[HIGH]; // Write high byte to Timer0
 			TMR0L = timer.bt[LOW]; // Write low byte to Timer0
-			/* if we are just idle don't reset the PIC */
-			if ((spi_stat.slave_int_count - spi_stat.last_slave_int_count) < SLAVE_ACTIVE) {
-				_asm clrwdt _endasm // reset the WDT timer
-				DLED1 = HIGH;
-				DLED2 = HIGH;
-				DLED3 = HIGH;
-				DLED4 = HIGH;
-				DLED5 = HIGH;
-				DLED6 = HIGH;
-				DLED7 = HIGH;
-#ifdef P8722
-				LATJ = 0xff;
-#endif
-			}
-			link = FALSE;
-			spi_comm.REMOTE_LINK = FALSE;
 			DLED0 = LOW;
 		}
 
 		if (PIR1bits.ADIF) { // ADC conversion complete flag
+			DLED0 = LOW;
 			PIR1bits.ADIF = LOW;
 			spi_stat.adc_count++; // just keep count
-			adc_buffer[channel] = ADRES; // data is ready but must be written to the SPI buffer before a master command is received 
-			if (upper) {
-				SPI_BUF = (uint8_t) (adc_buffer[channel] >> 8); // stuff with upper 8 bits
+			adc_buffer[channel] = (uint16_t) ADRES; // data is ready but must be written to the SPI buffer before a master command is received 
+			if (upper) { /* same as CMD_ZERO */
+				SPI_BUF = ADRESH;
 			} else {
-				SPI_BUF = (uint8_t) adc_buffer[channel]; // stuff with lower 8 bits
+				SPI_BUF = ADRESL; // stuff with lower 8 bits
 			}
 			spi_comm.ADC_DATA = TRUE; // so the transmit buffer will not be overwritten, WCOL set
+			DLED0 = HIGH;
 		}
 		DLED1 = LOW;
 	}
@@ -847,7 +834,7 @@ void InterruptHandlerHigh(void)
 		LATC = 0x00; // all LEDS on
 		TRISAbits.TRISA6 = 0; // CPU clock out
 
-		TRISBbits.TRISB1 = 1; // SSP2 pins clk in SLAVE
+		TRISBbits.TRISB1 = 1; // SSP2 pins clock in SLAVE
 		TRISBbits.TRISB2 = 1; // SDI
 		TRISBbits.TRISB3 = 0; // SDO
 		TRISBbits.TRISB0 = 1; // SS2
@@ -870,8 +857,8 @@ void InterruptHandlerHigh(void)
 
 		TRISBbits.TRISB4 = 1; // QEI encoder inputs
 		TRISBbits.TRISB5 = 1;
-		TRISBbits.TRISB6 = 1;
-		TRISBbits.TRISB7 = 1;
+		TRISBbits.TRISB6 = LOW; /* outputs */
+		TRISBbits.TRISB7 = LOW;
 
 		ANSELA = 0b00101111; // analog bit enables
 		ANSELB = 0b00110000; // analog bit enables
@@ -988,8 +975,9 @@ void InterruptHandlerHigh(void)
 
 				for (i = 0; i < 1; i++) {
 					for (j = 0; j < 1; j++) {
+						_asm clrwdt _endasm // reset the WDT timer
 #ifdef P8722_LCD
-						if ((((k++) % 10000) == 0) || !spi_adc.REMOTE_LINK) {
+							if ((((k++) % 10000) == 0) || !spi_adc.REMOTE_LINK) {
 							if (spi_adc.REMOTE_LINK) {
 								sprintf(bootstr2,
 									"SPI U%i %b          ",
