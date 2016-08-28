@@ -21,7 +21,7 @@ FC=gfortran
 AS=as
 
 # Macros
-CND_PLATFORM=GNU-Linux
+CND_PLATFORM=GNU-Linux-x86
 CND_DLIB_EXT=so
 CND_CONF=Release
 CND_DISTDIR=dist
@@ -35,7 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/5c0/bmc.o \
+	${OBJECTDIR}/_ext/1472/bmc.o \
 	${OBJECTDIR}/daq.o
 
 
@@ -63,10 +63,10 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bmc: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bmc ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/_ext/5c0/bmc.o: ../bmc.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/5c0
+${OBJECTDIR}/_ext/1472/bmc.o: ../bmc.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1472
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 `pkg-config --cflags comedilib`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/5c0/bmc.o ../bmc.c
+	$(COMPILE.c) -O2 `pkg-config --cflags comedilib`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1472/bmc.o ../bmc.c
 
 ${OBJECTDIR}/daq.o: daq.c 
 	${MKDIR} -p ${OBJECTDIR}

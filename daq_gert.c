@@ -1449,7 +1449,6 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			spi->mode = thisboard->spi_mode;
 			spi->max_speed_hz = thisboard->ai_max_speed_hz;
 			spi_setup(spi);
-			//udelay(devpriv->ai_cmd_delay_usecs); /* ADC setup delay */
 			pdata->tx_buff[0] = CMD_ADC_GO + chan;
 			spi_write(spi, pdata->tx_buff, 1);
 			udelay(devpriv->ai_conv_delay_usecs); /* ADC conversion delay */
@@ -1465,7 +1464,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			pdata->t[1].len = 1;
 			pdata->t[1].tx_buf = &pdata->tx_buff[1];
 			pdata->t[1].rx_buf = &pdata->rx_buff[1];
-			pdata->t[1].delay_usecs = 5;		
+			pdata->t[1].delay_usecs = 5;
 			spi_message_init_with_transfers(&m, &pdata->t[0], 2);
 			spi_bus_lock(spi->master);
 			spi_sync_locked(spi, &m); /* exchange SPI data */
@@ -2856,7 +2855,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		use_hunking = false;
 	}
 	if (daqgert_conf == 4)
-		use_hunking = 0; /* single transfers, ADC is in continuous conversion mode */
+		use_hunking = false; /* single transfers, ADC is in continuous conversion mode */
 	devpriv->use_hunking = use_hunking;
 
 	/*
@@ -2990,7 +2989,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	/* Board  operation data */
 	dev->board_name = thisboard->name;
 	devpriv->ai_cmd_delay_usecs = 1; /* PIC slave delays */
-	devpriv->ai_conv_delay_usecs = 20;
+	devpriv->ai_conv_delay_usecs = 25;
 	devpriv->ai_neverending = true;
 	devpriv->ai_mix = false;
 	devpriv->ai_conv_delay_10nsecs = CONV_SPEED;
