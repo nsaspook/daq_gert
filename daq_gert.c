@@ -1209,9 +1209,6 @@ static int32_t daqgert_device_offset(int32_t device_type)
 	case 2:
 		len = 2;
 		break;
-	case PICSL10:
-		len = 3;
-		break;
 	default:
 		len = 3;
 	}
