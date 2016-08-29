@@ -383,7 +383,7 @@ static const uint32_t ADS1220 = 24;
 static const uint32_t MCP4802 = 4; /* 8 bit DAC output from 12 bit input data */
 static const uint32_t MCP4812 = 2;
 static const uint32_t MCP4822 = 0;
-static const uint32_t PICSL10 = 2;
+static const uint32_t PICSL10 = 0;
 static const uint32_t PICSL12 = 0;
 static const uint32_t SPI_BUFF_SIZE = 3072;
 static const uint32_t SPI_BUFF_SIZE_NOHUNK = 64;
@@ -1208,6 +1208,9 @@ static int32_t daqgert_device_offset(int32_t device_type)
 	switch (device_type) {
 	case 2:
 		len = 2;
+		break;
+	case PICSL10:
+		len = 3;
 		break;
 	default:
 		len = 3;
