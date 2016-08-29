@@ -158,6 +158,18 @@ int set_dac_volts(int chan, double voltage) {
     return retval;
 }
 
+int set_dac_raw(int chan, lsampl_t voltage) {
+    int retval;
+
+    DAC_ERROR = FALSE;
+    retval = comedi_data_write(it, subdev_ao, chan, range_ao, aref_ao, voltage);
+    if (retval < 0) {
+        comedi_perror("comedi_data_write in set_dac_raw");
+        DAC_ERROR = TRUE;
+    }
+    return retval;
+}
+
 double get_adc_volts(int chan) {
     lsampl_t data;
     int retval;

@@ -56,6 +56,7 @@ extern "C" {
     int dac_range(double, double);
     double get_adc_volts(int);
     int set_dac_volts(int, double);
+    int set_dac_raw(int, lsampl_t);
     int get_dio_bit(int);
     int put_dio_bit(int, int);
     int set_dio_input(int);
