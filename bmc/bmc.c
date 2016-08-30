@@ -57,7 +57,7 @@ uint8_t sine_wave[256] = {
 int main(int argc, char *argv[])
 {
 	int blink[3], flip[2] = {0, 0};
-	int do_ao_only = TRUE;
+	int do_ao_only = FALSE;
 	uint8_t i = 0;
 
 	if (do_ao_only) {
