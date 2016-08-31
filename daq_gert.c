@@ -376,14 +376,14 @@ static const uint8_t ads1220_r1 = ADS1220_DR_20 | ADS1220_MODE_TURBO;
 static const uint8_t ads1220_r2 = ADS1220_REJECT_OFF;
 static const uint8_t ads1220_r3 = ADS1220_IDAC_OFF | ADS1220_DRDY_MODE;
 
-/* analog chip types (type - 12 bits) */
-static const uint32_t MCP3002 = 2; /* 10 bit ADC */
+/* analog chip types (type - 12 bits) or set bits for sigma-delta ADC */
+static const uint32_t MCP3002 = 2; /* 10 bit ADC, 12 bits - 2 */
 static const uint32_t MCP3202 = 0;
 static const uint32_t ADS1220 = 24;
 static const uint32_t MCP4802 = 4; /* 8 bit DAC output from 12 bit input data */
 static const uint32_t MCP4812 = 2;
 static const uint32_t MCP4822 = 0;
-static const uint32_t PICSL10 = 0;
+static const uint32_t PICSL10 = 2;
 static const uint32_t PICSL12 = 0;
 static const uint32_t SPI_BUFF_SIZE = 3072;
 static const uint32_t SPI_BUFF_SIZE_NOHUNK = 64;
