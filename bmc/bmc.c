@@ -68,9 +68,9 @@ int main(int argc, char *argv[])
 		while (TRUE) {
 
 			//set_dac_volts(1, ((double) sine_wave[i])*0.007);
-			set_dac_raw(1, sine_wave[i]<<4);
+			set_dac_raw(1, sine_wave[i] << 4);
 			//set_dac_volts(0, ((double) sine_wave[255 - i++])*0.007);
-			set_dac_raw(0, sine_wave[255 - i++]<<4);
+			set_dac_raw(0, sine_wave[255 - i++] << 4);
 			//usleep(1);
 			//			printf("%d\n", i);
 		}
@@ -84,10 +84,14 @@ int main(int argc, char *argv[])
 			printf("Missing Digital subdevice(s)\n");
 			return -1;
 		}
-		set_dio_output(0);
-		set_dio_output(1);
-		set_dio_input(6);
-		set_dio_input(7);
+		set_dio_output(0); // gpio 17
+		set_dio_output(1); // gpio 18
+		set_dio_output(2); // gpio 21/27
+		set_dio_output(3); // gpio 22
+		set_dio_output(4); // gpio 23
+		set_dio_output(5); // gpio 24
+		set_dio_input(6); // gpio 25
+		set_dio_input(7); // gpio 4
 		put_dio_bit(0, 1);
 		put_dio_bit(1, 1);
 		blink[2] = 0;
@@ -98,8 +102,8 @@ int main(int argc, char *argv[])
 			if (blink[2]++ >= 100) {
 				printf("         \r");
 				printf(" %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %u %u %u %u %u %u raw %x, %x",
-				bmc.pv_voltage, bmc.cc_voltage, bmc.input_voltage, bmc.b1_voltage, bmc.b2_voltage, bmc.system_voltage, bmc.logic_voltage,
-				bmc.datain.D0, bmc.datain.D1, bmc.datain.D2, bmc.datain.D3, bmc.datain.D6, bmc.datain.D7, bmc.adc_sample[0], bmc.adc_sample[1]);
+					bmc.pv_voltage, bmc.cc_voltage, bmc.input_voltage, bmc.b1_voltage, bmc.b2_voltage, bmc.system_voltage, bmc.logic_voltage,
+					bmc.datain.D0, bmc.datain.D1, bmc.datain.D2, bmc.datain.D3, bmc.datain.D6, bmc.datain.D7, bmc.adc_sample[0], bmc.adc_sample[1]);
 				//        usleep(4990);
 				blink[2] = 0;
 
@@ -109,6 +113,8 @@ int main(int argc, char *argv[])
 					}
 					printf(" Flip led 0 %x ", flip[0]);
 					bmc.dataout.D0 = flip[0];
+					bmc.dataout.D2 = flip[0];
+					bmc.dataout.D3 = flip[0];
 					set_dac_volts(0, bmc.cc_voltage);
 				} else {
 					set_dac_volts(0, 1.666);
@@ -121,6 +127,8 @@ int main(int argc, char *argv[])
 					printf(" Flip led 1 %x ", flip[1]);
 					set_dac_volts(1, 0.333);
 					bmc.dataout.D1 = flip[1];
+					bmc.dataout.D4 = flip[1];
+					bmc.dataout.D5 = flip[1];
 				} else {
 					set_dac_volts(1, 1.333);
 					bmc.dataout.D1 = 0;

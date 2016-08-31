@@ -57,6 +57,7 @@
 	};
     };
 
+/*
     fragment@3 {
 	target = <&spi0>;
 	__overlay__ {
@@ -72,4 +73,6 @@
             brcm,function = <4>; /* alt0 */
 	};
     };
+*/
+
 };

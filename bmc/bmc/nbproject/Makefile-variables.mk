@@ -7,13 +7,13 @@ CND_BASEDIR=`pwd`
 CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Debug configuration
-CND_PLATFORM_Debug=None-Linux
-CND_ARTIFACT_DIR_Debug=dist/Debug/None-Linux
+CND_PLATFORM_Debug=None-Linux-x86
+CND_ARTIFACT_DIR_Debug=dist/Debug/None-Linux-x86
 CND_ARTIFACT_NAME_Debug=bmc
-CND_ARTIFACT_PATH_Debug=dist/Debug/None-Linux/bmc
-CND_PACKAGE_DIR_Debug=dist/Debug/None-Linux/package
+CND_ARTIFACT_PATH_Debug=dist/Debug/None-Linux-x86/bmc
+CND_PACKAGE_DIR_Debug=dist/Debug/None-Linux-x86/package
 CND_PACKAGE_NAME_Debug=bmc.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/None-Linux/package/bmc.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/None-Linux-x86/package/bmc.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux
