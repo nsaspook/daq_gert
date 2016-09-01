@@ -57,7 +57,7 @@ uint8_t sine_wave[256] = {
 int main(int argc, char *argv[])
 {
 	int blink[3], flip[2] = {0, 0}, z = 0;
-	int do_ao_only = FALSE;
+	int do_ao_only = TRUE;
 	uint8_t i = 0;
 
 	if (do_ao_only) {
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 		while (TRUE) {
 
 			//set_dac_volts(1, ((double) sine_wave[i])*0.007);
-			set_dac_raw(1, sine_wave[i] << 4);
+			//set_dac_raw(1, sine_wave[i] << 4);
 			//set_dac_volts(0, ((double) sine_wave[255 - i++])*0.007);
 			set_dac_raw(0, sine_wave[255 - i++] << 4);
 			//usleep(1);

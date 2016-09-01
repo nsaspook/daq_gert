@@ -1,1 +1,2 @@
 ./ao_waveform -v -c 0 -f /dev/comedi0_subd2 -n0
+./ao_waveform -v -c 0 -f /dev/comedi0_subd2 -n0 -F4000
