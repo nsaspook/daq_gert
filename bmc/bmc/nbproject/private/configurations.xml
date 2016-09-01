@@ -37,7 +37,7 @@
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
-        <developmentServer>root@10.1.1.61:22</developmentServer>
+        <developmentServer>root@10.5.2.29:22</developmentServer>
         <platform>2</platform>
       </toolsSet>
       <dbx_gdbdebugger version="1">

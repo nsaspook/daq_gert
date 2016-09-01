@@ -259,13 +259,13 @@ by the module option variable daqgert_conf in the /etc/modprobe.d directory
 #define ADS1220_MODE_DCT	0x18
 
 // Define CM (conversion mode)
-#define ADS1220_CC			0x04
+#define ADS1220_CC		0x04
 
 // Define TS (temperature sensor)
 #define ADS1220_TEMP_SENSOR	0x02
 
 // Define BCS (burnout current source)
-#define ADS1220_BCS			0x01
+#define ADS1220_BCS		0x01
 
 /* ADS1220 Register 2 Definition */
 //   Bit 7   |   Bit 6   |   Bit 5   |   Bit 4   |   Bit 3   |   Bit 2   |   Bit 1   |   Bit 0 
@@ -517,9 +517,9 @@ static const struct daqgert_board daqgert_boards[] = {
 		.ai_ns_min = 50000, /* values plus software overhead */
 		.ai_ns_min_calc = 35000,
 		.ai_rate_min = 20000,
-		.ao_ns_min = 5000,
-		.ao_ns_min_calc = 4500,
-		.ao_rate_min = 10000,
+		.ao_ns_min = 500,
+		.ao_ns_min_calc = 500,
+		.ao_rate_min = 200000,
 		.ai_cs = 0,
 		.ao_cs = 1,
 		.ai_max_speed_hz = 1000000,
@@ -1952,7 +1952,7 @@ static int32_t daqgert_ao_cmd(struct comedi_device *dev,
 
 	/* 1ms */
 	/* timing of the scan: we set all channels at once */
-	devpriv->ao_timer = cmd->scan_begin_arg / 1000000;
+	devpriv->ao_timer = cmd->scan_begin_arg / 1000;
 	if (devpriv->ao_timer < 1) {
 		ret = -EINVAL;
 		goto ao_cmd_exit;
@@ -2127,7 +2127,7 @@ static int32_t daqgert_ao_delay_rate(struct comedi_device *dev,
 	} else { /* or nothing */
 		spacing_usecs = 0;
 	}
-	//	dev_info(dev->class_dev, "ao rate %i, spacing usecs %i\n", rate, spacing_usecs);
+		dev_info(dev->class_dev, "ao rate %i, spacing usecs %i\n", rate, spacing_usecs);
 	return spacing_usecs;
 }
 

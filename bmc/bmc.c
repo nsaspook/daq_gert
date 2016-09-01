@@ -56,7 +56,7 @@ uint8_t sine_wave[256] = {
 
 int main(int argc, char *argv[])
 {
-	int blink[3], flip[2] = {0, 0};
+	int blink[3], flip[2] = {0, 0}, z = 0;
 	int do_ao_only = FALSE;
 	uint8_t i = 0;
 
@@ -107,18 +107,20 @@ int main(int argc, char *argv[])
 				//        usleep(4990);
 				blink[2] = 0;
 
+				bmc.dataout.dio_buf = z++ >>3;
+
 				if ((bmc.datain.D0 == 0)) {
 					if (((blink[0]++) % 150) == 0) {
 						flip[0] = !flip[0];
 					}
 					printf(" Flip led 0 %x ", flip[0]);
-					bmc.dataout.D0 = flip[0];
-					bmc.dataout.D2 = flip[0];
-					bmc.dataout.D3 = flip[0];
+					bmc.dataout.d.D0 = flip[0];
+					bmc.dataout.d.D2 = flip[0];
+					bmc.dataout.d.D3 = flip[0];
 					set_dac_volts(0, bmc.cc_voltage);
 				} else {
 					set_dac_volts(0, 1.666);
-					bmc.dataout.D0 = 0;
+					//bmc.dataout.d.D0 = 0;
 				}
 				if ((bmc.datain.D1 == 0)) {
 					if (((blink[1]++) % 150) == 0) {
@@ -126,12 +128,12 @@ int main(int argc, char *argv[])
 					}
 					printf(" Flip led 1 %x ", flip[1]);
 					set_dac_volts(1, 0.333);
-					bmc.dataout.D1 = flip[1];
-					bmc.dataout.D4 = flip[1];
-					bmc.dataout.D5 = flip[1];
+					bmc.dataout.d.D1 = flip[1];
+					bmc.dataout.d.D4 = flip[1];
+					bmc.dataout.d.D5 = flip[1];
 				} else {
 					set_dac_volts(1, 1.333);
-					bmc.dataout.D1 = 0;
+					//bmc.dataout.d.D1 = 0;
 				}
 			}
 		}

@@ -290,14 +290,14 @@ int get_data_sample(void) {
     //    bmc.datain.D5 = get_dio_bit(13);
     //    bmc.datain.D6 = get_dio_bit(15); // GPIO 14 
     //    bmc.datain.D7 = get_dio_bit(16); // GPIO 15 
-    put_dio_bit(0, bmc.dataout.D0); // GPIO 17
-    put_dio_bit(1, bmc.dataout.D1); // GPIO 18
-    put_dio_bit(2, bmc.dataout.D2); // GPIO 21
-    put_dio_bit(3, bmc.dataout.D3); // GPIO 22
-    put_dio_bit(4, bmc.dataout.D4);
-    put_dio_bit(5, bmc.dataout.D5);
-    put_dio_bit(6, bmc.dataout.D6);
-    put_dio_bit(7, bmc.dataout.D7);
+    put_dio_bit(0, bmc.dataout.d.D0); // GPIO 17
+    put_dio_bit(1, bmc.dataout.d.D1); // GPIO 18
+    put_dio_bit(2, bmc.dataout.d.D2); // GPIO 21
+    put_dio_bit(3, bmc.dataout.d.D3); // GPIO 22
+    put_dio_bit(4, bmc.dataout.d.D4);
+    put_dio_bit(5, bmc.dataout.d.D5);
+    put_dio_bit(6, bmc.dataout.d.D6);
+    put_dio_bit(7, bmc.dataout.d.D7);
 }
 
 double lp_filter(double new, int bn, int slow) // low pass filter, slow rate of change for new, LPCHANC channels, slow/fast select (-1) to zero channel
