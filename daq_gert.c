@@ -1240,7 +1240,6 @@ static int32_t daqgert_ai_thread_function(void *data)
 				schedule();
 			else
 				wait_event_interruptible(daqgert_ai_thread_wq, test_bit(AI_CMD_RUNNING, &devpriv->state_bits));
-//				usleep_range(750, 1000);
 
 			if (kthread_should_stop())
 				return 0;
@@ -1265,7 +1264,6 @@ static int32_t daqgert_ai_thread_function(void *data)
 			clear_bit(SPI_AI_RUN, &devpriv->state_bits);
 			smp_mb__after_atomic();
 			wait_event_interruptible(daqgert_ai_thread_wq, test_bit(AI_CMD_RUNNING, &devpriv->state_bits));
-			//			usleep_range(750, 1000);
 		}
 	}
 	/*do_exit(1);*/
@@ -1303,7 +1301,6 @@ static int32_t daqgert_ao_thread_function(void *data)
 			clear_bit(SPI_AO_RUN, &devpriv->state_bits);
 			smp_mb__after_atomic();
 			wait_event_interruptible(daqgert_ao_thread_wq, test_bit(AO_CMD_RUNNING, &devpriv->state_bits));
-			//			usleep_range(750, 1000);
 		}
 	}
 	/*do_exit(1);*/
@@ -3232,6 +3229,7 @@ static void daqgert_detach(struct comedi_device * dev)
 {
 	struct daqgert_private *devpriv = dev->private;
 
+	/* wakeup and kill the threads */
 	if (devpriv->smp) {
 		if (devpriv->ao_spi->daqgert_task) {
 			set_bit(AO_CMD_RUNNING, &devpriv->state_bits);
@@ -3252,6 +3250,9 @@ static void daqgert_detach(struct comedi_device * dev)
 
 	iounmap(devpriv->timer_1mhz);
 	iounmap(dev->mmio);
+	dev_info(dev->class_dev,
+		"data i/o counts:  adc %d: dac %d\n",
+		devpriv->ai_count, devpriv->ao_count);
 	dev_info(dev->class_dev, "daq_gert detached\n");
 }
 
@@ -3553,7 +3554,7 @@ module_exit(daqgert_exit);
 
 MODULE_AUTHOR("Fred Brooks <spam@sma2.rain.com>");
 MODULE_DESCRIPTION("RPi DIO/AI/AO Driver");
-MODULE_VERSION("4.7.1");
+MODULE_VERSION("4.7.2");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("spi:spigert");
 
