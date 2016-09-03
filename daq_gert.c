@@ -1220,6 +1220,8 @@ static int32_t daqgert_device_offset(int32_t device_type)
  * and *data a pointer to that comedi structure
  * for this not to segfault 
  */
+static DECLARE_WAIT_QUEUE_HEAD(daqgert_ai_thread_wq);
+
 static int32_t daqgert_ai_thread_function(void *data)
 {
 	struct comedi_device *dev = (void*) data;
@@ -1237,7 +1239,8 @@ static int32_t daqgert_ai_thread_function(void *data)
 			if (devpriv->timer)
 				schedule();
 			else
-				usleep_range(750, 1000);
+				wait_event_interruptible(daqgert_ai_thread_wq, test_bit(AI_CMD_RUNNING, &devpriv->state_bits));
+//				usleep_range(750, 1000);
 
 			if (kthread_should_stop())
 				return 0;
@@ -1261,7 +1264,8 @@ static int32_t daqgert_ai_thread_function(void *data)
 		} else {
 			clear_bit(SPI_AI_RUN, &devpriv->state_bits);
 			smp_mb__after_atomic();
-			usleep_range(750, 1000);
+			wait_event_interruptible(daqgert_ai_thread_wq, test_bit(AI_CMD_RUNNING, &devpriv->state_bits));
+			//			usleep_range(750, 1000);
 		}
 	}
 	/*do_exit(1);*/
@@ -1271,6 +1275,8 @@ static int32_t daqgert_ai_thread_function(void *data)
 /*
  * AO async thread
  */
+static DECLARE_WAIT_QUEUE_HEAD(daqgert_ao_thread_wq);
+
 static int32_t daqgert_ao_thread_function(void *data)
 {
 	struct comedi_device *dev = (void*) data;
@@ -1296,7 +1302,8 @@ static int32_t daqgert_ao_thread_function(void *data)
 		} else {
 			clear_bit(SPI_AO_RUN, &devpriv->state_bits);
 			smp_mb__after_atomic();
-			usleep_range(750, 1000);
+			wait_event_interruptible(daqgert_ao_thread_wq, test_bit(AO_CMD_RUNNING, &devpriv->state_bits));
+			//			usleep_range(750, 1000);
 		}
 	}
 	/*do_exit(1);*/
@@ -1598,8 +1605,10 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 	uint16_t sampl_val;
 	uint32_t chan = s->async->cur_chan;
 
+	/* zero bytes from the write data buffer read */
 	if (!comedi_buf_read_samples(s, &sampl_val, 1)) {
 		s->async->events |= COMEDI_CB_OVERFLOW;
+		comedi_handle_events(dev, s);
 		return;
 	}
 
@@ -1868,6 +1877,7 @@ static int32_t daqgert_ai_inttrig(struct comedi_device *dev,
 		daqgert_ai_start_pacer(dev, true);
 		smp_mb__before_atomic();
 		set_bit(AI_CMD_RUNNING, &devpriv->state_bits);
+		wake_up_interruptible(&daqgert_ai_thread_wq);
 		smp_mb__after_atomic();
 		devpriv->ai_cmd_canceled = false;
 		s->async->inttrig = NULL;
@@ -1899,6 +1909,7 @@ static int32_t daqgert_ao_inttrig(struct comedi_device *dev,
 	if (!test_bit(AO_CMD_RUNNING, &devpriv->state_bits)) {
 		smp_mb__before_atomic();
 		set_bit(AO_CMD_RUNNING, &devpriv->state_bits);
+		wake_up_interruptible(&daqgert_ao_thread_wq);
 		smp_mb__after_atomic();
 		devpriv->ao_cmd_canceled = false;
 		s->async->inttrig = NULL;
@@ -1966,6 +1977,7 @@ static int32_t daqgert_ao_cmd(struct comedi_device *dev,
 		/* enable this acquisition operation */
 		smp_mb__before_atomic();
 		set_bit(AI_CMD_RUNNING, &devpriv->state_bits);
+		wake_up_interruptible(&daqgert_ai_thread_wq);
 		smp_mb__after_atomic();
 		devpriv->ao_cmd_canceled = false;
 	} else {
@@ -2078,6 +2090,7 @@ static int32_t daqgert_ai_cmd(struct comedi_device *dev,
 		daqgert_ai_start_pacer(dev, true);
 		smp_mb__before_atomic();
 		set_bit(AI_CMD_RUNNING, &devpriv->state_bits);
+		wake_up_interruptible(&daqgert_ai_thread_wq);
 		smp_mb__after_atomic();
 		devpriv->ai_cmd_canceled = false;
 	} else {
@@ -3220,12 +3233,18 @@ static void daqgert_detach(struct comedi_device * dev)
 	struct daqgert_private *devpriv = dev->private;
 
 	if (devpriv->smp) {
-		if (devpriv->ao_spi->daqgert_task)
+		if (devpriv->ao_spi->daqgert_task) {
+			set_bit(AO_CMD_RUNNING, &devpriv->state_bits);
+			wake_up_interruptible(&daqgert_ao_thread_wq);
 			kthread_stop(devpriv->ao_spi->daqgert_task);
+		}
 		devpriv->ao_spi->daqgert_task = NULL;
 
-		if (devpriv->ai_spi->daqgert_task)
+		if (devpriv->ai_spi->daqgert_task) {
+			set_bit(AI_CMD_RUNNING, &devpriv->state_bits);
+			wake_up_interruptible(&daqgert_ai_thread_wq);
 			kthread_stop(devpriv->ai_spi->daqgert_task);
+		}
 		devpriv->ai_spi->daqgert_task = NULL;
 	}
 
