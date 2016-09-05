@@ -23,19 +23,6 @@
  * have been interconnected in the standard way for a PIC18F8722 chip EET Board
  *
  * Version
- *		0.91 update exchange protocol
- *		0.9 add 45K80 commands and ports
- *		0.8 Add zero command for cleaner transfers and allow for no LCD code	
- *		0.7 minor software cleanups.
- *		0.06 P25K22 Set PIC speed to 64mhz and use have ADC use FOSC_64,12_TAD
- *		P8722 have ADC use FOSC_32,12_TAD
- *		0.05 Fixed the P25K22 version to work correctly.
- *		0.04 The testing hardware is mainly a pic18f8722 with a
- *		LCD display and PORTE bit leds.
- *		define the CPU type below.
- *
- *		The WatchDog and timer0 are used to check link status
- *		and to reset the chip if hung or confused.
  *
  * nsaspook@sma2.rain..com    Mar 2015
  */
@@ -266,20 +253,15 @@ volatile struct spi_link_type spi_comm = {FALSE, FALSE, FALSE, FALSE, FALSE, FAL
 volatile struct spi_stat_type spi_stat = {0}, report_stat = {0};
 
 const rom int8_t *build_date = __DATE__, *build_time = __TIME__;
-const rom char Version[] = " Version 0.9 PIC Slave ";
+const rom char Version[] = " Version 0.1 PIC fingers ";
 volatile uint8_t data_in2, adc_buffer_ptr = 0,
 	adc_channel = 0;
 
-volatile uint8_t dsi = 0, ctmu_button, PEAK_READS = 2; // LCD virtual console number
+volatile uint8_t ctmu_button, PEAK_READS = 2; // LCD virtual console number
 volatile uint16_t adc_buffer[64] = {0}, adc_data_in = 0;
-#pragma udata gpr13
-far int8_t bootstr2[MESG_W + 1];
-uint8_t lcd18 = 200;
-#pragma udata gpr2
-far struct lcdb ds[VS_SLOTS];
 #pragma udata gpr9
 volatile unsigned char CTMU_ADC_UPDATED = FALSE, TIME_CHARGE = FALSE, CTMU_WORKING = FALSE;
-volatile unsigned int touch_base[16], switchState = UNPRESSED, charge_time[16]; //storage for reading parameters
+volatile unsigned int touch_base[16], touch_zero[16], switchState = UNPRESSED, charge_time[16]; //storage for reading parameters
 
 void InterruptHandlerHigh(void);
 
@@ -302,33 +284,33 @@ void InterruptVectorHigh(void)
 
 void InterruptHandlerHigh(void)
 {
-	static uint8_t channel = 0, link, upper, command, port_tmp, char_txtmp, char_rxtmp, cmd_dummy = CMD_DUMMY, b_dummy;
 	static union Timers timer;
 	static unsigned char i = 0;
 	static unsigned int touch_peak = 1024; // max CTMU voltage
 
-
 	DLED0 = HIGH;
 
-	if (PIR1bits.TX1IF) { // check timer1 irq 
-		if (!CTMUCONHbits.IDISSEN) { // charge cycle timer1 int, because not shorting the CTMU voltage.
+	if (INTCONbits.TMR0IF) { // check timer0 irq 
+		LATCbits.LATC0 = !LATCbits.LATC0;
+		if (!CTMUCONHbits.IDISSEN) { // charge cycle timer0 int, because not shorting the CTMU voltage.
 			CTMUCONLbits.EDG1STAT = 0; // Stop charging touch circuit
 			TIME_CHARGE = FALSE; // clear charging flag
 			CTMU_WORKING = TRUE; // set working flag, doing touch ADC conversion
 			// configure ADC for next reading
-			channel = (TMR3H >> 4)&0x0f; // ADC channel is TMR3H [4..7] bits
-			ADCON0bits.CHS = channel; // Select ADC channel, TMR3H[4..7]
+			ADCON0bits.CHS = ctmu_button; // Select ADC channel
 			ADCON0bits.ADON = 1; // Turn on ADC
 			ADCON0bits.GO = 1; // and begin A/D conv, will set adc int flag when done.
 		} else { // discharge cycle timer0 int, because CTMU voltage is shorted 
 			CTMUCONHbits.IDISSEN = 0; // end drain of touch circuit
 			TIME_CHARGE = TRUE; // set charging flag
 			CTMU_WORKING = TRUE; // set working flag, doing 
-			WriteTimer0(charge_time[channel]); // set timer to charge rate time
+			timer.lt = charge_time[ctmu_button]; // set timer to charge rate time
+			TMR0H = timer.bt[HIGH]; // Write high byte to Timer0
+			TMR0L = timer.bt[LOW]; // Write low byte to Timer0
 			CTMUCONLbits.EDG1STAT = 1; // Begin charging the touch circuit
 		}
-		// clr  TMR1 int flag
-		PIR1bits.TX1IF = 0; //clear interrupt flag
+		// clr  TMR0 int flag
+		INTCONbits.TMR0IF = 0; //clear interrupt flag
 	}
 
 	if (PIR1bits.ADIF) { // check ADC irq
@@ -337,12 +319,12 @@ void InterruptHandlerHigh(void)
 		if (i++ >= PEAK_READS) {
 			timer.lt = touch_peak; // Get the value from the A/D
 			timer.lt = (timer.lt >> CHOP_BITS)&0x03ff; // toss lower bit noise and mask
-			if ((timer.lt) < (touch_base[channel] - TRIP)) { // see if we have a pressed button
+			if ((timer.lt) < (touch_base[ctmu_button] - TRIP)) { // see if we have a pressed button
 				switchState = PRESSED;
-			} else if ((timer.lt) > (touch_base[channel] - TRIP + HYST)) {
+			} else if ((timer.lt) > (touch_base[ctmu_button] - TRIP + HYST)) {
 				switchState = UNPRESSED;
 			}
-			TMR3H = timer.bt[1] | ((channel << 4)&0xf3); // copy high byte/channel data [4..7] bits
+			TMR3H = timer.bt[1] | ((ctmu_button << 4)&0xf3); // copy high byte/channel data [4..7] bits
 			TMR3L = timer.bt[0]; // copy low byte and write to timer counter
 			i = 0;
 			touch_peak = 1024;
@@ -354,83 +336,15 @@ void InterruptHandlerHigh(void)
 		CTMUCONLbits.EDG1STAT = 0; // Set Edge status bits to zero
 		CTMUCONLbits.EDG2STAT = 0;
 		CTMUCONHbits.IDISSEN = 1; // drain charge on the circuit
-		WriteTimer1(TIMERDISCHARGE); // set timer to discharge rate
-	}
-
-	/* we only get this when the master  wants data, the slave never generates one */
-	if (PIR3bits.SSP2IF) { // SPI port #2 SLAVE receiver
-		PIR3bits.SSP2IF = LOW;
-		spi_stat.slave_int_count++;
-		data_in2 = SPI_BUF;
-		command = data_in2 & HI_NIBBLE;
-
-		if (command == CMD_ADC_GO) { // Found a GO for a conversion command
-			spi_comm.ADC_DATA = FALSE;
-			if (data_in2 & ADC_SWAP_MASK) {
-				upper = TRUE;
-			} else {
-				upper = FALSE;
-			}
-			channel = data_in2 & LO_NIBBLE;
-			if (channel >= 5) channel += 6; // skip missing channels
-			if (channel == 12) channel = 0; // invalid so set to 0
-			if (channel > 19) channel = 0; // invalid to set to 0
-
-
-			if (!ADCON0bits.GO) {
-				ADCON0 = ((channel << 2) & 0b00111100) | (ADCON0 & 0b11000011);
-				adc_buffer[channel] = 0xffff; // fill with bits
-				ADCON0bits.GO = HIGH; // start a conversion
-			} else {
-				ADCON0bits.GO = LOW; // stop a conversion
-				SPI_BUF = CMD_DUMMY; // Tell master  we are here
-			}
-			spi_comm.REMOTE_LINK = TRUE;
-			link = TRUE;
-			/* reset link data timer if we are talking */
-			timer.lt = TIMEROFFSET; // Copy timer value into union
-			TMR0H = timer.bt[HIGH]; // Write high byte to Timer0
-			TMR0L = timer.bt[LOW]; // Write low byte to Timer0
-			INTCONbits.TMR0IF = LOW; //clear possible interrupt flag	
-		}
-		if (data_in2 == CMD_DUMMY_CFG) {
-			SPI_BUF = CMD_DUMMY; // Tell master  we are here
-		}
-
-		if ((data_in2 == CMD_ZERO) && spi_comm.ADC_DATA) { // don't sent unless we have valid data
-			spi_stat.last_slave_int_count = spi_stat.slave_int_count;
-			if (upper) {
-				SPI_BUF = ADRESH;
-			} else {
-				SPI_BUF = ADRESL; // stuff with lower 8 bits
-			}
-		}
-		if (data_in2 == CMD_ADC_DATA) {
-			if (spi_comm.ADC_DATA) {
-				if (upper) {
-					SPI_BUF = ADRESL; // stuff with lower 8 bits
-				} else {
-					SPI_BUF = ADRESH;
-				}
-				spi_stat.last_slave_int_count = spi_stat.slave_int_count;
-			} else {
-				SPI_BUF = CMD_DUMMY;
-			}
-		}
-		if (command == CMD_CHAR_RX) {
-			SPI_BUF = char_rxtmp; // Send current RX buffer contents
-			cmd_dummy = CMD_DUMMY; // clear rx bit
-		}
-	}
-
-	if (INTCONbits.TMR0IF) { // check timer0 irq 1 second timer int handler
-		INTCONbits.TMR0IF = LOW; //clear interrupt flag
-		//check for TMR0 overflow
-		LATBbits.LATB7 = !LATBbits.LATB7;
-
-		timer.lt = TIMEROFFSET; // Copy timer value into union
+		timer.lt = TIMERDISCHARGE; // set timer to discharge rate
 		TMR0H = timer.bt[HIGH]; // Write high byte to Timer0
 		TMR0L = timer.bt[LOW]; // Write low byte to Timer0
+	}
+
+	if (PIR1bits.SSPIF) { // SPI port #1 receiver
+		PIR1bits.SSPIF = LOW;
+		spi_stat.slave_int_count++;
+		data_in2 = SSP1BUF;
 	}
 
 	DLED0 = LOW;
@@ -480,8 +394,7 @@ void touch_channel(unsigned char channel)
 {
 	CTMU_ADC_UPDATED = FALSE;
 	while (!CTMU_ADC_UPDATED); // wait for touch update cycle
-	TMR3H = channel << 4; // set channel
-	TMR3L = 0; // write to timer3 counter
+	ctmu_button = channel;
 	CTMU_ADC_UPDATED = FALSE;
 	while (!CTMU_ADC_UPDATED); // wait for touch update cycle
 }
@@ -543,6 +456,10 @@ void config_pic(void)
 
 	OSCCON = 0x70; // internal osc 16mhz, CONFIG OPTION 4XPLL for 64MHZ
 	OSCTUNE = 0xC0; // 4x pll
+	WPUB = 0xff;
+	SLRCON = 0x00; // slew rate to max
+
+	INTCON2bits.RBPU = LOW; // turn on weak pullups
 	TRISAbits.TRISA6 = 0; // CPU clock out
 
 	TRISCbits.TRISC3 = 0; // clock out Master
@@ -574,11 +491,9 @@ void config_pic(void)
 	OpenSPI1(SPI_FOSC_16, MODE_00, SMPEND); // 1MHz
 	SSPCON1 |= SPI_FOSC_16; // set clock to low speed
 
-	/* System activity timer, can reset the processor */
-	OpenTimer0(TIMER_INT_ON & T0_16BIT & T0_SOURCE_INT & T0_PS_1_256);
-	WriteTimer0(TIMEROFFSET); //      start timer0 at 1 second ticks
-	OpenTimer1(TIMER_INT_ON & T1_16BIT_RW & T1_SOURCE_FOSC_4 & T1_PS_1_8 &
-		T1_OSC1EN_OFF & T1_SYNC_EXT_OFF, 255); // for CTMU scanner
+	/* System activity timer */
+	OpenTimer0(TIMER_INT_ON & T0_16BIT & T0_SOURCE_INT & T0_PS_1_1);
+	WriteTimer0(TIMERDISCHARGE); //	start timer0 
 
 	/* clear SPI module possible flag and enable interrupts*/
 	PIR1bits.SSP1IF = LOW;
@@ -599,6 +514,10 @@ void config_pic(void)
 	CTMUCONHbits.IDISSEN = HIGH; // drain the circuit
 	CTMUCONHbits.CTTRIG = LOW; // disable trigger
 
+	/* ports */
+	TRISAbits.TRISA7 = 0; // out
+	TRISCbits.TRISC0 = 0;
+
 	/* Enable interrupt priority */
 	RCONbits.IPEN = 1;
 	/* Enable all high priority interrupts */
@@ -610,23 +529,27 @@ void config_pic(void)
 void main(void) /* SPI Master/Slave loopback */
 {
 	int16_t i, j, k = 0, num_ai_chan = 0;
+	uint16_t touch_tmp;
 
 	config_pic(); // setup the slave for work
 
-	while (1) { // just loop and output results on DIAG LCD for 8722
+	//		CTMU setups
+	ctmu_button = 0; // select start touch input
+	ctmu_setup(14, ctmu_button); // config the CTMU for touch response 
+	touch_zero[ctmu_button] = touch_base_calc(ctmu_button);
 
+	while (1) { // just loop 
 
 		if (SSP2CON1bits.WCOL || SSP2CON1bits.SSPOV) { // check for overruns/collisions
 			SSP2CON1bits.WCOL = SSP2CON1bits.SSPOV = 0;
 			spi_stat.adc_error_count = spi_stat.adc_count - spi_stat.adc_error_count;
 		}
 
-
-		for (i = 0; i < 1; i++) {
-			for (j = 0; j < 1; j++) {
-				_asm clrwdt _endasm // reset the WDT timer
-			}
-		}
+		_asm clrwdt _endasm // reset the WDT timer
+		CTMU_ADC_UPDATED = FALSE;
+		DLED0 = !DLED0;
+		while (!CTMU_ADC_UPDATED); // wait for touch update cycle
+		touch_tmp = ctmu_touch(ctmu_button, TRUE);
 
 	}
 
