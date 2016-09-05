@@ -34,3 +34,6 @@ Module.symvers
 *.dwo
 !.gitignore
 !.mailmap
+/hand/finger.X/nbproject/private/
+/hand/finger.X/dist/default/
+/hand/finger.X/build/default/
