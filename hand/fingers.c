@@ -24,7 +24,7 @@
  *
  * Version
  *
- * nsaspook@sma2.rain..com    Mar 2015
+ * nsaspook@sma2.rain..com    Sept 2016
  */
 
 #define P25K22
@@ -128,34 +128,13 @@ int ctmu_setup(unsigned char, unsigned char);
 #define	TIMEROFFSET	26474           // timer0 16bit counter value for 1 second to overflow
 #define SLAVE_ACTIVE	10		// Activity counter level
 
-/* PIC Slave commands */
-#define CMD_ZERO        0b00000000
-#define CMD_ADC_GO	0b10000000
-#define CMD_PORT_GO	0b10100000	// send data LO_NIBBLE to port buffer
-#define CMD_CHAR_GO	0b10110000	// send data LO_NIBBLE to TX buffer
-#define CMD_ADC_DATA	0b11000000
-#define CMD_PORT_DATA	0b11010000	// send data HI_NIBBLE to port buffer ->PORT and return input PORT data in received SPI data byte
-#define CMD_CHAR_DATA	0b11100000	// send data HI_NIBBLE to TX buffer and return RX buffer in received SPI data byte
-#define CMD_XXXX	0b11110000	//
-#define CMD_CHAR_RX	0b00010000	// Get RX buffer
-#define CMD_DUMMY_CFG	0b01000000	// stuff config data in SPI buffer
-#define CMD_DEAD        0b11111111      // This is usually a bad response
-
-#define CMD_DUMMY	0b01101110	/* 14 channels 2.048 but only 13 are ADC */
-#define NUM_AI_CHAN     14
-#define SPI_BUF		SSP2BUF
-
-#define	HI_NIBBLE	0xf0
-#define	LO_NIBBLE	0x0f
-#define	ADC_SWAP_MASK	0b01000000
-#define UART_DUMMY_MASK	0b01000000
-
 #define	TIMERCHARGE_BASE_X10		65523		// 5.5 uA time, large plate ~150us
 #define	TIMERCHARGE_BASE_1		64000		// .55 uA time, large plate max sens ~700us
 #define	TIMERCHARGE_BASE_2		61543		// .55 uA time, large plate low sens ~1000us
 #define	TIMERCHARGE_BASE_3		65000		// .55 uA time, small plate max sens ~200us
 #define	TIMERCHARGE_BASE_4		62543		// .55 uA time, small plate low sens ~750us
-#define	TIMERDISCHARGE			41000		// discharge and max touch data update period 1.8ms
+#define	TIMERDISCHARGE			60000		// discharge and max touch data update period 1.8ms
+#define TIMERPROCESS			40000
 
 #define TRIP 32 //Difference between pressed
 //and un-pressed switch
@@ -257,8 +236,8 @@ const rom char Version[] = " Version 0.1 PIC fingers ";
 volatile uint8_t data_in2, adc_buffer_ptr = 0,
 	adc_channel = 0;
 
-volatile uint8_t ctmu_button, PEAK_READS = 2; // LCD virtual console number
-volatile uint16_t adc_buffer[64] = {0}, adc_data_in = 0;
+volatile uint8_t ctmu_button, ADC_READS = 7;
+volatile uint16_t adc_buffer[4][8] = {0}, adc_data_in = 0;
 #pragma udata gpr9
 volatile unsigned char CTMU_ADC_UPDATED = FALSE, TIME_CHARGE = FALSE, CTMU_WORKING = FALSE;
 volatile unsigned int touch_base[16], touch_zero[16], switchState = UNPRESSED, charge_time[16]; //storage for reading parameters
@@ -285,8 +264,7 @@ void InterruptVectorHigh(void)
 void InterruptHandlerHigh(void)
 {
 	static union Timers timer;
-	static unsigned char i = 0;
-	static unsigned int touch_peak = 1024; // max CTMU voltage
+	static unsigned char i = 0, i_adc = 0;
 
 	DLED0 = HIGH;
 
@@ -301,6 +279,7 @@ void InterruptHandlerHigh(void)
 			ADCON0bits.ADON = 1; // Turn on ADC
 			ADCON0bits.GO = 1; // and begin A/D conv, will set adc int flag when done.
 		} else { // discharge cycle timer0 int, because CTMU voltage is shorted 
+			ADCON0bits.CHS = ctmu_button; // Select ADC channel for charging
 			CTMUCONHbits.IDISSEN = 0; // end drain of touch circuit
 			TIME_CHARGE = TRUE; // set charging flag
 			CTMU_WORKING = TRUE; // set working flag, doing 
@@ -315,20 +294,17 @@ void InterruptHandlerHigh(void)
 
 	if (PIR1bits.ADIF) { // check ADC irq
 		PIR1bits.ADIF = 0; // clear ADC int flag
-		if (ADRES < touch_peak) touch_peak = ADRES; // find peak value
-		if (i++ >= PEAK_READS) {
-			timer.lt = touch_peak; // Get the value from the A/D
-			timer.lt = (timer.lt >> CHOP_BITS)&0x03ff; // toss lower bit noise and mask
-			if ((timer.lt) < (touch_base[ctmu_button] - TRIP)) { // see if we have a pressed button
-				switchState = PRESSED;
-			} else if ((timer.lt) > (touch_base[ctmu_button] - TRIP + HYST)) {
-				switchState = UNPRESSED;
-			}
-			TMR3H = timer.bt[1] | ((ctmu_button << 4)&0xf3); // copy high byte/channel data [4..7] bits
-			TMR3L = timer.bt[0]; // copy low byte and write to timer counter
-			i = 0;
-			touch_peak = 1024;
+		PIR1bits.SSPIF = LOW; // clear SPI flags
+		PIE1bits.SSP1IE = HIGH; // enable to send second byte
+		SSP1BUF = ADRESH | ((ctmu_button << 4)&0xf3);
+		adc_buffer[ctmu_button][i_adc] = ADRES;
+		timer.lt = TIMERDISCHARGE; // set timer to discharge rate
+		if (i_adc++ >= ADC_READS) {
+			TMR3H = ADRESH | ((ctmu_button << 4)&0xf3); // copy high byte/channel data [4..7] bits
+			TMR3L = ADRESL; // copy low byte and write to timer counter
+			i_adc = 0; // reset adc buffer position
 			CTMU_ADC_UPDATED = TRUE; // New data is in timer3 counter, set to FALSE in main program flow
+			timer.lt = TIMERPROCESS; // set timer to data processing rate
 		}
 		CTMU_WORKING = FALSE; // clear working flag, ok to read timer3 counter.
 		// config CTMU for next reading
@@ -336,15 +312,16 @@ void InterruptHandlerHigh(void)
 		CTMUCONLbits.EDG1STAT = 0; // Set Edge status bits to zero
 		CTMUCONLbits.EDG2STAT = 0;
 		CTMUCONHbits.IDISSEN = 1; // drain charge on the circuit
-		timer.lt = TIMERDISCHARGE; // set timer to discharge rate
 		TMR0H = timer.bt[HIGH]; // Write high byte to Timer0
 		TMR0L = timer.bt[LOW]; // Write low byte to Timer0
 	}
 
-	if (PIR1bits.SSPIF) { // SPI port #1 receiver
+	if (PIE1bits.SSP1IE && PIR1bits.SSPIF) { // SPI port #1 receiver
 		PIR1bits.SSPIF = LOW;
 		spi_stat.slave_int_count++;
 		data_in2 = SSP1BUF;
+		PIE1bits.SSP1IE = LOW; // disable to we don't send again
+		SSP1BUF = ADRESL;
 	}
 
 	DLED0 = LOW;
@@ -378,6 +355,7 @@ unsigned int ctmu_touch(unsigned char channel, unsigned char NULL0)
 unsigned int touch_base_calc(unsigned char channel)
 {
 	long t_avg = 0, i;
+
 	touch_channel(channel);
 	CTMU_ADC_UPDATED = FALSE;
 	while (!CTMU_ADC_UPDATED) ClrWdt(); // wait for touch update cycle
@@ -440,15 +418,6 @@ int ctmu_setup(unsigned char current, unsigned char channel)
 	TMR3H = 0;
 	TMR3L = 0;
 	return 0;
-}
-
-void wdtdelay(unsigned long delay)
-{
-	static uint32_t dcount;
-	for (dcount = 0; dcount <= delay; dcount++) { // delay a bit
-		Nop();
-		ClrWdt(); // reset the WDT timer
-	};
 }
 
 void config_pic(void)
@@ -528,15 +497,17 @@ void config_pic(void)
 
 void main(void) /* SPI Master/Slave loopback */
 {
-	int16_t i, j, k = 0, num_ai_chan = 0;
+	int16_t i, j, k = 0;
 	uint16_t touch_tmp;
 
 	config_pic(); // setup the slave for work
 
 	//		CTMU setups
 	ctmu_button = 0; // select start touch input
-	ctmu_setup(14, ctmu_button); // config the CTMU for touch response 
-	touch_zero[ctmu_button] = touch_base_calc(ctmu_button);
+	ctmu_setup(11, ctmu_button); // config the CTMU for touch response 
+	ctmu_setup(11, ctmu_button + 1);
+	ctmu_setup(11, ctmu_button + 2);
+	ctmu_setup(11, ctmu_button + 3);
 
 	while (1) { // just loop 
 
@@ -548,8 +519,11 @@ void main(void) /* SPI Master/Slave loopback */
 		_asm clrwdt _endasm // reset the WDT timer
 		CTMU_ADC_UPDATED = FALSE;
 		DLED0 = !DLED0;
-		while (!CTMU_ADC_UPDATED); // wait for touch update cycle
-		touch_tmp = ctmu_touch(ctmu_button, TRUE);
+		while (!CTMU_ADC_UPDATED); // wait for complete channel touch update cycle
+
+		if (ctmu_button++ > 3) {
+			ctmu_button = 0;
+		}
 
 	}
 
