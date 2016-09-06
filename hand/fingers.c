@@ -104,6 +104,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <ctmu.h>
+#include <usart.h>
 #include <GenericTypeDefs.h>
 
 /*
@@ -200,20 +201,6 @@ typedef signed long int32_t;
 typedef signed long long int64_t;
 #endif
 
-struct lcdb {
-	int8_t b[LCDW_SIZE];
-};
-
-struct spi_link_type { // internal state table
-	uint8_t SPI_DATA : 1;
-	uint8_t ADC_DATA : 1;
-	uint8_t PORT_DATA : 1;
-	uint8_t CHAR_DATA : 1;
-	uint8_t REMOTE_LINK : 1;
-	uint8_t REMOTE_DATA_DONE : 1;
-	uint8_t LOW_BITS : 1;
-};
-
 struct spi_stat_type {
 	volatile uint32_t adc_count, adc_error_count,
 	port_count, port_error_count,
@@ -223,24 +210,23 @@ struct spi_stat_type {
 	volatile uint8_t comm_ok;
 };
 
-struct serial_bounce_buffer_type {
-	uint8_t data[2];
-	uint32_t place;
+struct finger_move_type {
+	uint16_t zero_ref, zero_max, zero_min, moving_avg, moving_val;
+	uint32_t avg;
+	int16_t moving_diff;
 };
 
-volatile struct spi_link_type spi_comm = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};
-volatile struct spi_stat_type spi_stat = {0}, report_stat = {0};
+volatile struct spi_stat_type spi_stat = {0};
 
 const rom int8_t *build_date = __DATE__, *build_time = __TIME__;
 const rom char Version[] = " Version 0.1 PIC fingers ";
-volatile uint8_t data_in2, adc_buffer_ptr = 0,
-	adc_channel = 0;
+volatile uint8_t data_in2;
 
 volatile uint8_t ctmu_button, ADC_READS = 7;
 volatile uint16_t adc_buffer[4][8] = {0}, adc_data_in = 0;
-#pragma udata gpr9
 volatile unsigned char CTMU_ADC_UPDATED = FALSE, TIME_CHARGE = FALSE, CTMU_WORKING = FALSE;
 volatile unsigned int touch_base[16], touch_zero[16], switchState = UNPRESSED, charge_time[16]; //storage for reading parameters
+struct finger_move_type finger[4] = {0};
 
 void InterruptHandlerHigh(void);
 
@@ -354,17 +340,16 @@ unsigned int ctmu_touch(unsigned char channel, unsigned char NULL0)
 
 unsigned int touch_base_calc(unsigned char channel)
 {
-	long t_avg = 0, i;
+	uint8_t i;
 
 	touch_channel(channel);
 	CTMU_ADC_UPDATED = FALSE;
 	while (!CTMU_ADC_UPDATED) ClrWdt(); // wait for touch update cycle
+	finger[channel].avg = 0;
 	for (i = 0; i < 8; i++) {
-		CTMU_ADC_UPDATED = FALSE;
-		while (!CTMU_ADC_UPDATED) ClrWdt(); // wait for touch update cycle
-		t_avg += (ctmu_touch(channel, FALSE)&0x03ff);
+		finger[channel].avg = adc_buffer[channel][i]&0x03ff;
 	}
-	touch_base[channel] = (unsigned int) (t_avg >> 3);
+	touch_base[channel] = (unsigned int) (finger[channel].avg >> 3);
 	return touch_base[channel];
 }
 
@@ -436,6 +421,9 @@ void config_pic(void)
 	TRISCbits.TRISC5 = 0; // SDO
 	TRISCbits.TRISC2 = 0; // CS0
 
+	TRISCbits.TRISC6 = 0; // tx rs232
+	TRISCbits.TRISC7 = 1; // rx
+
 	/* ADC channels setup */
 	TRISAbits.TRISA0 = HIGH; // an0
 	TRISAbits.TRISA1 = HIGH; // an1
@@ -483,6 +471,13 @@ void config_pic(void)
 	CTMUCONHbits.IDISSEN = HIGH; // drain the circuit
 	CTMUCONHbits.CTTRIG = LOW; // disable trigger
 
+	Open1USART(USART_TX_INT_OFF &
+		USART_RX_INT_OFF &
+		USART_ASYNCH_MODE &
+		USART_EIGHT_BIT &
+		USART_CONT_RX &
+		USART_BRGH_HIGH, 51); // 64mhz Fosc 9600 baud
+
 	/* ports */
 	TRISAbits.TRISA7 = 0; // out
 	TRISCbits.TRISC0 = 0;
@@ -497,8 +492,6 @@ void config_pic(void)
 
 void main(void) /* SPI Master/Slave loopback */
 {
-	int16_t i, j, k = 0;
-	uint16_t touch_tmp;
 
 	config_pic(); // setup the slave for work
 
