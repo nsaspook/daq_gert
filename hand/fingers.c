@@ -120,12 +120,6 @@
  * 
  */
 
-//	CTMU section
-unsigned int touch_base_calc(unsigned char);
-void touch_channel(unsigned char);
-unsigned int ctmu_touch(unsigned char, unsigned char);
-int ctmu_setup(unsigned char, unsigned char);
-
 #define	TIMEROFFSET	26474           // timer0 16bit counter value for 1 second to overflow
 #define SLAVE_ACTIVE	10		// Activity counter level
 
@@ -184,6 +178,9 @@ int ctmu_setup(unsigned char, unsigned char);
 #define YES		HIGH
 
 #define DLED0		LATAbits.LATA7
+#define DLED1		LATCbits.LATC0
+#define FLED0		LATBbits.LATB0
+#define FLED1		LATBbits.LATB1
 
 #ifdef INTTYPES
 #include <stdint.h>
@@ -201,6 +198,12 @@ typedef signed long int32_t;
 typedef signed long long int64_t;
 #endif
 
+//	CTMU section
+uint16_t touch_base_calc(uint8_t);
+void touch_channel(uint8_t);
+int16_t ctmu_touch(uint8_t, uint8_t);
+int16_t ctmu_setup(uint8_t, uint8_t);
+
 struct spi_stat_type {
 	volatile uint32_t adc_count, adc_error_count,
 	port_count, port_error_count,
@@ -212,9 +215,9 @@ struct spi_stat_type {
 
 struct finger_move_type {
 	uint16_t zero_ref, zero_max, zero_min, moving_avg, moving_val;
-	uint32_t avg;
+	uint32_t avg_val;
 	int16_t moving_diff;
-};
+} finger_move_type;
 
 volatile struct spi_stat_type spi_stat = {0};
 
@@ -223,10 +226,10 @@ const rom int8_t Version[] = "\r\n Version 0.1 PIC fingers ";
 volatile uint8_t data_in2;
 
 volatile uint8_t ctmu_button, ADC_READS = 7;
-volatile uint16_t adc_buffer[4][8] = {0}, adc_data_in = 0;
-volatile unsigned char CTMU_ADC_UPDATED = FALSE, TIME_CHARGE = FALSE, CTMU_WORKING = FALSE;
-volatile unsigned int touch_base[16], touch_zero[16], switchState = UNPRESSED, charge_time[16]; //storage for reading parameters
-struct finger_move_type finger[4] = {0};
+volatile uint16_t adc_buffer[5][8] = {0}, adc_data_in = 0;
+volatile uint8_t CTMU_ADC_UPDATED = FALSE, TIME_CHARGE = FALSE, CTMU_WORKING = FALSE;
+volatile uint16_t touch_base[16], touch_zero[16], switchState = UNPRESSED, charge_time[16]; //storage for reading parameters
+struct finger_move_type finger[5] = {0};
 
 void InterruptHandlerHigh(void);
 
@@ -250,13 +253,13 @@ void InterruptVectorHigh(void)
 void InterruptHandlerHigh(void)
 {
 	static union Timers timer;
-	static unsigned char i = 0, i_adc = 0;
+	static uint8_t i = 0, i_adc = 0;
 
-	DLED0 = HIGH;
+	//	DLED0 = HIGH;
 
 	if (INTCONbits.TMR0IF) { // check timer0 irq 
-		LATCbits.LATC0 = !LATCbits.LATC0;
 		if (!CTMUCONHbits.IDISSEN) { // charge cycle timer0 int, because not shorting the CTMU voltage.
+			DLED1 = HIGH;
 			CTMUCONLbits.EDG1STAT = 0; // Stop charging touch circuit
 			TIME_CHARGE = FALSE; // clear charging flag
 			CTMU_WORKING = TRUE; // set working flag, doing touch ADC conversion
@@ -265,6 +268,7 @@ void InterruptHandlerHigh(void)
 			ADCON0bits.ADON = 1; // Turn on ADC
 			ADCON0bits.GO = 1; // and begin A/D conv, will set adc int flag when done.
 		} else { // discharge cycle timer0 int, because CTMU voltage is shorted 
+			DLED1 = LOW;
 			ADCON0bits.CHS = ctmu_button; // Select ADC channel for charging
 			CTMUCONHbits.IDISSEN = 0; // end drain of touch circuit
 			TIME_CHARGE = TRUE; // set charging flag
@@ -310,50 +314,64 @@ void InterruptHandlerHigh(void)
 		SSP1BUF = ADRESL;
 	}
 
-	DLED0 = LOW;
+	//	DLED0 = LOW;
 }
 
-unsigned int ctmu_touch(unsigned char channel, unsigned char NULL0)
+int ctmu_touch(uint8_t channel, uint8_t diff_val)
 {
-	static unsigned int ctmu_change = 0, last = 0, null = 0;
-	static union Timers timer;
+	static int16_t ctmu_change = 0, last = 0, null = 0;
+	uint8_t i;
 
 	if (CTMU_ADC_UPDATED) {
-		timer.lt = finger[channel].avg; 
+		finger[channel].moving_val = finger[channel].avg_val;
+		finger[channel].avg_val = 0;
+		for (i = 0; i < 8; i++) {
+			finger[channel].avg_val += adc_buffer[channel][i]&0x03ff;
+		}
+		finger[channel].avg_val = finger[channel].avg_val >> (uint16_t) 3;
+		finger[channel].moving_avg = (finger[channel].moving_val + finger[channel].avg_val) >> (uint16_t) 1;
 
-		if (!NULL0) {
-			return(timer.lt & 0x03ff);
+		if (!diff_val) {
+			return finger[channel].avg_val;
 		}
-		if (((timer.lt & 0x03ff))< (touch_base[channel]&0x03ff)) {
-			ctmu_change = (touch_base[channel]&0x03ff)-(timer.lt & 0x03ff); // read diff 
-			if (NULL0) {
-				if (ctmu_change > 255) ctmu_change = 1;
-			}
+		if (finger[channel].moving_avg < touch_base[channel]) {
+			ctmu_change = touch_base[channel] - finger[channel].moving_avg; // read diff 
 		}
-		if ((null == 0) && NULL0) null = ctmu_change;
+
 		last = ctmu_change;
-		return(unsigned int) ctmu_change;
+		return ctmu_change;
 	} else {
-		return(unsigned int) last;
+		return last;
 	}
 }
 
-unsigned int touch_base_calc(unsigned char channel)
+/*
+ * compute the gesture zero
+ */
+uint16_t touch_base_calc(uint8_t channel)
 {
 	uint8_t i;
 
 	touch_channel(channel);
 	CTMU_ADC_UPDATED = FALSE;
 	while (!CTMU_ADC_UPDATED) ClrWdt(); // wait for touch update cycle
-	finger[channel].avg = 0;
+	finger[channel].avg_val = 0;
+	finger[channel].zero_max = adc_buffer[channel][i]&0x03ff;
+	finger[channel].zero_min = adc_buffer[channel][i]&0x03ff;
 	for (i = 0; i < 8; i++) {
-		finger[channel].avg = adc_buffer[channel][i]&0x03ff;
+		finger[channel].avg_val += adc_buffer[channel][i]&0x03ff;
+		if (adc_buffer[channel][i]&0x03ff > finger[channel].zero_max) // look at the spreads
+			finger[channel].zero_max = adc_buffer[channel][i]&0x03ff;
+		if (adc_buffer[channel][i]&0x03ff < finger[channel].zero_min)
+			finger[channel].zero_min = adc_buffer[channel][i]&0x03ff;
 	}
-	touch_base[channel] = (unsigned int) (finger[channel].avg >> 3);
+	finger[channel].avg_val = finger[channel].avg_val >> (uint16_t) 3;
+	touch_base[channel] = finger[channel].avg_val;
+	finger[channel].zero_ref = finger[channel].avg_val;
 	return touch_base[channel];
 }
 
-void touch_channel(unsigned char channel)
+void touch_channel(uint8_t channel)
 {
 	CTMU_ADC_UPDATED = FALSE;
 	while (!CTMU_ADC_UPDATED); // wait for touch update cycle
@@ -362,7 +380,7 @@ void touch_channel(unsigned char channel)
 	while (!CTMU_ADC_UPDATED); // wait for touch update cycle
 }
 
-int ctmu_setup(unsigned char current, unsigned char channel)
+int16_t ctmu_setup(uint8_t current, uint8_t channel)
 {
 	//CTMUCONH/1 - CTMU Control registers
 	CTMUCONH = 0x00; //make sure CTMU is disabled
@@ -430,6 +448,8 @@ void config_pic(void)
 	TRISAbits.TRISA2 = HIGH; // an2
 	TRISAbits.TRISA3 = HIGH; // an3
 
+	TRISBbits.TRISB0 = 0; //finger led outputs 
+	TRISBbits.TRISB1 = 0;
 	TRISBbits.TRISB4 = 1; // QEI encoder inputs
 	TRISBbits.TRISB5 = 1;
 	TRISBbits.TRISB6 = LOW; /* outputs */
@@ -492,7 +512,6 @@ void config_pic(void)
 
 void main(void) /* SPI Master/Slave loopback */
 {
-
 	config_pic(); // setup the slave for work
 	putrs1USART(Version);
 	putrs1USART(build_date);
@@ -506,6 +525,9 @@ void main(void) /* SPI Master/Slave loopback */
 	ctmu_setup(11, ctmu_button + 1);
 	ctmu_setup(11, ctmu_button + 2);
 	ctmu_setup(11, ctmu_button + 3);
+	ctmu_setup(11, ctmu_button + 4);
+
+	touch_base_calc(ctmu_button);
 
 	while (1) { // just loop 
 
@@ -516,12 +538,23 @@ void main(void) /* SPI Master/Slave loopback */
 
 		_asm clrwdt _endasm // reset the WDT timer
 		CTMU_ADC_UPDATED = FALSE;
-		DLED0 = !DLED0;
+//		DLED0 = HIGH;
 		while (!CTMU_ADC_UPDATED); // wait for complete channel touch update cycle
+//		DLED0 = LOW;
 
+		INTCONbits.GIEH = 0; // critical section
 		if (ctmu_button++ > 3) {
+			DLED0 = HIGH;
 			ctmu_button = 0;
+			INTCONbits.GIEH = 1; // critical section
+			if (ctmu_touch(ctmu_button, 1) > 15) {
+				FLED0 = 0;
+			} else {
+				FLED0 = 1;
+			}
+			DLED0 = LOW;
 		}
+		INTCONbits.GIEH = 1;
 
 	}
 

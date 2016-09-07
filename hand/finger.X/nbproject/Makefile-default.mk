@@ -99,7 +99,7 @@ ${OBJECTDIR}/_ext/1472/fingers.o: ../fingers.c  nbproject/Makefile-${CND_CONF}.m
 	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
 	@${RM} ${OBJECTDIR}/_ext/1472/fingers.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1472/fingers.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE) -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -p$(MP_PROCESSOR_OPTION) -ml --extended -I ${MP_CC_DIR}/../h  -fo ${OBJECTDIR}/_ext/1472/fingers.o   ../fingers.c 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -p$(MP_PROCESSOR_OPTION) --verbose -ml --extended -I ${MP_CC_DIR}/../h  -fo ${OBJECTDIR}/_ext/1472/fingers.o   ../fingers.c 
 	@${DEP_GEN} -d ${OBJECTDIR}/_ext/1472/fingers.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/fingers.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
 	
@@ -108,7 +108,7 @@ ${OBJECTDIR}/_ext/1472/fingers.o: ../fingers.c  nbproject/Makefile-${CND_CONF}.m
 	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
 	@${RM} ${OBJECTDIR}/_ext/1472/fingers.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1472/fingers.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE) -p$(MP_PROCESSOR_OPTION) -ml --extended -I ${MP_CC_DIR}/../h  -fo ${OBJECTDIR}/_ext/1472/fingers.o   ../fingers.c 
+	${MP_CC} $(MP_EXTRA_CC_PRE) -p$(MP_PROCESSOR_OPTION) --verbose -ml --extended -I ${MP_CC_DIR}/../h  -fo ${OBJECTDIR}/_ext/1472/fingers.o   ../fingers.c 
 	@${DEP_GEN} -d ${OBJECTDIR}/_ext/1472/fingers.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/fingers.o.d" $(SILENT) -rsi ${MP_CC_DIR}../ -c18 
 	
