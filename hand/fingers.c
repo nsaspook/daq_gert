@@ -219,7 +219,7 @@ struct finger_move_type {
 volatile struct spi_stat_type spi_stat = {0};
 
 const rom int8_t *build_date = __DATE__, *build_time = __TIME__;
-const rom char Version[] = " Version 0.1 PIC fingers ";
+const rom int8_t Version[] = "\r\n Version 0.1 PIC fingers ";
 volatile uint8_t data_in2;
 
 volatile uint8_t ctmu_button, ADC_READS = 7;
@@ -319,8 +319,8 @@ unsigned int ctmu_touch(unsigned char channel, unsigned char NULL0)
 	static union Timers timer;
 
 	if (CTMU_ADC_UPDATED) {
-		timer.bt[0] = TMR3L; // read low byte and read 16bits from timer counter into TMR3 16bit buffer
-		timer.bt[1] = TMR3H; // read high byte
+		timer.lt = finger[channel].avg; 
+
 		if (!NULL0) {
 			return(timer.lt & 0x03ff);
 		}
@@ -494,6 +494,11 @@ void main(void) /* SPI Master/Slave loopback */
 {
 
 	config_pic(); // setup the slave for work
+	putrs1USART(Version);
+	putrs1USART(build_date);
+	putrs1USART(" ");
+	putrs1USART(build_time);
+	putrs1USART("\r\n");
 
 	//		CTMU setups
 	ctmu_button = 0; // select start touch input
