@@ -103,6 +103,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <limits.h> 
 #include <ctmu.h>
 #include <usart.h>
 #include "finger.h"
@@ -330,6 +331,48 @@ void ctmu_zero_set(void)
 	}
 }
 
+int16_t finger_diff(int16_t finger1, int16_t finger2)
+{
+	return abs(finger1 - finger2);
+}
+
+/* bit rotations for 32 bit led motion control */
+uint32_t rotl32(uint32_t value, unsigned int count)
+{
+	const unsigned int mask = (CHAR_BIT * sizeof(value) - 1);
+	count &= mask;
+	return(value << count) | (value >> ((-count) & mask)); // unary minus warning cheated with -nw=2059
+}
+
+uint32_t rotr32(uint32_t value, unsigned int count)
+{
+	const unsigned int mask = (CHAR_BIT * sizeof(value) - 1);
+	count &= mask;
+	return(value >> count) | (value << ((-count) & mask));
+}
+
+void led_motion(uint8_t mode)
+{
+	FLED0 = mode;
+}
+
+int16_t finger_trigger(uint8_t channel_count)
+{
+	static uint32_t roller = ROLL_PATTERN0;
+	/* check finger trigger conditions */
+	if (((finger[0].moving_diff > TRIP) && (finger[1].moving_diff > TRIP)) && (finger_diff(finger[0].moving_diff, finger[1].moving_diff) < TRIP_DIFF)) {
+		led_motion(roller & 0x1);
+		sprintf(mesg, " %u:%d:%d:%d:%d %d:%d diff %d: rotr %lu\r\n", channel_count, finger[channel_count].zero_ref, (int16_t) finger[channel_count].avg_val,
+			finger[channel_count].moving_avg, finger[channel_count].moving_val,
+			finger[0].moving_diff, finger[1].moving_diff, finger_diff(finger[0].moving_diff, finger[1].moving_diff), roller);
+		puts1USART(mesg);
+		roller = rotr32(roller, 1);
+	} else {
+		led_motion(1);
+	}
+	return 0;
+}
+
 void config_pic(void)
 {
 	OSCCON = 0x70; // internal osc 16mhz, CONFIG OPTION 4XPLL for 64MHZ
@@ -464,15 +507,7 @@ void main(void) /* SPI Master/Slave loopback */
 		finger[1].moving_diff = ctmu_touch(1, 1);
 
 		/* check finger trigger conditions */
-		if ((finger[0].moving_diff > TRIP) && (finger[1].moving_diff > TRIP)) {
-			FLED0 = 0;
-			sprintf(mesg, " %u:%d:%d:%d:%d %d:%d\r\n", channel_count, finger[channel_count].zero_ref, (int16_t) finger[channel_count].avg_val,
-				finger[channel_count].moving_avg, finger[channel_count].moving_val,
-				finger[0].moving_diff, finger[1].moving_diff);
-			puts1USART(mesg);
-		} else {
-			FLED0 = 1;
-		}
+		finger_trigger(channel_count);
 
 		/* reset the finger zeros on a schedule */
 		if (++channel_count > SCAN_MAX_CHAN) {

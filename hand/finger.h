@@ -29,6 +29,8 @@ extern "C" {
 	typedef signed long long int64_t;
 #endif
 
+#define abs(x) ((x) > 0 ? (x) : -(x))
+
 #define	TIMEROFFSET	26474           // timer0 16bit counter value for 1 second to overflow
 
 #define	TIMERCHARGE_BASE_X10		65523		// 5.5 uA time, large plate ~150us
@@ -46,8 +48,9 @@ extern "C" {
 #define ADC_READS	8
 #define ZERO_NOISE	15
 #define SCAN_MAX_CHAN	1
-#define TRIP 80l //Difference between pressed
+#define TRIP 70l //Difference between pressed
 	//and un-pressed switch
+#define TRIP_DIFF	20l
 #define HYST 8l //amount to change
 	//from pressed to un-pressed
 #define PRESSED 1
@@ -74,6 +77,10 @@ extern "C" {
 
 #define DLED0		LATAbits.LATA7
 #define DLED1		LATCbits.LATC0
+
+	/* bit set is LED off */
+#define ROLL_PATTERN0	0b10111001110110111000110011011011
+#define ROLL_PATTERN1	0b00000000000000000000000000000001
 #define FLED0		LATBbits.LATB0
 #define FLED1		LATBbits.LATB1
 

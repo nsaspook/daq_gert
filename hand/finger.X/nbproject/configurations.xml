@@ -84,6 +84,7 @@
         <property key="storage-class" value="sca"/>
         <property key="verbose" value="true"/>
         <property key="warning-level" value="2"/>
+        <appendMe value=" -nw=2059"/>
       </C18>
       <C18-AS>
         <property key="cross.reference.file" value=""/>
@@ -116,7 +117,6 @@
                   value="Press to browse for a specific firmware version"/>
         <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
-        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="false"/>
