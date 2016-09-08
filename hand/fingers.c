@@ -105,132 +105,24 @@
 #include <math.h>
 #include <ctmu.h>
 #include <usart.h>
-#include <GenericTypeDefs.h>
+#include "finger.h"
 
 /*
- * bit 7 high for commands sent from the MASTER
- * bit 6 0 send lower or 1 send upper byte ADC result first
- * bits 3..0 port address
- *
- * bit 7 low  for config data sent in CMD_DUMMY per uC type
- * bits 6 config bit code always 1
- * bit	5 0=ADC ref VDD, 1=ADC rec FVR=2.048
- * bit  4 0=10bit adc, 1=12bit adc
- * bits 3..0 number of ADC channels
- * 
+ * Hand controlled light toy
  */
-
-#define	TIMEROFFSET	26474           // timer0 16bit counter value for 1 second to overflow
-#define SLAVE_ACTIVE	10		// Activity counter level
-
-#define	TIMERCHARGE_BASE_X10		65523		// 5.5 uA time, large plate ~150us
-#define	TIMERCHARGE_BASE_1		64000		// .55 uA time, large plate max sens ~700us
-#define	TIMERCHARGE_BASE_2		61543		// .55 uA time, large plate low sens ~1000us
-#define	TIMERCHARGE_BASE_3		65000		// .55 uA time, small plate max sens ~200us
-#define	TIMERCHARGE_BASE_4		62543		// .55 uA time, small plate low sens ~750us
-#define	TIMERDISCHARGE			60000		// discharge and max touch data update period 1.8ms
-#define TIMERPROCESS			40000
-
-#define TRIP 32 //Difference between pressed
-//and un-pressed switch
-#define HYST 8 //amount to change
-//from pressed to un-pressed
-#define PRESSED 1
-#define UNPRESSED 0
-#define	CHOP_BITS	1
-
-/* LCD defines */
-#define LCD_L           4                       // lines
-#define LCD_W           20			// chars per line
-#define LCD_STR         22                 // char string for LCD messages
-#define LCDW_SIZE       21              // add term char
-#define MESG_W          250			// message string buffer
-#define	LL1		0x00                    // LCD line addresses
-#define	LL2		0x40
-#define LL3		0x14
-#define	LL4		0x54
-#define	VC_MAX		3
-#define VS_SLOTS	12                      // storage array size
-#define	VC0		0			// LCD Virtual Screens
-#define	VC1		4
-#define	VC2		8
-#define VS0		0			// Virtual screen select
-#define VS1		1
-#define VS2		2
-#define	DS0		0			// LCD line index
-#define	DS1		1
-#define	DS2		2
-#define	DS3		3
-#define	DS4		4
-#define	DS5		5
-/* DIO defines */
-#define LOW		(unsigned char)0        // digital output state levels, sink
-#define	HIGH		(unsigned char)1        // digital output state levels, source
-#define	ON		LOW       		//
-#define OFF		HIGH			//
-#define	S_ON            LOW       		// low select/on for chip/led
-#define S_OFF           HIGH			// high deselect/off chip/led
-#define	R_ON            HIGH       		// control relay states, relay is on when output gate is high, uln2803,omron relays need the CPU at 5.5vdc to drive
-#define R_OFF           LOW			// control relay states
-#define R_ALL_OFF       0x00
-#define R_ALL_ON	0xff
-#define NO		LOW
-#define YES		HIGH
-
-#define DLED0		LATAbits.LATA7
-#define DLED1		LATCbits.LATC0
-#define FLED0		LATBbits.LATB0
-#define FLED1		LATBbits.LATB1
-
-#ifdef INTTYPES
-#include <stdint.h>
-#else
-#define INTTYPES
-/*unsigned types*/
-typedef unsigned char uint8_t;
-typedef unsigned int uint16_t;
-typedef unsigned long uint32_t;
-typedef unsigned long long uint64_t;
-/*signed types*/
-typedef signed char int8_t;
-typedef signed int int16_t;
-typedef signed long int32_t;
-typedef signed long long int64_t;
-#endif
-
-//	CTMU section
-uint16_t touch_base_calc(uint8_t);
-void touch_channel(uint8_t);
-int16_t ctmu_touch(uint8_t, uint8_t);
-int16_t ctmu_setup(uint8_t, uint8_t);
-
-struct spi_stat_type {
-	volatile uint32_t adc_count, adc_error_count,
-	port_count, port_error_count,
-	char_count, char_error_count,
-	slave_int_count, last_slave_int_count,
-	comm_count;
-	volatile uint8_t comm_ok;
-};
-
-struct finger_move_type {
-	uint16_t zero_ref, zero_max, zero_min, moving_avg, moving_val;
-	uint32_t avg_val;
-	int16_t moving_diff;
-} finger_move_type;
 
 volatile struct spi_stat_type spi_stat = {0};
 
 const rom int8_t *build_date = __DATE__, *build_time = __TIME__;
 const rom int8_t Version[] = "\r\n Version 0.1 PIC fingers ";
-volatile uint8_t data_in2;
 
-volatile uint8_t ctmu_button, ADC_READS = 7;
-volatile uint16_t adc_buffer[5][8] = {0}, adc_data_in = 0;
+volatile uint8_t ctmu_button; // selects ADC/CTMU combo to monitor
+volatile uint16_t adc_buffer[5][9] = {0}, charge_time[16];
 volatile uint8_t CTMU_ADC_UPDATED = FALSE, TIME_CHARGE = FALSE, CTMU_WORKING = FALSE;
-volatile uint16_t touch_base[16], touch_zero[16], switchState = UNPRESSED, charge_time[16]; //storage for reading parameters
 struct finger_move_type finger[5] = {0};
+int8_t mesg[MESG_W];
 
+/* function prototype */
 void InterruptHandlerHigh(void);
 
 //High priority interrupt vector
@@ -242,20 +134,15 @@ void InterruptVectorHigh(void)
 		goto InterruptHandlerHigh //jump to interrupt routine
 		_endasm
 }
-
-//----------------------------------------------------------------------------
-// High priority interrupt routine
-
 #pragma code
 
+// High priority interrupt routine
 #pragma interrupt InterruptHandlerHigh
 
 void InterruptHandlerHigh(void)
 {
 	static union Timers timer;
-	static uint8_t i = 0, i_adc = 0;
-
-	//	DLED0 = HIGH;
+	static uint8_t i_adc = 0;
 
 	if (INTCONbits.TMR0IF) { // check timer0 irq 
 		if (!CTMUCONHbits.IDISSEN) { // charge cycle timer0 int, because not shorting the CTMU voltage.
@@ -284,12 +171,13 @@ void InterruptHandlerHigh(void)
 
 	if (PIR1bits.ADIF) { // check ADC irq
 		PIR1bits.ADIF = 0; // clear ADC int flag
+		spi_stat.adc_count++;
 		PIR1bits.SSPIF = LOW; // clear SPI flags
 		PIE1bits.SSP1IE = HIGH; // enable to send second byte
 		SSP1BUF = ADRESH | ((ctmu_button << 4)&0xf3);
 		adc_buffer[ctmu_button][i_adc] = ADRES;
 		timer.lt = TIMERDISCHARGE; // set timer to discharge rate
-		if (i_adc++ >= ADC_READS) {
+		if (++i_adc >= ADC_READS) {
 			TMR3H = ADRESH | ((ctmu_button << 4)&0xf3); // copy high byte/channel data [4..7] bits
 			TMR3L = ADRESL; // copy low byte and write to timer counter
 			i_adc = 0; // reset adc buffer position
@@ -308,18 +196,24 @@ void InterruptHandlerHigh(void)
 
 	if (PIE1bits.SSP1IE && PIR1bits.SSPIF) { // SPI port #1 receiver
 		PIR1bits.SSPIF = LOW;
-		spi_stat.slave_int_count++;
-		data_in2 = SSP1BUF;
+		spi_stat.int_count++;
+		spi_stat.data_in = SSP1BUF;
 		PIE1bits.SSP1IE = LOW; // disable to we don't send again
 		SSP1BUF = ADRESL;
 	}
 
-	//	DLED0 = LOW;
+	if (PIR1bits.TMR1IF) {
+		PIR1bits.TMR1IF = 0; // clear TMR2 int flag
+		timer.lt = PDELAY;
+		TMR1H = timer.bt[HIGH]; // Write high byte to Timer1
+		TMR1L = timer.bt[LOW]; // Write low byte to Timer1
+		spi_stat.time_tick++;
+	}
 }
 
-int ctmu_touch(uint8_t channel, uint8_t diff_val)
+int16_t ctmu_touch(uint8_t channel, uint8_t diff_val)
 {
-	static int16_t ctmu_change = 0, last = 0, null = 0;
+	int16_t ctmu_change;
 	uint8_t i;
 
 	if (CTMU_ADC_UPDATED) {
@@ -334,14 +228,10 @@ int ctmu_touch(uint8_t channel, uint8_t diff_val)
 		if (!diff_val) {
 			return finger[channel].avg_val;
 		}
-		if (finger[channel].moving_avg < touch_base[channel]) {
-			ctmu_change = touch_base[channel] - finger[channel].moving_avg; // read diff 
-		}
-
-		last = ctmu_change;
+		ctmu_change = finger[channel].zero_ref - finger[channel].moving_avg; // read diff 
 		return ctmu_change;
 	} else {
-		return last;
+		return 0;
 	}
 }
 
@@ -356,19 +246,21 @@ uint16_t touch_base_calc(uint8_t channel)
 	CTMU_ADC_UPDATED = FALSE;
 	while (!CTMU_ADC_UPDATED) ClrWdt(); // wait for touch update cycle
 	finger[channel].avg_val = 0;
-	finger[channel].zero_max = adc_buffer[channel][i]&0x03ff;
-	finger[channel].zero_min = adc_buffer[channel][i]&0x03ff;
+	finger[channel].zero_noise = 0;
+	finger[channel].zero_max = adc_buffer[channel][0]&0x03ff;
+	finger[channel].zero_min = adc_buffer[channel][0]&0x03ff;
 	for (i = 0; i < 8; i++) {
 		finger[channel].avg_val += adc_buffer[channel][i]&0x03ff;
-		if (adc_buffer[channel][i]&0x03ff > finger[channel].zero_max) // look at the spreads
+		if (adc_buffer[channel][i]&0x03ff > finger[channel].zero_max) // look at the noise spreads
 			finger[channel].zero_max = adc_buffer[channel][i]&0x03ff;
 		if (adc_buffer[channel][i]&0x03ff < finger[channel].zero_min)
 			finger[channel].zero_min = adc_buffer[channel][i]&0x03ff;
 	}
 	finger[channel].avg_val = finger[channel].avg_val >> (uint16_t) 3;
-	touch_base[channel] = finger[channel].avg_val;
 	finger[channel].zero_ref = finger[channel].avg_val;
-	return touch_base[channel];
+	if ((finger[channel].zero_max - finger[channel].zero_min) > ZERO_NOISE)
+		finger[channel].zero_noise = 1;
+	return finger[channel].zero_ref;
 }
 
 void touch_channel(uint8_t channel)
@@ -423,13 +315,27 @@ int16_t ctmu_setup(uint8_t current, uint8_t channel)
 	return 0;
 }
 
+void ctmu_zero_set(void)
+{
+	uint8_t i, max_count;
+
+	for (i = 0; i < 4; i++) {
+		max_count = 0;
+		do {
+			touch_base_calc(i);
+			if (finger[i].zero_noise)
+				if (++max_count > 64)
+					break;
+		} while (finger[i].zero_noise);
+	}
+}
+
 void config_pic(void)
 {
-
 	OSCCON = 0x70; // internal osc 16mhz, CONFIG OPTION 4XPLL for 64MHZ
 	OSCTUNE = 0xC0; // 4x pll
-	WPUB = 0xff;
-	SLRCON = 0x00; // slew rate to max
+	WPUB = 0xff; // pull ups ON
+	SLRCON = 0x00; // slew rate to max for high speed SPI
 
 	INTCON2bits.RBPU = LOW; // turn on weak pullups
 	TRISAbits.TRISA6 = 0; // CPU clock out
@@ -448,12 +354,8 @@ void config_pic(void)
 	TRISAbits.TRISA2 = HIGH; // an2
 	TRISAbits.TRISA3 = HIGH; // an3
 
-	TRISBbits.TRISB0 = 0; //finger led outputs 
-	TRISBbits.TRISB1 = 0;
-	TRISBbits.TRISB4 = 1; // QEI encoder inputs
-	TRISBbits.TRISB5 = 1;
-	TRISBbits.TRISB6 = LOW; /* outputs */
-	TRISBbits.TRISB7 = LOW;
+	TRISB = 0x00; //finger led outputs 
+	LATB = 0xff; // all leds off
 
 	ANSELA = 0b00001111; // analog bit enables
 	ANSELB = 0b00000000; // analog bit enables
@@ -472,6 +374,10 @@ void config_pic(void)
 	OpenTimer0(TIMER_INT_ON & T0_16BIT & T0_SOURCE_INT & T0_PS_1_1);
 	WriteTimer0(TIMERDISCHARGE); //	start timer0 
 
+	/* tick timer */
+	OpenTimer1(T1_SOURCE_FOSC_4 & T1_16BIT_RW & T1_PS_1_8 & T1_OSC1EN_OFF & T1_SYNC_EXT_OFF, 0);
+	WriteTimer1(PDELAY);
+
 	/* clear SPI module possible flag and enable interrupts*/
 	PIR1bits.SSP1IF = LOW;
 	PIE1bits.SSP1IE = HIGH;
@@ -481,26 +387,28 @@ void config_pic(void)
 	 */
 
 	//CTMUCONH/1 - CTMU Control registers
-	CTMUCONH = 0x04; //make sure CTMU is disabled and ready for edge 1 before 2
+	CTMUCONH = 0x04; //make sure CTMU is disabled
 	CTMUICON = 0x03; //.55uA*100, Nominal - No Adjustment default
-	CTMUCONLbits.EDG1SEL = 3; // Set Edge CTED1
-	CTMUCONLbits.EDG2SEL = 2; // CTED2
-	CTMUCONLbits.EDG1POL = HIGH; // Set Edge
-	CTMUCONLbits.EDG2POL = HIGH; // positive edges
+	CTMUCONL = 0x90;
 	CTMUCONHbits.CTMUEN = HIGH; //Enable the CTMU
 	CTMUCONHbits.IDISSEN = HIGH; // drain the circuit
 	CTMUCONHbits.CTTRIG = LOW; // disable trigger
 
+	/* diag output only */
 	Open1USART(USART_TX_INT_OFF &
 		USART_RX_INT_OFF &
 		USART_ASYNCH_MODE &
 		USART_EIGHT_BIT &
 		USART_CONT_RX &
-		USART_BRGH_HIGH, 51); // 64mhz Fosc 9600 baud
+		USART_BRGH_LOW, 51); // 64mhz Fosc 38400 baud
+	SPBRGH1 = 0x00;
+	SPBRG1 = 25;
 
-	/* ports */
+	/* DIAG ports */
 	TRISAbits.TRISA7 = 0; // out
 	TRISCbits.TRISC0 = 0;
+	DLED0 = HIGH;
+	DLED1 = HIGH;
 
 	/* Enable interrupt priority */
 	RCONbits.IPEN = 1;
@@ -512,6 +420,8 @@ void config_pic(void)
 
 void main(void) /* SPI Master/Slave loopback */
 {
+	uint8_t i, channel_count, recal_count = 0;
+
 	config_pic(); // setup the slave for work
 	putrs1USART(Version);
 	putrs1USART(build_date);
@@ -521,41 +431,56 @@ void main(void) /* SPI Master/Slave loopback */
 
 	//		CTMU setups
 	ctmu_button = 0; // select start touch input
-	ctmu_setup(11, ctmu_button); // config the CTMU for touch response 
-	ctmu_setup(11, ctmu_button + 1);
-	ctmu_setup(11, ctmu_button + 2);
-	ctmu_setup(11, ctmu_button + 3);
-	ctmu_setup(11, ctmu_button + 4);
-
-	touch_base_calc(ctmu_button);
+	for (i = 0; i < 4; i++) {
+		ctmu_setup(11, i); // config the CTMU for touch response 
+		ctmu_zero_set();
+	}
+	ctmu_button = 0; // select start touch input
+	channel_count = 0;
 
 	while (1) { // just loop 
 
+		/* update error stats */
 		if (SSP2CON1bits.WCOL || SSP2CON1bits.SSPOV) { // check for overruns/collisions
 			SSP2CON1bits.WCOL = SSP2CON1bits.SSPOV = 0;
 			spi_stat.adc_error_count = spi_stat.adc_count - spi_stat.adc_error_count;
+			spi_stat.last_int_count = spi_stat.int_count;
 		}
 
 		_asm clrwdt _endasm // reset the WDT timer
+
+		/* update detector data */
 		CTMU_ADC_UPDATED = FALSE;
-//		DLED0 = HIGH;
 		while (!CTMU_ADC_UPDATED); // wait for complete channel touch update cycle
-//		DLED0 = LOW;
 
-		INTCONbits.GIEH = 0; // critical section
-		if (ctmu_button++ > 3) {
-			DLED0 = HIGH;
-			ctmu_button = 0;
-			INTCONbits.GIEH = 1; // critical section
-			if (ctmu_touch(ctmu_button, 1) > 15) {
-				FLED0 = 0;
-			} else {
-				FLED0 = 1;
-			}
-			DLED0 = LOW;
+		if (ctmu_button == SCAN_MAX_CHAN) DLED0 = !DLED0;
+		/* clean up some detector noise */
+		if (finger[channel_count].avg_val > finger[channel_count].zero_ref) {
+			finger[channel_count].zero_ref = finger[channel_count].avg_val;
 		}
-		INTCONbits.GIEH = 1;
 
+		/* check for finger trips */
+		finger[0].moving_diff = ctmu_touch(0, 1);
+		finger[1].moving_diff = ctmu_touch(1, 1);
+
+		/* check finger trigger conditions */
+		if ((finger[0].moving_diff > TRIP) && (finger[1].moving_diff > TRIP)) {
+			FLED0 = 0;
+			sprintf(mesg, " %u:%d:%d:%d:%d %d:%d\r\n", channel_count, finger[channel_count].zero_ref, (int16_t) finger[channel_count].avg_val,
+				finger[channel_count].moving_avg, finger[channel_count].moving_val,
+				finger[0].moving_diff, finger[1].moving_diff);
+			puts1USART(mesg);
+		} else {
+			FLED0 = 1;
+		}
+
+		/* reset the finger zeros on a schedule */
+		if (++channel_count > SCAN_MAX_CHAN) {
+			channel_count = 0;
+			if (!recal_count++)
+				ctmu_zero_set();
+		}
+		ctmu_button = channel_count;
 	}
 
 }
