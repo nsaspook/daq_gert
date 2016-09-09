@@ -33,7 +33,7 @@ extern "C" {
 
 #define	TIMEROFFSET	26474           // timer0 16bit counter value for 1 second to overflow
 
-#define	TIMERCHARGE_BASE_X10		65523		// 5.5 uA time, large plate ~150us
+#define	TIMERCHARGE_BASE_X10		65400		// 5.5 uA time, large plate ~150us
 #define	TIMERCHARGE_BASE_1		64000		// .55 uA time, large plate max sens ~700us
 #define	TIMERCHARGE_BASE_2		61543		// .55 uA time, large plate low sens ~1000us
 #define	TIMERCHARGE_BASE_3		65000		// .55 uA time, small plate max sens ~200us
@@ -48,7 +48,7 @@ extern "C" {
 #define ADC_READS	8
 #define ZERO_NOISE	15
 #define SCAN_MAX_CHAN	1
-#define TRIP 70l //Difference between pressed
+#define TRIP 25l //Difference between pressed
 	//and un-pressed switch
 #define TRIP_DIFF	20l
 #define HYST 8l //amount to change

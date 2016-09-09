@@ -199,7 +199,7 @@ void InterruptHandlerHigh(void)
 		PIR1bits.SSPIF = LOW;
 		spi_stat.int_count++;
 		spi_stat.data_in = SSP1BUF;
-		PIE1bits.SSP1IE = LOW; // disable to we don't send again
+		PIE1bits.SSP1IE = LOW; // disable so we don't send again
 		SSP1BUF = ADRESL;
 	}
 
@@ -287,6 +287,10 @@ int16_t ctmu_setup(uint8_t current, uint8_t channel)
 	CTMUICON = 0x01; //.55uA, Nominal - No Adjustment default
 
 	switch (current) {
+	case 2:
+		CTMUICON = 0x02; //5.5uA, Nominal - No Adjustment
+		charge_time[channel] = TIMERCHARGE_BASE_X10; // faster
+		break;
 	case 11:
 		charge_time[channel] = TIMERCHARGE_BASE_1;
 		break;
@@ -302,10 +306,6 @@ int16_t ctmu_setup(uint8_t current, uint8_t channel)
 	default:
 		charge_time[channel] = TIMERCHARGE_BASE_3; // slower
 		break;
-	}
-	if (current == 0x02) {
-		CTMUICON = 0x02; //5.5uA, Nominal - No Adjustment
-		charge_time[channel] = TIMERCHARGE_BASE_X10; // faster
 	}
 
 	// timer3 register used for atomic data transfer
@@ -475,7 +475,7 @@ void main(void) /* SPI Master/Slave loopback */
 	//		CTMU setups
 	ctmu_button = 0; // select start touch input
 	for (i = 0; i < 4; i++) {
-		ctmu_setup(11, i); // config the CTMU for touch response 
+		ctmu_setup(2, i); // config the CTMU for touch response 
 		ctmu_zero_set();
 	}
 	ctmu_button = 0; // select start touch input
