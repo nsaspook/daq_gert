@@ -29,6 +29,8 @@ extern "C" {
 	typedef signed long long int64_t;
 #endif
 
+#define RS232_DEBUG	FALSE
+
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
 #define	TIMEROFFSET	26474           // timer0 16bit counter value for 1 second to overflow
@@ -43,7 +45,8 @@ extern "C" {
 
 #define	PDELAY	25200 // ~50hz for tick timer
 #define TICK_SEC	50ul
-#define TICK_10TH_SIC	TICK_SEC/10ul
+#define TICK_10TH_SEC	TICK_SEC/10ul
+#define BIT_TIMER_VALUE	5
 
 #define ADC_READS	8
 #define ZERO_NOISE	15
@@ -80,7 +83,7 @@ extern "C" {
 
 	/* bit set is LED off */
 #define ROLL_PATTERN0	0b10111001110110111000110011011011
-#define ROLL_PATTERN1	0b00000000000000000000000000000001
+#define ROLL_PATTERN1	0b00011110000111000111001100110011
 #define FLED0		LATBbits.LATB0
 #define FLED1		LATBbits.LATB1
 
@@ -91,11 +94,16 @@ extern "C" {
 	int16_t ctmu_setup(uint8_t, uint8_t);
 	void ctmu_zero_set(void);
 
+	/* general section */
+	void led_motion(uint8_t, uint8_t, uint8_t);
+
 	struct spi_stat_type {
 		volatile uint32_t adc_count, adc_error_count,
-		int_count, last_int_count,
-		time_tick;
+		int_count, last_int_count, bit_timer_start,
+		time_tick, bit_timer_value;
 		volatile uint8_t comm_ok, data_in;
+		uint8_t bit_timer_clear : 1;
+		uint8_t bit_timer_set : 1;
 	};
 
 	struct finger_move_type {

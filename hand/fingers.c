@@ -121,7 +121,7 @@ volatile uint8_t ctmu_button; // selects ADC/CTMU combo to monitor
 volatile uint16_t adc_buffer[5][9] = {0}, charge_time[16];
 volatile uint8_t CTMU_ADC_UPDATED = FALSE, TIME_CHARGE = FALSE, CTMU_WORKING = FALSE;
 struct finger_move_type finger[5] = {0};
-int8_t mesg[MESG_W];
+int8_t mesg[MESG_W], rs232_debug = RS232_DEBUG;
 
 /* function prototype */
 void InterruptHandlerHigh(void);
@@ -209,6 +209,18 @@ void InterruptHandlerHigh(void)
 		TMR1H = timer.bt[HIGH]; // Write high byte to Timer1
 		TMR1L = timer.bt[LOW]; // Write low byte to Timer1
 		spi_stat.time_tick++;
+
+		/* simple software timer */
+		if (spi_stat.bit_timer_set) {
+			spi_stat.bit_timer_start = spi_stat.time_tick;
+			spi_stat.bit_timer_clear = FALSE;
+			spi_stat.bit_timer_set = FALSE;
+		}
+
+		if ((spi_stat.time_tick >= (spi_stat.bit_timer_value + spi_stat.bit_timer_start))) {
+			spi_stat.bit_timer_clear = TRUE;
+			spi_stat.bit_timer_start = USLONG_MAX - spi_stat.bit_timer_value;
+		}
 	}
 }
 
@@ -351,24 +363,36 @@ uint32_t rotr32(uint32_t value, unsigned int count)
 	return(value >> count) | (value << ((-count) & mask));
 }
 
-void led_motion(uint8_t mode)
+void led_motion(uint8_t mode, uint8_t bit0, uint8_t bit1)
 {
-	FLED0 = mode;
+	FLED0 = bit0;
+	FLED1 = bit1;
+
+	if (mode)
+		return;
+
+	spi_stat.bit_timer_clear = FALSE;
+	spi_stat.bit_timer_set = TRUE;
+	while (!spi_stat.bit_timer_clear) ClrWdt();
+
 }
 
 int16_t finger_trigger(uint8_t channel_count)
 {
-	static uint32_t roller = ROLL_PATTERN0;
+	static uint32_t roller0 = ROLL_PATTERN0, roller1 = ROLL_PATTERN1;
 	/* check finger trigger conditions */
 	if (((finger[0].moving_diff > TRIP) && (finger[1].moving_diff > TRIP)) && (finger_diff(finger[0].moving_diff, finger[1].moving_diff) < TRIP_DIFF)) {
-		led_motion(roller & 0x1);
-		sprintf(mesg, " %u:%d:%d:%d:%d %d:%d diff %d: rotr %lu\r\n", channel_count, finger[channel_count].zero_ref, (int16_t) finger[channel_count].avg_val,
-			finger[channel_count].moving_avg, finger[channel_count].moving_val,
-			finger[0].moving_diff, finger[1].moving_diff, finger_diff(finger[0].moving_diff, finger[1].moving_diff), roller);
-		puts1USART(mesg);
-		roller = rotr32(roller, 1);
+		led_motion(0, roller0 & 0x1, roller1 & 0x1);
+		if (rs232_debug) {
+			sprintf(mesg, " %u:%d:%d:%d:%d %d:%d diff %d: rotr %lu\r\n", channel_count, finger[channel_count].zero_ref, (int16_t) finger[channel_count].avg_val,
+				finger[channel_count].moving_avg, finger[channel_count].moving_val,
+				finger[0].moving_diff, finger[1].moving_diff, finger_diff(finger[0].moving_diff, finger[1].moving_diff), roller0);
+			puts1USART(mesg);
+		}
+		roller0 = rotr32(roller0, 1);
+		roller1 = rotr32(roller1, 1);
 	} else {
-		led_motion(1);
+		led_motion(1, 1, 1);
 	}
 	return 0;
 }
@@ -420,6 +444,8 @@ void config_pic(void)
 	/* tick timer */
 	OpenTimer1(T1_SOURCE_FOSC_4 & T1_16BIT_RW & T1_PS_1_8 & T1_OSC1EN_OFF & T1_SYNC_EXT_OFF, 0);
 	WriteTimer1(PDELAY);
+	spi_stat.bit_timer_value = BIT_TIMER_VALUE; // led motion timer
+	spi_stat.bit_timer_start = USLONG_MAX-spi_stat.bit_timer_value;
 
 	/* clear SPI module possible flag and enable interrupts*/
 	PIR1bits.SSP1IF = LOW;
