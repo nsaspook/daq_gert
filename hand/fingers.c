@@ -363,10 +363,12 @@ uint32_t rotr32(uint32_t value, unsigned int count)
 	return(value >> count) | (value << ((-count) & mask));
 }
 
-void led_motion(uint8_t mode, uint8_t bit0, uint8_t bit1)
+void led_motion(uint8_t mode, uint8_t bit0, uint8_t bit1, uint8_t bit2, uint8_t bit3)
 {
 	FLED0 = bit0;
 	FLED1 = bit1;
+	FLED2 = bit2;
+	FLED3 = bit3;
 
 	if (mode)
 		return;
@@ -379,10 +381,10 @@ void led_motion(uint8_t mode, uint8_t bit0, uint8_t bit1)
 
 int16_t finger_trigger(uint8_t channel_count)
 {
-	static uint32_t roller0 = ROLL_PATTERN0, roller1 = ROLL_PATTERN1;
+	static uint32_t roller0 = ROLL_PATTERN0, roller1 = ROLL_PATTERN1, roller2 = ROLL_PATTERN2, roller3 = ROLL_PATTERN3;
 	/* check finger trigger conditions */
 	if (((finger[0].moving_diff > TRIP) && (finger[1].moving_diff > TRIP)) && (finger_diff(finger[0].moving_diff, finger[1].moving_diff) < TRIP_DIFF)) {
-		led_motion(0, roller0 & 0x1, roller1 & 0x1);
+		led_motion(0, roller0 & 0x1, roller1 & 0x1, roller2 & 0x1, roller3 & 0x1);
 		if (rs232_debug) {
 			sprintf(mesg, " %u:%d:%d:%d:%d %d:%d diff %d: rotr %lu\r\n", channel_count, finger[channel_count].zero_ref, (int16_t) finger[channel_count].avg_val,
 				finger[channel_count].moving_avg, finger[channel_count].moving_val,
@@ -391,8 +393,10 @@ int16_t finger_trigger(uint8_t channel_count)
 		}
 		roller0 = rotr32(roller0, 1);
 		roller1 = rotr32(roller1, 1);
+		roller2 = rotr32(roller2, 1);
+		roller3 = rotr32(roller3, 1);
 	} else {
-		led_motion(1, 1, 1);
+		led_motion(1, 1, 1, 1, 1);
 	}
 	return 0;
 }
@@ -445,7 +449,7 @@ void config_pic(void)
 	OpenTimer1(T1_SOURCE_FOSC_4 & T1_16BIT_RW & T1_PS_1_8 & T1_OSC1EN_OFF & T1_SYNC_EXT_OFF, 0);
 	WriteTimer1(PDELAY);
 	spi_stat.bit_timer_value = BIT_TIMER_VALUE; // led motion timer
-	spi_stat.bit_timer_start = USLONG_MAX-spi_stat.bit_timer_value;
+	spi_stat.bit_timer_start = USLONG_MAX - spi_stat.bit_timer_value;
 
 	/* clear SPI module possible flag and enable interrupts*/
 	PIR1bits.SSP1IF = LOW;

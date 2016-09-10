@@ -46,12 +46,12 @@ extern "C" {
 #define	PDELAY	25200 // ~50hz for tick timer
 #define TICK_SEC	50ul
 #define TICK_10TH_SEC	TICK_SEC/10ul
-#define BIT_TIMER_VALUE	5
+#define BIT_TIMER_VALUE	2
 
 #define ADC_READS	8
 #define ZERO_NOISE	15
 #define SCAN_MAX_CHAN	1
-#define TRIP 25l //Difference between pressed
+#define TRIP 20l //Difference between pressed
 	//and un-pressed switch
 #define TRIP_DIFF	20l
 #define HYST 8l //amount to change
@@ -84,8 +84,12 @@ extern "C" {
 	/* bit set is LED off */
 #define ROLL_PATTERN0	0b10111001110110111000110011011011
 #define ROLL_PATTERN1	0b00011110000111000111001100110011
+#define ROLL_PATTERN2	0b00110011001100000011001100110011
+#define ROLL_PATTERN3	0b11001100110000001100110011001100
 #define FLED0		LATBbits.LATB0
 #define FLED1		LATBbits.LATB1
+#define FLED2		LATBbits.LATB2
+#define FLED3		LATBbits.LATB3
 
 	//	CTMU section
 	uint16_t touch_base_calc(uint8_t);
@@ -95,7 +99,7 @@ extern "C" {
 	void ctmu_zero_set(void);
 
 	/* general section */
-	void led_motion(uint8_t, uint8_t, uint8_t);
+	void led_motion(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
 
 	struct spi_stat_type {
 		volatile uint32_t adc_count, adc_error_count,
