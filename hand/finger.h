@@ -80,6 +80,8 @@ extern "C" {
 
 #define DLED0		LATAbits.LATA7
 #define DLED1		LATCbits.LATC0
+#define DLED2		LATCbits.LATC1
+#define DLED3		LATCbits.LATC2
 
 	/* bit set is LED off */
 #define ROLL_PATTERN0	0b10111001110110111000110011011011

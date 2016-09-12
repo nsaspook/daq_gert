@@ -145,6 +145,7 @@ void InterruptHandlerHigh(void)
 	static union Timers timer;
 	static uint8_t i_adc = 0;
 
+	DLED2 = HIGH;
 	if (INTCONbits.TMR0IF) { // check timer0 irq 
 		if (!CTMUCONHbits.IDISSEN) { // charge cycle timer0 int, because not shorting the CTMU voltage.
 			DLED1 = HIGH;
@@ -171,6 +172,7 @@ void InterruptHandlerHigh(void)
 	}
 
 	if (PIR1bits.ADIF) { // check ADC irq
+		DLED3 = HIGH;
 		PIR1bits.ADIF = 0; // clear ADC int flag
 		spi_stat.adc_count++;
 		PIR1bits.SSPIF = LOW; // clear SPI flags
@@ -222,6 +224,8 @@ void InterruptHandlerHigh(void)
 			spi_stat.bit_timer_start = USLONG_MAX - spi_stat.bit_timer_value;
 		}
 	}
+	DLED2 = LOW;
+	DLED3 = LOW;
 }
 
 int16_t ctmu_touch(uint8_t channel, uint8_t diff_val)
@@ -480,6 +484,8 @@ void config_pic(void)
 	/* DIAG ports */
 	TRISAbits.TRISA7 = 0; // out
 	TRISCbits.TRISC0 = 0;
+	TRISCbits.TRISC1 = 0;
+	TRISCbits.TRISC2 = 0;
 	DLED0 = HIGH;
 	DLED1 = HIGH;
 
