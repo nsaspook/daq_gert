@@ -98,7 +98,7 @@ extern "C" {
 	void touch_channel(uint8_t);
 	int16_t ctmu_touch(uint8_t, uint8_t);
 	int16_t ctmu_setup(uint8_t, uint8_t);
-	void ctmu_zero_set(void);
+	int8_t ctmu_zero_set(void);
 
 	/* general section */
 	void led_motion(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
