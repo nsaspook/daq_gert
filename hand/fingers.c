@@ -1,32 +1,4 @@
 
-/* Parts of this code were modified from
- *  http://www.d.umn.edu/~cprince/PubRes/Hardware/SPI/
- * examples
- *
- * Fully interrupt driven SPI slave ADC for RPi via the daq_gert linux module
- * 8722
- * Port E is the main led diag port
- * PORT H is the LCD port
- * 25k22
- * Pins C0,C1 are the diag LED pins.
- * SPI 2 has been config'd as the slave with chip select.
- * DIP8 Pins for MCP3002 header
- * Pin 21   RB0	SPI Chip-Select	Pin 1
- * Pin 22   RB1	SPI Clock	Pin 7
- * Pin 23   RB2	SPI Data In	Pin 5
- * Pin 24   RB3	SPI Data Out	Pin 6
- * Pin 8    Vss			Pin 4
- * Pin 20   Vdd			Pin 8
- * Pin 2    RA0	ANA0		Pin 2
- * Pin 3    RA1	ANA1		Pin 3
- * The I/O and clock pins IDC connector pins
- * have been interconnected in the standard way for a PIC18F8722 chip EET Board
- *
- * Version
- *
- * nsaspook@sma2.rain..com    Sept 2016
- */
-
 #define P25K22
 
 // PIC18F25K22 Configuration Bit Settings
@@ -332,7 +304,7 @@ int16_t ctmu_setup(uint8_t current, uint8_t channel)
 	return 0;
 }
 
-void ctmu_zero_set(void)
+int8_t ctmu_zero_set(void)
 {
 	uint8_t i, max_count;
 
@@ -345,6 +317,7 @@ void ctmu_zero_set(void)
 					break;
 		} while (finger[i].zero_noise);
 	}
+	return finger[i].zero_noise;
 }
 
 int16_t finger_diff(int16_t finger1, int16_t finger2)
@@ -367,6 +340,7 @@ uint32_t rotr32(uint32_t value, unsigned int count)
 	return(value >> count) | (value << ((-count) & mask));
 }
 
+/* low select LED on logic */
 void led_motion(uint8_t mode, uint8_t bit0, uint8_t bit1, uint8_t bit2, uint8_t bit3)
 {
 	FLED0 = bit0;
