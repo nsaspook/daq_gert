@@ -330,8 +330,8 @@
 /* LCD defines */
 #define LCD_L           4                       // lines
 #define LCD_W           20			// chars per line
-#define LCD_STR         22                 // char string for LCD messages
-#define LCDW_SIZE       21              // add term char
+#define LCD_STR         22			// char string for LCD messages
+#define LCDW_SIZE       21			// add term char
 #define MESG_W          250			// message string buffer
 #define	LL1		0x00                    // LCD line addresses
 #define	LL2		0x40
@@ -565,8 +565,7 @@ void InterruptHandlerHigh(void)
 				channel = data_in2 & LO_NIBBLE;
 #ifdef P25K22
 				if (channel >= 5) channel += 6; // skip missing channels
-				if (channel == 12) channel = 0; // invalid so set to 0
-				if (channel > 19) channel = 0; // invalid to set to 0
+				if (channel == 12 || channel > 19) channel = 0; // invalid so set to 0
 #endif
 #ifdef P8722
 				if (channel > 11) channel = 0; // invalid so set to 0
@@ -864,7 +863,7 @@ void InterruptHandlerHigh(void)
 		ANSELB = 0b00110000; // analog bit enables
 		ANSELC = 0b11111100; // analog bit enables
 		VREFCON0 = 0b11100000; // ADC voltage ref 2.048 volts
-		OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_12_TAD, ADC_CH0 & ADC_INT_ON, ADC_REF_FVR_BUF & ADC_REF_VDD_VSS); // open ADC channel
+		OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_4_TAD, ADC_CH0 & ADC_INT_ON, ADC_REF_FVR_BUF & ADC_REF_VDD_VSS); // open ADC channel
 #endif
 
 		PIE1bits.ADIE = HIGH; // the ADC interrupt enable bit
