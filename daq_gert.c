@@ -365,7 +365,7 @@ static LIST_HEAD(device_list);
 static const uint8_t SPI_MODE = SPI_MODE_3; /* mode 3 for ADC & DAC*/
 static const uint32_t SPI_SPEED = 1000000; /* default clock speed */
 static const uint8_t SPI_MODE_PIC = SPI_MODE_3; /* mode 3 for ADC */
-static const uint32_t SPI_SPEED_PIC = 1000000; /* PIC clock speed */
+static const uint32_t SPI_SPEED_PIC = 4000000; /* PIC clock speed */
 static const uint8_t SPI_MODE_ADS1220 = SPI_MODE_1; /* mode 1 for TI ADC */
 static const uint32_t SPI_SPEED_ADS1220 = 30000; /* default clock speed */
 static const uint8_t SPI_BPW = 8; /* 8 bit SPI words */
@@ -387,6 +387,8 @@ static const uint32_t MCP4812 = 2;
 static const uint32_t MCP4822 = 0;
 static const uint32_t PICSL10 = 2;
 static const uint32_t PICSL12 = 0;
+static const uint32_t PIC18_CONVD_25K22 = 24;
+static const uint32_t PIC18_CMDD_25K22 = 4;
 static const uint32_t SPI_BUFF_SIZE = 3072;
 static const uint32_t SPI_BUFF_SIZE_NOHUNK = 64;
 static const uint32_t MAX_CHANLIST_LEN = 256;
@@ -1191,7 +1193,7 @@ static void ADS1220WriteRegister(int StartAddress, int NumRegs, unsigned * pData
 	pdata->one_t.delay_usecs = 0;
 	spi_message_init_with_transfers(&m, &pdata->one_t, 1);
 	spi->mode = SPI_MODE_ADS1220;
-	spi->max_speed_hz = thisboard->ai_max_speed_hz;
+	spi->max_speed_hz = thisboard->ai_max_speed_hz_ads1220;
 	spi_setup(spi);
 	spi_bus_lock(pdata->slave.spi->master);
 	spi_sync_locked(pdata->slave.spi, &m); /* exchange SPI data */
@@ -1452,9 +1454,6 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 	/* The PIC Slave needs 8 bit transfers only */
 	if (unlikely(spi_data->pic18)) { /*  PIC18 SPI slave device. NO MULTI_MODE ever */
 		if (likely(devpriv->ai_spi->device_type != ADS1220)) {
-			spi->mode = thisboard->spi_mode;
-			spi->max_speed_hz = thisboard->ai_max_speed_hz;
-			spi_setup(spi);
 			pdata->tx_buff[0] = CMD_ADC_GO + chan;
 			pdata->tx_buff[1] = CMD_ADC_DATA;
 			pdata->tx_buff[2] = CMD_ZERO;
@@ -1468,12 +1467,12 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			pdata->t[1].len = 1;
 			pdata->t[1].tx_buf = &pdata->tx_buff[1];
 			pdata->t[1].rx_buf = &pdata->rx_buff[1];
-			pdata->t[1].delay_usecs = 10;
+			pdata->t[1].delay_usecs = devpriv->ai_cmd_delay_usecs;
 			pdata->t[2].cs_change = false;
 			pdata->t[2].len = 1;
 			pdata->t[2].tx_buf = &pdata->tx_buff[2];
 			pdata->t[2].rx_buf = &pdata->rx_buff[2];
-			pdata->t[2].delay_usecs = 10;
+			pdata->t[2].delay_usecs = devpriv->ai_cmd_delay_usecs;
 			spi_message_init_with_transfers(&m, &pdata->t[0], 3);
 			spi_bus_lock(spi->master);
 			spi_sync_locked(spi, &m); /* exchange SPI data */
@@ -2918,7 +2917,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			spi_setup(pdata->slave.spi);
 			pdata->one_t.tx_buf = pdata->tx_buff;
 			pdata->one_t.rx_buf = pdata->rx_buff;
-			if (daqgert_conf == 4) { /* ads1220 mode */
+			if (daqgert_conf == 4) { /* ads1220 mode, so do the init here */
 				/* 
 				 * setup ads1220 registers
 				 */
@@ -3003,8 +3002,8 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 
 	/* Board  operation data */
 	dev->board_name = thisboard->name;
-	devpriv->ai_cmd_delay_usecs = 1; /* PIC slave delays */
-	devpriv->ai_conv_delay_usecs = 35; // the conversion and ADC isr routine must be complete before the next SPI master */
+	devpriv->ai_cmd_delay_usecs = PIC18_CMDD_25K22; /* PIC slave delays */
+	devpriv->ai_conv_delay_usecs = PIC18_CONVD_25K22; // the conversion and ADC isr routine must be complete before the next SPI master */
 	devpriv->ai_neverending = true;
 	devpriv->ai_mix = false;
 	devpriv->ai_conv_delay_10nsecs = CONV_SPEED;
@@ -3503,6 +3502,12 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 				"bits code %i, PIC code %i, detect Code %i\n",
 				spi_adc->chan, spi_adc->range, spi_adc->device_type,
 				spi_adc->bits, spi_adc->pic18, ret);
+			dev_info(dev->class_dev,
+				"board setup: spi cd %d: %d Hz: mode 0x%x: "
+				"assigned to adc devices\n",
+				spi_adc->spi->chip_select,
+				spi_adc->spi->max_speed_hz,
+				spi_adc->spi->mode);
 		} else {
 			spi_adc->pic18 = 0; /* SPI probes found nothing */
 			dev_info(dev->class_dev, "no PIC found, gpio pins only. "
@@ -3559,7 +3564,7 @@ module_exit(daqgert_exit);
 
 MODULE_AUTHOR("Fred Brooks <spam@sma2.rain.com>");
 MODULE_DESCRIPTION("RPi DIO/AI/AO Driver");
-MODULE_VERSION("4.7.2");
+MODULE_VERSION("4.7.3");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("spi:spigert");
 
