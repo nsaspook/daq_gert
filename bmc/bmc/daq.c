@@ -148,7 +148,6 @@ int set_dac_volts(int chan, double voltage) {
     lsampl_t data;
     int retval;
 
-    DAC_ERROR = FALSE;
     data = comedi_from_phys(voltage, da_range, maxdata_ao);
     retval = comedi_data_write(it, subdev_ao, chan, range_ao, aref_ao, data);
     if (retval < 0) {
@@ -161,7 +160,6 @@ int set_dac_volts(int chan, double voltage) {
 int set_dac_raw(int chan, lsampl_t voltage) {
     int retval;
 
-    DAC_ERROR = FALSE;
     retval = comedi_data_write(it, subdev_ao, chan, range_ao, aref_ao, voltage);
     if (retval < 0) {
         comedi_perror("comedi_data_write in set_dac_raw");
@@ -174,7 +172,6 @@ double get_adc_volts(int chan) {
     lsampl_t data;
     int retval;
 
-    ADC_ERROR = FALSE;
     retval = comedi_data_read_delayed(it, subdev_ai, chan, range_ai, aref_ai, &data, 1000);
     if (retval < 0) {
         comedi_perror("comedi_data_read in get_adc_volts");
@@ -203,7 +200,6 @@ int get_dio_bit(int chan) {
     lsampl_t data;
     int retval;
 
-    DIO_ERROR = FALSE;
     retval = comedi_data_read(it, subdev_dio, chan, range_dio, aref_dio, &data);
     if (retval < 0) {
         comedi_perror("comedi_data_read in get_dio_bits");
@@ -218,7 +214,6 @@ int put_dio_bit(int chan, int bit_data) {
     lsampl_t data = bit_data;
     int retval;
 
-    DIO_ERROR = FALSE;
     retval = comedi_data_write(it, subdev_dio, chan, range_dio, aref_dio, data);
     if (retval < 0) {
         comedi_perror("comedi_data_write in put_dio_bits");
