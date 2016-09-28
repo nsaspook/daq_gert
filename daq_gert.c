@@ -362,12 +362,12 @@ static LIST_HEAD(device_list);
 /* 
  * Default SPI link setup 
  */
-static const uint8_t SPI_MODE = SPI_MODE_3; /* mode 3 for ADC & DAC*/
+static const uint8_t SPI_MODE = SPI_MODE_3; /* default mode 3 for ADC & DAC*/
 static const uint32_t SPI_SPEED = 1000000; /* default clock speed */
 static const uint8_t SPI_MODE_PIC = SPI_MODE_3; /* mode 3 for ADC */
 static const uint32_t SPI_SPEED_PIC = 4000000; /* PIC clock speed */
 static const uint8_t SPI_MODE_ADS1220 = SPI_MODE_1; /* mode 1 for TI ADC */
-static const uint32_t SPI_SPEED_ADS1220 = 30000; /* default clock speed */
+static const uint32_t SPI_SPEED_ADS1220 = 30000; /* TI ADC clock speed */
 static const uint8_t SPI_BPW = 8; /* 8 bit SPI words */
 /*
  * ads1220 daq configuration
@@ -1483,7 +1483,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			pdata->tx_buff[3] = 0;
 			pdata->tx_buff[4] = 0;
 			spi_message_init_with_transfers(&m,
-				&pdata->one_t, 1);
+							&pdata->one_t, 1);
 			spi_bus_lock(spi->master);
 			spi_sync_locked(spi, &m); /* exchange SPI data */
 			spi_bus_unlock(spi->master);
@@ -2844,6 +2844,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	if (!devpriv)
 		return -ENOMEM;
 
+	/* set hardware defaults table */
 	dev->board_ptr = thisboard;
 
 	devpriv->cpu_nodes = num_online_cpus();
@@ -2858,7 +2859,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	}
 	if (daqgert_conf == 4)
 		use_hunking = false; /* single transfers, ADC is in continuous conversion mode */
-	devpriv->use_hunking = use_hunking;
+	devpriv->use_hunking = use_hunking; /* defaults to true */
 
 	/*
 	 * loop the spi device queue for needed devices
@@ -2897,7 +2898,8 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		}
 		/*
 		 * we have a valid device pointer, see which one and 
-		 * init hardware for special cases that need SPI many transfers
+		 * init hardware for special cases that may need 
+		 * many SPI transfers
 		 */
 		if (pdata->slave.spi->chip_select == thisboard->ai_cs) {
 			devpriv->ai_spi = &pdata->slave;
@@ -2939,10 +2941,11 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 				 */
 				if ((pdata->rx_buff[1] != ads1220_r0) ||
 				(pdata->rx_buff[2] != ads1220_r1)) {
-					dev_info(dev->class_dev,
+					dev_err(dev->class_dev,
 						"ADS1220 configuration error: %x %x %x %x\n",
 						pdata->rx_buff[1], pdata->rx_buff[2],
 						pdata->rx_buff[3], pdata->rx_buff[4]);
+					return -EINVAL;
 				}
 				usleep_range(50, 60);
 				pdata->one_t.len = 1;
@@ -2964,6 +2967,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 
 	/*
 	 * check for possible bad spigert table entry (dupe)
+	 * or missing special case device
 	 */
 	if (spi_device_missing)
 		return -ENODEV;
@@ -3241,6 +3245,7 @@ static struct comedi_driver daqgert_driver = {
 /* 
  * called for each listed spigert device in the overlay file 
  * SO THIS RUNS FIRST, setup basic spi comm parameters here
+ * so default to slow speed
  */
 static int32_t spigert_spi_probe(struct spi_device * spi)
 {
@@ -3266,6 +3271,12 @@ static int32_t spigert_spi_probe(struct spi_device * spi)
 	/*
 	 * Do only two chip selects for the Gertboard 
 	 */
+
+	dev_info(&spi->dev,
+		"default setup: cd %d: %d Hz: bpw %u, mode 0x%x\n",
+		spi->chip_select, spi->max_speed_hz, spi->bits_per_word,
+		spi->mode);
+
 	if (spi->chip_select == CSnA) {
 		/* 
 		 * get a copy of the slave device 0 to share with comedi 
@@ -3284,6 +3295,7 @@ static int32_t spigert_spi_probe(struct spi_device * spi)
 			spi->max_speed_hz = SPI_SPEED_ADS1220;
 		} else {
 			spi->mode = SPI_MODE;
+			spi->max_speed_hz = SPI_SPEED;
 		}
 	}
 	if (spi->chip_select == CSnB) {
@@ -3298,10 +3310,6 @@ static int32_t spigert_spi_probe(struct spi_device * spi)
 	}
 	spi->bits_per_word = SPI_BPW;
 	spi_setup(spi);
-	dev_info(&spi->dev,
-		"default setup: cd %d: %d Hz: bpw %u, mode 0x%x\n",
-		spi->chip_select, spi->max_speed_hz, spi->bits_per_word,
-		spi->mode);
 
 	/* 
 	 * Check for basic errors 
@@ -3363,7 +3371,9 @@ static struct spi_driver spigert_spi_driver = {
 };
 
 /*
- * setup and probe the spi bus for devices, save the data to the global spi variables
+ * setup and probe the spi bus for board devices for channels
+ * save the data to the global spi variables
+ * return number of channels found
  */
 static int32_t daqgert_spi_probe(struct comedi_device * dev,
 				 struct spi_param_type * spi_adc,
@@ -3413,8 +3423,8 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 		 * SPI data transfers, send a few dummies for config info 
 		 * probes
 		 */
-		spi_adc->spi->mode = SPI_MODE;
-		spi_adc->spi->max_speed_hz = SPI_SPEED;
+		spi_adc->spi->mode = thisboard->spi_mode;
+		spi_adc->spi->max_speed_hz = thisboard->ai_max_speed_hz;
 		spi_setup(spi_adc->spi);
 		spi_w8r8(spi_adc->spi, CMD_DUMMY_CFG);
 		spi_w8r8(spi_adc->spi, CMD_DUMMY_CFG);
@@ -3435,31 +3445,21 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 		}
 		dev_info(dev->class_dev,
 			"pre detect code %i\n", ret);
+
 		if ((ret != 76) && (ret != 110)) { /* PIC slave adc codes */
-			/*
-			 * check for channel 0 SE 
-			 */
-			ret = spi_w8r8(spi_adc->spi, 0x60);
-			if (1) { /* FIXME need to add another probe test */
-				spi_adc->pic18 = 0; /* MCP3X02 mode */
-				spi_adc->chan = thisboard->n_aichan;
-				spi_adc->range = 0; /* range 2.048 */
-				dev_info(dev->class_dev,
-					"onboard MCP3x02 adc chip detected, %i channels, "
-					"range code %i, device code %i, "
-					"PIC code %i, detect code %i\n",
-					spi_adc->chan,
-					spi_adc->range, spi_adc->device_type,
-					spi_adc->pic18, ret);
-				return spi_adc->chan;
-			}
-			spi_adc->pic18 = 0; /* SPI probes found nothing */
+			spi_adc->pic18 = 0; /* MCP3X02 mode */
+			spi_adc->chan = thisboard->n_aichan;
+			spi_adc->range = 0; /* range 2.048 */
 			dev_info(dev->class_dev,
-				"no adc found, gpio pins only. detect code %i\n",
-				ret);
-			spi_adc->chan = 0;
-			return spi_adc->chan;
+				"onboard MCP3x02 adc chip detected, %i channels, "
+				"range code %i, device code %i, "
+				"PIC code %i, detect code %i\n",
+				spi_adc->chan,
+				spi_adc->range, spi_adc->device_type,
+				spi_adc->pic18, ret);
 		}
+
+		ret = spi_w8r8(spi_adc->spi, 0x60);
 		if (ret) {
 			spi_adc->spi->mode = SPI_MODE_PIC;
 			spi_adc->spi->max_speed_hz = SPI_SPEED_PIC;
@@ -3484,7 +3484,7 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 			dev_info(dev->class_dev, "no PIC found, gpio pins only. "
 				"Detect code %i\n",
 				ret);
-			spi_adc->chan = 0;
+			spi_adc->chan = 2; /* dummy number */
 		}
 	} else {
 		spi_adc->spi->mode = SPI_MODE_ADS1220;
@@ -3504,6 +3504,7 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 			spi_adc->chan, spi_adc->range, spi_adc->device_type,
 			spi_adc->bits, spi_adc->pic18, ret);
 	}
+
 	dev_info(dev->class_dev,
 		"board setup: spi cd %d: %d Hz: mode 0x%x: "
 		"assigned to adc devices\n",
@@ -3516,6 +3517,7 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 		spi_dac->spi->chip_select,
 		spi_dac->spi->max_speed_hz,
 		spi_dac->spi->mode);
+
 	return spi_adc->chan;
 }
 
@@ -3546,7 +3548,7 @@ module_exit(daqgert_exit);
 
 MODULE_AUTHOR("Fred Brooks <spam@sma2.rain.com>");
 MODULE_DESCRIPTION("RPi DIO/AI/AO Driver");
-MODULE_VERSION("4.7.3");
+MODULE_VERSION("4.7.4");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("spi:spigert");
 
