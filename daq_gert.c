@@ -1175,7 +1175,7 @@ static int32_t wiringPiSetupGpio(struct comedi_device *dev)
 
 static void ADS1220WriteRegister(int StartAddress, int NumRegs, unsigned * pData, struct comedi_subdevice *s)
 {
-	const struct daqgert_board *thisboard = &daqgert_boards[gert_type];
+	//	const struct daqgert_board *thisboard = &daqgert_boards[gert_type];
 	int i;
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
@@ -1192,9 +1192,6 @@ static void ADS1220WriteRegister(int StartAddress, int NumRegs, unsigned * pData
 	pdata->one_t.cs_change = false;
 	pdata->one_t.delay_usecs = 0;
 	spi_message_init_with_transfers(&m, &pdata->one_t, 1);
-	spi->mode = SPI_MODE_ADS1220;
-	spi->max_speed_hz = thisboard->ai_max_speed_hz_ads1220;
-	spi_setup(spi);
 	spi_bus_lock(pdata->slave.spi->master);
 	spi_sync_locked(pdata->slave.spi, &m); /* exchange SPI data */
 	spi_bus_unlock(pdata->slave.spi->master);
@@ -1409,7 +1406,7 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 				  struct comedi_subdevice *s,
 				  uint32_t val)
 {
-	const struct daqgert_board *thisboard = &daqgert_boards[gert_type];
+	//	const struct daqgert_board *thisboard = &daqgert_boards[gert_type];
 	struct daqgert_private *devpriv = dev->private;
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
@@ -1422,9 +1419,6 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 	pdata->tx_buff[1] = val_tmp & 0xff;
 	pdata->tx_buff[0] = (0x30 | ((chan & 0x01) << 7)
 		| (val_tmp >> 8));
-//	spi->mode = thisboard->spi_mode;
-//	spi->max_speed_hz = thisboard->ao_max_speed_hz;
-//	spi_setup(spi);
 	spi_write(spi, pdata->tx_buff, 2);
 	s->readback[chan] = val;
 	devpriv->ao_count++;
@@ -1439,7 +1433,7 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 				     struct comedi_subdevice *s)
 {
-	const struct daqgert_board *thisboard = &daqgert_boards[gert_type];
+	//	const struct daqgert_board *thisboard = &daqgert_boards[gert_type];
 	struct daqgert_private *devpriv = dev->private;
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
@@ -1489,7 +1483,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			pdata->tx_buff[3] = 0;
 			pdata->tx_buff[4] = 0;
 			spi_message_init_with_transfers(&m,
-							&pdata->one_t, 1);
+				&pdata->one_t, 1);
 			spi_bus_lock(spi->master);
 			spi_sync_locked(spi, &m); /* exchange SPI data */
 			spi_bus_unlock(spi->master);
@@ -2902,13 +2896,11 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			}
 		}
 		/*
-		 * we have a valid device pointer, see which one
+		 * we have a valid device pointer, see which one and 
+		 * init hardware for special cases that need SPI many transfers
 		 */
 		if (pdata->slave.spi->chip_select == thisboard->ai_cs) {
 			devpriv->ai_spi = &pdata->slave;
-			pdata->slave.spi->max_speed_hz = thisboard->ai_max_speed_hz;
-			pdata->slave.spi->mode = thisboard->spi_mode;
-			spi_setup(pdata->slave.spi);
 			pdata->one_t.tx_buf = pdata->tx_buff;
 			pdata->one_t.rx_buf = pdata->rx_buff;
 			if (daqgert_conf == 4) { /* ads1220 mode, so do the init here */
@@ -2925,7 +2917,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 								&pdata->one_t, 1);
 				pdata->slave.spi->max_speed_hz = thisboard->ai_max_speed_hz_ads1220;
 				pdata->slave.spi->mode = thisboard->spi_mode_ads1220;
-				spi_setup(pdata->slave.spi);
+				spi_setup(pdata->slave.spi); /* setup SPI hardware */
 				spi_bus_lock(pdata->slave.spi->master);
 				spi_sync_locked(pdata->slave.spi, &m); /* exchange SPI data */
 				spi_bus_unlock(pdata->slave.spi->master);
@@ -2962,23 +2954,8 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 				spi_bus_unlock(pdata->slave.spi->master);
 			}
 			clear_bit(CSnA, &spi_device_missing);
-			dev_info(dev->class_dev,
-				"board setup: spi cd %d: %d Hz: mode 0x%x: "
-				"assigned to adc devices\n",
-				pdata->slave.spi->chip_select,
-				pdata->slave.spi->max_speed_hz,
-				pdata->slave.spi->mode);
 		} else {
 			devpriv->ao_spi = &pdata->slave;
-			pdata->slave.spi->max_speed_hz = thisboard->ao_max_speed_hz;
-			pdata->slave.spi->mode = thisboard->spi_mode;
-			spi_setup(pdata->slave.spi);
-			dev_info(dev->class_dev,
-				"board setup: spi cd %d: %d Hz: mode 0x%x: "
-				"assigned to dac devices\n",
-				pdata->slave.spi->chip_select,
-				pdata->slave.spi->max_speed_hz,
-				pdata->slave.spi->mode);
 			pdata->one_t.tx_buf = pdata->tx_buff;
 			pdata->one_t.rx_buf = pdata->rx_buff;
 			clear_bit(CSnB, &spi_device_missing);
@@ -3262,7 +3239,7 @@ static struct comedi_driver daqgert_driver = {
 };
 
 /* 
- * called for each listed spigert device in the bcm270*.c file 
+ * called for each listed spigert device in the overlay file 
  * SO THIS RUNS FIRST, setup basic spi comm parameters here
  */
 static int32_t spigert_spi_probe(struct spi_device * spi)
@@ -3426,13 +3403,15 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 		spi_dac->device_type = MCP4802;
 	}
 
-	spi_dac->spi->mode = thisboard->spi_mode;
+	/* set default AO spi */
 	spi_dac->spi->max_speed_hz = thisboard->ao_max_speed_hz;
+	spi_dac->spi->mode = thisboard->spi_mode;
 	spi_setup(spi_dac->spi);
 
 	if (spi_adc->device_type != ADS1220) {
 		/* 
 		 * SPI data transfers, send a few dummies for config info 
+		 * probes
 		 */
 		spi_adc->spi->mode = SPI_MODE;
 		spi_adc->spi->max_speed_hz = SPI_SPEED;
@@ -3500,12 +3479,6 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 				"bits code %i, PIC code %i, detect Code %i\n",
 				spi_adc->chan, spi_adc->range, spi_adc->device_type,
 				spi_adc->bits, spi_adc->pic18, ret);
-			dev_info(dev->class_dev,
-				"board setup: spi cd %d: %d Hz: mode 0x%x: "
-				"assigned to adc devices\n",
-				spi_adc->spi->chip_select,
-				spi_adc->spi->max_speed_hz,
-				spi_adc->spi->mode);
 		} else {
 			spi_adc->pic18 = 0; /* SPI probes found nothing */
 			dev_info(dev->class_dev, "no PIC found, gpio pins only. "
@@ -3513,7 +3486,6 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 				ret);
 			spi_adc->chan = 0;
 		}
-		return spi_adc->chan;
 	} else {
 		spi_adc->spi->mode = SPI_MODE_ADS1220;
 		spi_adc->spi->max_speed_hz = SPI_SPEED_ADS1220;
@@ -3531,8 +3503,20 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 			"bits code %i, PIC code %i, detect Code %i\n",
 			spi_adc->chan, spi_adc->range, spi_adc->device_type,
 			spi_adc->bits, spi_adc->pic18, ret);
-		return spi_adc->chan;
 	}
+	dev_info(dev->class_dev,
+		"board setup: spi cd %d: %d Hz: mode 0x%x: "
+		"assigned to adc devices\n",
+		spi_adc->spi->chip_select,
+		spi_adc->spi->max_speed_hz,
+		spi_adc->spi->mode);
+	dev_info(dev->class_dev,
+		"board setup: spi cd %d: %d Hz: mode 0x%x: "
+		"assigned to dac devices\n",
+		spi_dac->spi->chip_select,
+		spi_dac->spi->max_speed_hz,
+		spi_dac->spi->mode);
+	return spi_adc->chan;
 }
 
 static int32_t __init daqgert_init(void)
