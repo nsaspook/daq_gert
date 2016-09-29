@@ -23,6 +23,7 @@
  * have been interconnected in the standard way for a PIC18F8722 chip EET Board
  *
  * Version
+ *              1.0 stable version for daq_gert P25K22 4_TAD
  *		0.91 update exchange protocol
  *		0.9 add 45K80 commands and ports
  *		0.8 Add zero command for cleaner transfers and allow for no LCD code	
@@ -37,7 +38,7 @@
  *		The WatchDog and timer0 are used to check link status
  *		and to reset the chip if hung or confused.
  *
- * nsaspook@sma2.rain..com    Mar 2015
+ * nsaspook@sma2.rain..com    Sept 2016
  */
 
 //#define P45K80
@@ -444,7 +445,7 @@ volatile struct spi_link_type spi_comm = {FALSE, FALSE, FALSE, FALSE, FALSE, FAL
 volatile struct spi_stat_type spi_stat = {0}, report_stat = {0};
 
 const rom int8_t *build_date = __DATE__, *build_time = __TIME__;
-const rom char Version[] = " Version 0.9 PIC Slave ";
+const rom char Version[] = " Version 1.0 PIC Slave ";
 volatile uint8_t data_in2, adc_buffer_ptr = 0,
 	adc_channel = 0;
 
