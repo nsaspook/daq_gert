@@ -372,15 +372,16 @@ static const uint8_t ads1220_r2 = ADS1220_REJECT_OFF;
 static const uint8_t ads1220_r3 = ADS1220_IDAC_OFF | ADS1220_DRDY_MODE;
 
 /* analog chip types  */
-static const uint32_t mcp3002 = 0;
-static const uint32_t mcp3202 = 1;
-static const uint32_t mcp4802 = 2;
-static const uint32_t mcp4812 = 3;
-static const uint32_t mcp4822 = 4;
-static const uint32_t picsl10 = 5;
-static const uint32_t picsl12 = 6;
-static const uint32_t ads1220 = 7;
-static const uint32_t ads8330 = 8;
+static const uint32_t defdev0 = 0;
+static const uint32_t mcp3002 = 1;
+static const uint32_t mcp3202 = 2;
+static const uint32_t mcp4802 = 3;
+static const uint32_t mcp4812 = 4;
+static const uint32_t mcp4822 = 5;
+static const uint32_t picsl10 = 6;
+static const uint32_t picsl12 = 7;
+static const uint32_t ads1220 = 8;
+static const uint32_t ads8330 = 9;
 
 static const uint32_t PIC18_CONVD_25K22 = 24;
 static const uint32_t PIC18_CMDD_25K22 = 4;
@@ -498,6 +499,12 @@ struct daqgert_device {
 
 static const struct daqgert_device daqgert_devices[] = {
 	{
+		.name = "defdev0",
+		.max_speed_hz = 500000,
+		.spi_mode = 3,
+		.spi_bpw = 8,
+	},
+	{
 		.name = "mcp3002",
 		.max_speed_hz = 1000000,
 		.spi_mode = 3,
@@ -579,12 +586,8 @@ struct daqgert_board {
 	uint32_t ao_rate_min;
 	uint8_t ai_cs;
 	uint8_t ao_cs;
-	uint32_t ai_max_speed_hz;
-	uint32_t ao_max_speed_hz;
 	int32_t ai_node;
 	int32_t ao_node;
-	uint8_t spi_mode;
-	uint8_t spi_bpw;
 };
 
 static const struct daqgert_board daqgert_boards[] = {
@@ -603,12 +606,8 @@ static const struct daqgert_board daqgert_boards[] = {
 		.ao_rate_min = 200000,
 		.ai_cs = 0,
 		.ao_cs = 1,
-		.ai_max_speed_hz = 500000,
-		.ao_max_speed_hz = 8000000,
 		.ai_node = 3,
 		.ao_node = 2,
-		.spi_mode = 3,
-		.spi_bpw = 8,
 	},
 	{
 		.name = "Myboard",
@@ -623,8 +622,6 @@ static const struct daqgert_board daqgert_boards[] = {
 		.ao_rate_min = 10000,
 		.ai_cs = 0,
 		.ao_cs = 1,
-		.ai_max_speed_hz = 1000000,
-		.ao_max_speed_hz = 8000000,
 		.ai_node = 3,
 		.ao_node = 2,
 	},
@@ -3130,13 +3127,13 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	}
 
 	dev_info(dev->class_dev,
-		"%s spi slave device detection started, daqgert_conf option value %i\n",
+		"%s device detection started, daqgert_conf option value %i\n",
 		thisboard->name, daqgert_conf);
 	devpriv->num_subdev = 1;
 	if (daqgert_spi_probe(dev, devpriv->ai_spi, devpriv->ao_spi)) {
 		devpriv->num_subdev += 2;
 	} else {
-		dev_err(dev->class_dev, "spi slave device detection failed!\n");
+		dev_err(dev->class_dev, "board device detection failed!\n");
 		return -EINVAL;
 	}
 
@@ -3346,7 +3343,6 @@ static int32_t spigert_spi_probe(struct spi_device * spi)
 {
 	struct comedi_spigert *pdata;
 	int32_t ret;
-	const struct daqgert_board *thisboard = &daqgert_boards[gert_type];
 
 	pdata = kzalloc(sizeof(struct comedi_spigert), GFP_KERNEL);
 	if (!pdata)
@@ -3375,7 +3371,7 @@ static int32_t spigert_spi_probe(struct spi_device * spi)
 
 	if (spi->chip_select == CSnA) {
 		/* 
-		 * get a copy of the slave device 0 to share with comedi 
+		 * get a copy of the slave device 0 to share with Comedi 
 		 * we need a device to talk to the ADC 
 		 * 
 		 * create entry into the Comedi device list 
@@ -3386,8 +3382,8 @@ static int32_t spigert_spi_probe(struct spi_device * spi)
 		 * put entry into the Comedi device list 
 		 */
 		list_add_tail(&pdata->device_entry, &device_list);
-		spi->mode = thisboard->spi_mode;
-		spi->max_speed_hz = thisboard->ai_max_speed_hz;
+		spi->mode = daqgert_devices[defdev0].spi_mode;
+		spi->max_speed_hz = daqgert_devices[defdev0].max_speed_hz;
 	}
 	if (spi->chip_select == CSnB) {
 		/* 
@@ -3396,10 +3392,10 @@ static int32_t spigert_spi_probe(struct spi_device * spi)
 		INIT_LIST_HEAD(&pdata->device_entry);
 		pdata->slave.spi = spi;
 		list_add_tail(&pdata->device_entry, &device_list);
-		spi->mode = thisboard->spi_mode;
-		spi->max_speed_hz = thisboard->ao_max_speed_hz;
+		spi->mode = daqgert_devices[defdev0].spi_mode;
+		spi->max_speed_hz = daqgert_devices[defdev0].max_speed_hz;
 	}
-	spi->bits_per_word = thisboard->spi_bpw;
+	spi->bits_per_word = daqgert_devices[defdev0].spi_bpw;
 	spi_setup(spi);
 
 	/* 
@@ -3554,20 +3550,20 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 		default:
 			ret = spi_w8r8(spi_adc->spi, CMD_DUMMY_CFG);
 		}
-		dev_info(dev->class_dev,
-			"pre detect code %i\n", ret);
 
 		if ((ret != 76) && (ret != 110)) { /* PIC slave adc codes */
 			spi_adc->pic18 = 0; /* MCP3X02 mode */
 			spi_adc->chan = thisboard->n_aichan;
 			spi_adc->range = 0; /* range 2.048 */
 			dev_info(dev->class_dev,
-				"onboard MCP3x02 adc chip detected, %i channels, "
+				"onboard %s detected with %s, %i channels, "
 				"range code %i, device code %i, "
-				"PIC code %i, detect code %i\n",
+				"detect code %i\n",
+				spi_adc->device_spi->name,
+				spi_dac->device_spi->name,
 				spi_adc->chan,
 				spi_adc->range, spi_adc->device_type,
-				spi_adc->pic18, ret);
+				ret);
 		}
 
 		if (ret == 76 || ret == 110) {
@@ -3582,9 +3578,11 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 				spi_adc->device_type = picsl12;
 			}
 			dev_info(dev->class_dev,
-				"PIC spi slave adc chip board detected, "
+				"PIC %s slave adc detected with %s, "
 				"%i channels, range code %i, device code %i, "
 				"bits code %i, PIC code %i, detect Code %i\n",
+				spi_adc->device_spi->name,
+				spi_dac->device_spi->name,
 				spi_adc->chan, spi_adc->range, spi_adc->device_type,
 				spi_adc->bits, spi_adc->pic18, ret);
 		}
@@ -3610,9 +3608,11 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 			spi_adc->bits = spi_adc->device_spi->n_chan_bits;
 		}
 		dev_info(dev->class_dev,
-			"ADSxxxx spi adc chip board detected, "
+			"%s adc detected with %s, "
 			"%i channels, range code %i, device code %i, "
 			"bits code %i, PIC code %i, detect Code %i\n",
+			spi_adc->device_spi->name,
+			spi_dac->device_spi->name,
 			spi_adc->chan, spi_adc->range, spi_adc->device_type,
 			spi_adc->bits, spi_adc->pic18, ret);
 	}
