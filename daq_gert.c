@@ -482,6 +482,9 @@ MODULE_PARM_DESC(gert_type, "i/o board type: default 0=gertboard");
 static int32_t speed_test = 0;
 module_param(speed_test, int, S_IRUGO);
 MODULE_PARM_DESC(speed_test, "sample timing test: 1=enable");
+static int32_t lsamp_size = SDF_LSAMPL;
+module_param(lsamp_size, int, S_IRUGO);
+MODULE_PARM_DESC(lsamp_size, "16 or 32 bit lsampl size: 0=16 bit");
 static int32_t wiringpi = 1;
 module_param(wiringpi, int, S_IRUGO);
 static int32_t use_hunking = 1;
@@ -3168,7 +3171,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	}
 
 	/* 
-	 * all Comedi buffers should be 32 bits
+	 * all Comedi buffers should be defaulted to 32 bits
 	 * add AI and AO channels 
 	 */
 	ret = comedi_alloc_subdevices(dev, devpriv->num_subdev);
@@ -3177,10 +3180,15 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		return ret;
 	}
 
+	if (lsamp_size != SDF_LSAMPL) {
+		lsamp_size = 0;
+		dev_info(dev->class_dev, "16 bit and less device buffers set to 16 bits\n");
+	}
+
 	/* daq_gert dio */
 	s = &dev->subdevices[0];
 	s->type = COMEDI_SUBD_DIO;
-	s->subdev_flags = SDF_READABLE | SDF_WRITABLE | SDF_LSAMPL;
+	s->subdev_flags = SDF_READABLE | SDF_WRITABLE | lsamp_size;
 	s->n_chan = num_dio_chan;
 	s->len_chanlist = num_dio_chan;
 	s->range_table = &range_digital;
@@ -3210,14 +3218,14 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		s->insn_read = daqgert_ai_rinsn;
 		if (devpriv->smp) {
 			s->subdev_flags = SDF_READABLE | SDF_GROUND
-				| SDF_CMD_READ | SDF_COMMON | SDF_LSAMPL;
+				| SDF_CMD_READ | SDF_COMMON | lsamp_size;
 			s->do_cmdtest = daqgert_ai_cmdtest;
 			s->do_cmd = daqgert_ai_cmd;
 			s->poll = daqgert_ai_poll;
 			s->cancel = daqgert_ai_cancel;
 		} else {
 			s->subdev_flags = SDF_READABLE | SDF_GROUND
-				| SDF_COMMON | SDF_LSAMPL;
+				| SDF_COMMON | lsamp_size;
 		}
 		if (devpriv->ai_spi->device_type == ads1220) {
 			/* we support single-ended (ground) & diff bipolar  24-bit samples */
@@ -3247,14 +3255,14 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			s->insn_config = daqgert_ai_insn_config;
 			if (devpriv->smp) {
 				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_CMD_READ | SDF_COMMON | SDF_LSAMPL;
+					| SDF_CMD_READ | SDF_COMMON | lsamp_size;
 				s->do_cmdtest = daqgert_ai_cmdtest;
 				s->do_cmd = daqgert_ai_cmd;
 				s->poll = daqgert_ai_poll;
 				s->cancel = daqgert_ai_cancel;
 			} else {
 				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_COMMON | SDF_LSAMPL;
+					| SDF_COMMON | lsamp_size;
 			}
 		}
 		dev->read_subdev = s;
@@ -3274,12 +3282,12 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		s->insn_read = comedi_readback_insn_read;
 		if (devpriv->smp) {
 			s->subdev_flags = SDF_WRITABLE | SDF_GROUND
-				| SDF_CMD_WRITE | SDF_LSAMPL;
+				| SDF_CMD_WRITE | lsamp_size;
 			s->do_cmdtest = daqgert_ao_cmdtest;
 			s->do_cmd = daqgert_ao_cmd;
 			s->cancel = daqgert_ao_cancel;
 		} else {
-			s->subdev_flags = SDF_WRITABLE | SDF_GROUND | SDF_LSAMPL;
+			s->subdev_flags = SDF_WRITABLE | SDF_GROUND | lsamp_size;
 		}
 		ret = comedi_alloc_subdev_readback(s);
 		if (ret) {
