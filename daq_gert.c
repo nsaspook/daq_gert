@@ -711,15 +711,15 @@ struct daqgert_private {
 	int32_t ai_chan, ao_chan, ai_range;
 	struct mutex drvdata_lock, cmd_lock;
 	uint32_t val;
-	uint16_t use_hunking : 1;
 	uint32_t ai_hunk;
-	uint16_t ai_mix : 1;
-	uint16_t ai_neverending : 1;
-	uint16_t ao_neverending : 1;
-	uint16_t timer : 1;
 	uint32_t run;
-	uint16_t ai_cmd_canceled : 1;
-	uint16_t ao_cmd_canceled : 1;
+	uint32_t use_hunking : 1;
+	uint32_t ai_mix : 1;
+	uint32_t ai_neverending : 1;
+	uint32_t ao_neverending : 1;
+	uint32_t timer : 1;
+	uint32_t ai_cmd_canceled : 1;
+	uint32_t ao_cmd_canceled : 1;
 	int32_t mix_chan;
 	uint32_t ai_scans; /*  length of scanlist */
 	int32_t ai_scans_left; /*  number left to finish */
@@ -1327,17 +1327,14 @@ static int32_t daqgert_ai_thread_function(void *data)
 		}
 		if (likely(test_bit(AI_CMD_RUNNING, &devpriv->state_bits))) {
 			if (likely(devpriv->ai_hunk)) {
-				smp_mb__before_atomic();
-				set_bit(SPI_AI_RUN, &devpriv->state_bits);
-				smp_mb__after_atomic();
 				daqgert_handle_ai_hunk(dev, s);
 				devpriv->hunk_count++;
 				hunk_count = devpriv->hunk_count;
 			} else {
 				daqgert_handle_ai_eoc(dev, s);
 				devpriv->ai_count++;
-				__set_current_state(TASK_UNINTERRUPTIBLE);
 				pdata->kmin = ktime_set(0, pdata->delay_nsecs);
+				__set_current_state(TASK_UNINTERRUPTIBLE);
 				schedule_hrtimeout_range(&pdata->kmin, 0,
 							HRTIMER_MODE_REL_PINNED);
 			}
@@ -1345,9 +1342,12 @@ static int32_t daqgert_ai_thread_function(void *data)
 			clear_bit(SPI_AI_RUN, &devpriv->state_bits);
 			smp_mb__after_atomic();
 			wait_event_interruptible(daqgert_ai_thread_wq, test_bit(AI_CMD_RUNNING, &devpriv->state_bits));
+			smp_mb__before_atomic();
+			set_bit(SPI_AI_RUN, &devpriv->state_bits);
+			smp_mb__after_atomic();
 		}
 	}
-	/*do_exit(1);*/
+
 	return 0;
 }
 
@@ -1370,21 +1370,21 @@ static int32_t daqgert_ao_thread_function(void *data)
 
 	while (!kthread_should_stop()) {
 		if (likely(test_bit(AO_CMD_RUNNING, &devpriv->state_bits))) {
-			smp_mb__before_atomic();
-			set_bit(SPI_AO_RUN, &devpriv->state_bits);
-			smp_mb__after_atomic();
 			daqgert_handle_ao_eoc(dev, s);
-			__set_current_state(TASK_UNINTERRUPTIBLE);
 			pdata->kmin = ktime_set(0, pdata->delay_nsecs);
+			__set_current_state(TASK_UNINTERRUPTIBLE);
 			schedule_hrtimeout_range(&pdata->kmin, 0,
 						HRTIMER_MODE_REL_PINNED);
 		} else {
 			clear_bit(SPI_AO_RUN, &devpriv->state_bits);
 			smp_mb__after_atomic();
 			wait_event_interruptible(daqgert_ao_thread_wq, test_bit(AO_CMD_RUNNING, &devpriv->state_bits));
+			smp_mb__before_atomic();
+			set_bit(SPI_AO_RUN, &devpriv->state_bits);
+			smp_mb__after_atomic();
 		}
 	}
-	/*do_exit(1);*/
+
 	return 0;
 }
 
@@ -1437,6 +1437,7 @@ static void daqgert_ai_set_chan_range_ads1220(struct comedi_device *dev,
 	}
 
 	if ((devpriv->ai_chan != chan) || (devpriv->ai_range != range)) {
+
 		cMux |= ((range & 0x03) << 1); /* setup the gain bits for range with NO pga */
 		cMux |= ads1220_r0_for_mux_gain;
 		ADS1220WriteRegister(ADS1220_0_REGISTER, 0x01, &cMux, s);
@@ -1480,24 +1481,24 @@ static void daqgert_ao_set_chan_range(struct comedi_device *dev,
 }
 
 /*
- * transfers one value to the DAC device
+ * transfers one 32 bit value to the DAC device
  */
 static void daqgert_ao_put_sample(struct comedi_device *dev,
 				  struct comedi_subdevice *s,
 				  uint32_t val)
 {
+
 	struct daqgert_private *devpriv = dev->private;
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
 	struct comedi_spigert *pdata = spi->dev.platform_data;
-	uint32_t val_tmp, chan;
+	uint32_t chan;
 
 	mutex_lock(&devpriv->drvdata_lock);
 	chan = CR_CHAN(devpriv->ao_chan);
-	val_tmp = val & 0xfff; /* strip to 12 bits */
-	pdata->tx_buff[1] = val_tmp & 0xff;
+	pdata->tx_buff[1] = val & 0xff;
 	pdata->tx_buff[0] = (0x30 | ((chan & 0x01) << 7)
-		| (val_tmp >> 8));
+		| (val >> 8));
 	spi_write(spi, pdata->tx_buff, 2);
 	s->readback[chan] = val;
 	devpriv->ao_count++;
@@ -1507,7 +1508,7 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 }
 
 /*
- * returns one value from the ADC device
+ * returns one 32 bit value from the ADC device
  */
 static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 				     struct comedi_subdevice *s)
@@ -1517,7 +1518,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 	struct spi_device *spi = spi_data->spi;
 	struct comedi_spigert *pdata = spi->dev.platform_data;
 	struct spi_message m;
-	int32_t chan, sync;
+	uint32_t chan, sync;
 	int32_t val;
 
 	mutex_lock(&devpriv->drvdata_lock);
@@ -1600,6 +1601,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 				val = ((pdata->rx_buff[0] << 7)
 					| (pdata->rx_buff[1] >> 1)) & 0x3FF;
 			} else {
+
 				val = (pdata->rx_buff[2]&0x80) >> 7;
 				val += pdata->rx_buff[1] << 1;
 				val += (pdata->rx_buff[0]&0x0f) << 9;
@@ -1636,6 +1638,7 @@ static void daqgert_handle_ai_eoc(struct comedi_device *dev,
 	if (cmd->stop_src == TRIG_COUNT &&
 	s->async->scans_done >= cmd->stop_arg) {
 		if (!devpriv->ai_neverending) {
+
 			daqgert_ai_cancel(dev, s);
 			s->async->events |= COMEDI_CB_EOA;
 		}
@@ -1651,6 +1654,7 @@ static void daqgert_ao_next_chan(struct comedi_device *dev,
 	if (cmd->stop_src == TRIG_COUNT &&
 	s->async->scans_done >= cmd->stop_arg) {
 		if (!devpriv->ao_neverending) {
+
 			/* all data sampled */
 			daqgert_ao_cancel(dev, s);
 			s->async->events |= COMEDI_CB_EOA;
@@ -1665,8 +1669,7 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 				  struct comedi_subdevice *s)
 {
 	struct comedi_cmd *cmd = &s->async->cmd;
-	uint32_t next_chan, val;
-	uint16_t sampl_val;
+	uint32_t next_chan, sampl_val;
 	uint32_t chan = s->async->cur_chan;
 
 	/* zero bytes from the write data buffer read */
@@ -1677,9 +1680,9 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 	}
 
 	/* possible munge of data */
-	val = sampl_val;
-	daqgert_ao_put_sample(dev, s, val);
+	daqgert_ao_put_sample(dev, s, sampl_val);
 	next_chan = s->async->cur_chan;
+
 	if (cmd->chanlist[chan] != cmd->chanlist[next_chan])
 		daqgert_ao_set_chan_range(dev, cmd->chanlist[next_chan], 1);
 	daqgert_ao_next_chan(dev, s);
@@ -1706,6 +1709,7 @@ static void transfer_from_hunk_buf_3002(struct comedi_device *dev,
 
 		if (unlikely(cmd->stop_src == TRIG_COUNT &&
 			s->async->scans_done >= cmd->stop_arg)) {
+
 			daqgert_ai_cancel(dev, s);
 			s->async->events |= COMEDI_CB_EOA;
 			comedi_handle_events(dev, s);
@@ -1736,6 +1740,7 @@ static void transfer_from_hunk_buf_3202(struct comedi_device *dev,
 
 		if (unlikely(cmd->stop_src == TRIG_COUNT &&
 			s->async->scans_done >= cmd->stop_arg)) {
+
 			daqgert_ai_cancel(dev, s);
 			s->async->events |= COMEDI_CB_EOA;
 			comedi_handle_events(dev, s);
@@ -1788,6 +1793,7 @@ static int32_t transfer_to_hunk_buf(struct comedi_device *dev,
 				delay_usecs = 0;
 			}
 		} else {
+
 			chan = devpriv->mix_chan; /* for single channel hunks */
 		}
 
@@ -1854,13 +1860,14 @@ static void daqgert_handle_ai_hunk(struct comedi_device *dev,
 	 */
 	if (spi_data->device_type == mcp3202)
 		transfer_from_hunk_buf_3202(dev, s, bufptr, bufpos, len);
+
 	else
 		transfer_from_hunk_buf_3002(dev, s, bufptr, bufpos, len);
 	/* 
 	 * debug comment
 	if (cmd->stop_src == TRIG_COUNT)
-		dev_info(dev->class_dev, "From hunk %i %i\n",
-			s->async->scans_done, cmd->stop_arg);
+	dev_info(dev->class_dev, "From hunk %i %i\n",
+s->async->scans_done, cmd->stop_arg);
 	 */
 }
 
@@ -1883,6 +1890,7 @@ static int32_t daqgert_ai_setup_hunk(struct comedi_device *dev,
 	if (cmd->stop_src == TRIG_COUNT) { /* optimize small samples */
 		if (devpriv->ai_scans > hunk_len)
 			len = hunk_len;
+
 		else
 			len = devpriv->ai_scans;
 	}
@@ -1902,6 +1910,7 @@ static int32_t daqgert_ai_setup_hunk(struct comedi_device *dev,
 static void daqgert_ai_setup_eoc(struct comedi_device *dev,
 				 struct comedi_subdevice * s)
 {
+
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
 	struct comedi_spigert *pdata = spi->dev.platform_data;
@@ -1946,6 +1955,7 @@ static int32_t daqgert_ai_inttrig(struct comedi_device *dev,
 		devpriv->ai_cmd_canceled = false;
 		s->async->inttrig = NULL;
 	} else {
+
 		ret = -EBUSY;
 	}
 
@@ -1978,6 +1988,7 @@ static int32_t daqgert_ao_inttrig(struct comedi_device *dev,
 		devpriv->ao_cmd_canceled = false;
 		s->async->inttrig = NULL;
 	} else {
+
 		ret = -EBUSY;
 	}
 
@@ -2046,6 +2057,7 @@ static int32_t daqgert_ao_cmd(struct comedi_device *dev,
 		devpriv->ao_cmd_canceled = false;
 	} else {
 		/* TRIG_INT */
+
 		/* wait for an internal signal */
 		s->async->inttrig = daqgert_ao_inttrig;
 	}
@@ -2160,6 +2172,7 @@ static int32_t daqgert_ai_cmd(struct comedi_device *dev,
 	} else {
 		/* TRIG_INT */
 		/* don't enable the acquisition operation */
+
 		/* wait for an internal signal */
 		s->async->inttrig = daqgert_ai_inttrig;
 	}
@@ -2202,6 +2215,7 @@ static int32_t daqgert_ao_delay_rate(struct comedi_device *dev,
 		if (spacing_usecs < 0)
 			spacing_usecs = 0;
 	} else { /* or nothing */
+
 		spacing_usecs = 0;
 	}
 	dev_info(dev->class_dev, "ao rate %i, spacing usecs %i\n", rate, spacing_usecs);
@@ -2359,6 +2373,7 @@ static int32_t daqgert_ai_delay_rate(struct comedi_device *dev,
 		spacing_usecs += CONV_SPEED_FIX;
 	else
 		spacing_usecs += CONV_SPEED_FIX_FREERUN;
+
 	if (device_type == mcp3002)
 		spacing_usecs += CONV_SPEED_FIX_FAST;
 	//	dev_info(dev->class_dev, "ai rate %i, spacing usecs %i\n", rate, spacing_usecs);
@@ -2430,6 +2445,7 @@ void comedi_8254_cascade_ns_to_timer(struct comedi_8254 *i8254,
 			d1 = d1_lub;
 			d2 = d2_lub;
 		} else {
+
 			d1 = d1_glb;
 			d2 = d2_glb;
 		}
@@ -2584,6 +2600,7 @@ static void my_timer_ai_callback(unsigned long data)
 	}
 	daqgert_ai_start_pacer(dev, true);
 	if (speed_test) {
+
 		if (!(time_marks++ % 1000))
 			dev_info(dev->class_dev,
 				"speed testing %i: count %i, hunk %i, "
@@ -2635,6 +2652,7 @@ static int32_t daqgert_ai_cancel(struct comedi_device *dev,
 	clear_bit(AI_CMD_RUNNING, &devpriv->state_bits);
 	smp_mb__after_atomic();
 	devpriv->timing_lockout--;
+
 	if (devpriv->timing_lockout < 0)
 		devpriv->timing_lockout = 0;
 	return 0;
@@ -2664,6 +2682,7 @@ static int32_t daqgert_ao_cancel(struct comedi_device *dev,
 
 	s->async->inttrig = NULL;
 	devpriv->timing_lockout--;
+
 	if (devpriv->timing_lockout < 0)
 		devpriv->timing_lockout = 0;
 	devpriv->ao_cmd_canceled = true;
@@ -2698,6 +2717,7 @@ static int32_t daqgert_dio_insn_bits(struct comedi_device *dev,
 		if (wpi_pin_safe(dev, pinWPi)) {
 			/* Do nothing on SPI AUX pins */
 			if (mask) {
+
 				if (mask & 0xffffffff)
 					devpriv->digitalWrite(dev, pinWPi,
 							(s->state
@@ -2735,6 +2755,7 @@ static int32_t daqgert_dio_insn_config(struct comedi_device *dev,
 		break;
 	case INSN_CONFIG_DIO_INPUT:
 		if (wpi_pin_safe(dev, wpi_pin)) {
+
 			s->io_bits &= (~chan);
 			devpriv->pinMode(dev, wpi_pin, INPUT);
 			pullUpDnControl(dev, wpi_pin, pullups);
@@ -2781,6 +2802,7 @@ static int32_t daqgert_ai_rinsn(struct comedi_device *dev,
 
 	/* convert n samples */
 	for (n = 0; n < insn->n; n++) {
+
 		data[n] = daqgert_ai_get_sample(dev, s);
 	}
 	ai_count = devpriv->ai_count;
@@ -2804,6 +2826,7 @@ static int32_t daqgert_ai_insn_config(struct comedi_device *dev,
 		return result;
 
 	result = insn->n;
+
 	if (data[1] > 0)
 		devpriv->ai_count = devpriv->ai_count;
 
@@ -2824,6 +2847,7 @@ static int32_t daqgert_ao_winsn(struct comedi_device *dev,
 
 	daqgert_ao_set_chan_range(dev, insn->chanspec, 1);
 	for (n = 0; n < insn->n; n++) {
+
 		val = data[n];
 		daqgert_ao_put_sample(dev, s, val);
 	}
@@ -2834,6 +2858,7 @@ static int32_t daqgert_ao_winsn(struct comedi_device *dev,
 static int32_t daqgert_ai_config(struct comedi_device *dev,
 				 struct comedi_subdevice * s)
 {
+
 	struct spi_param_type *spi_data = s->private;
 
 	/* Stuff here? */
@@ -2843,6 +2868,7 @@ static int32_t daqgert_ai_config(struct comedi_device *dev,
 static int32_t daqgert_ao_config(struct comedi_device *dev,
 				 struct comedi_subdevice * s)
 {
+
 	struct spi_param_type *spi_data = s->private;
 
 	/* Stuff here? */
@@ -2886,6 +2912,7 @@ static int32_t daqgert_create_thread(struct comedi_device *dev,
 		kthread_bind(devpriv->ao_spi->daqgert_task, devpriv->ao_node);
 		wake_up_process(devpriv->ao_spi->daqgert_task);
 	} else {
+
 		return PTR_ERR(devpriv->ao_spi->daqgert_task);
 	}
 
@@ -2930,6 +2957,9 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	if (daqgert_conf == 4) /* single transfers, ADC is in continuous conversion mode */
 		use_hunking = false;
 	devpriv->use_hunking = use_hunking; /* defaults to true */
+
+	if (speed_test)
+		dev_info(dev->class_dev, "samples per second speed test mode\n");
 
 	/*
 	 * loop the spi device queue for needed devices
@@ -3138,6 +3168,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	}
 
 	/* 
+	 * all Comedi buffers should be 32 bits
 	 * add AI and AO channels 
 	 */
 	ret = comedi_alloc_subdevices(dev, devpriv->num_subdev);
@@ -3149,7 +3180,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	/* daq_gert dio */
 	s = &dev->subdevices[0];
 	s->type = COMEDI_SUBD_DIO;
-	s->subdev_flags = SDF_READABLE | SDF_WRITABLE;
+	s->subdev_flags = SDF_READABLE | SDF_WRITABLE | SDF_LSAMPL;
 	s->n_chan = num_dio_chan;
 	s->len_chanlist = num_dio_chan;
 	s->range_table = &range_digital;
@@ -3179,17 +3210,17 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		s->insn_read = daqgert_ai_rinsn;
 		if (devpriv->smp) {
 			s->subdev_flags = SDF_READABLE | SDF_GROUND
-				| SDF_CMD_READ | SDF_COMMON;
+				| SDF_CMD_READ | SDF_COMMON | SDF_LSAMPL;
 			s->do_cmdtest = daqgert_ai_cmdtest;
 			s->do_cmd = daqgert_ai_cmd;
 			s->poll = daqgert_ai_poll;
 			s->cancel = daqgert_ai_cancel;
 		} else {
 			s->subdev_flags = SDF_READABLE | SDF_GROUND
-				| SDF_COMMON;
+				| SDF_COMMON | SDF_LSAMPL;
 		}
 		if (devpriv->ai_spi->device_type == ads1220) {
-			/* we support single-ended (ground) & diff bipolar  */
+			/* we support single-ended (ground) & diff bipolar  24-bit samples */
 			s->maxdata = (1 << devpriv->ai_spi->device_spi->n_chan_bits) - 1;
 			s->range_table = &range_ads1220_ai;
 			s->n_chan = devpriv->ai_spi->device_spi->n_chan;
@@ -3197,18 +3228,18 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			s->insn_config = daqgert_ai_insn_config;
 			if (devpriv->smp) {
 				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_CMD_READ | SDF_COMMON;
+					| SDF_CMD_READ | SDF_COMMON | SDF_LSAMPL;
 				s->do_cmdtest = daqgert_ai_cmdtest;
 				s->do_cmd = daqgert_ai_cmd;
 				s->poll = daqgert_ai_poll;
 				s->cancel = daqgert_ai_cancel;
 			} else {
 				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_COMMON;
+					| SDF_COMMON | SDF_LSAMPL;
 			}
 		}
 		if (devpriv->ai_spi->device_type == ads8330) {
-			/* we support single-ended (ground) & diff   */
+			/* we support single-ended (ground) & diff  16-bit samples */
 			s->maxdata = (1 << devpriv->ai_spi->device_spi->n_chan_bits) - 1;
 			s->range_table = &range_ads8330_ai;
 			s->n_chan = devpriv->ai_spi->device_spi->n_chan;
@@ -3216,14 +3247,14 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			s->insn_config = daqgert_ai_insn_config;
 			if (devpriv->smp) {
 				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_CMD_READ | SDF_COMMON;
+					| SDF_CMD_READ | SDF_COMMON | SDF_LSAMPL;
 				s->do_cmdtest = daqgert_ai_cmdtest;
 				s->do_cmd = daqgert_ai_cmd;
 				s->poll = daqgert_ai_poll;
 				s->cancel = daqgert_ai_cancel;
 			} else {
 				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_COMMON;
+					| SDF_COMMON | SDF_LSAMPL;
 			}
 		}
 		dev->read_subdev = s;
@@ -3243,12 +3274,12 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		s->insn_read = comedi_readback_insn_read;
 		if (devpriv->smp) {
 			s->subdev_flags = SDF_WRITABLE | SDF_GROUND
-				| SDF_CMD_WRITE;
+				| SDF_CMD_WRITE | SDF_LSAMPL;
 			s->do_cmdtest = daqgert_ao_cmdtest;
 			s->do_cmd = daqgert_ao_cmd;
 			s->cancel = daqgert_ao_cancel;
 		} else {
-			s->subdev_flags = SDF_WRITABLE | SDF_GROUND;
+			s->subdev_flags = SDF_WRITABLE | SDF_GROUND | SDF_LSAMPL;
 		}
 		ret = comedi_alloc_subdev_readback(s);
 		if (ret) {
@@ -3269,6 +3300,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	if (devpriv->smp) {
 		ret = daqgert_create_thread(dev, devpriv);
 		if (ret) {
+
 			dev_err(dev->class_dev, "cpu thread creation failed\n");
 			return ret;
 		}
@@ -3307,6 +3339,7 @@ static void daqgert_detach(struct comedi_device * dev)
 		devpriv->ao_spi->daqgert_task = NULL;
 
 		if (devpriv->ai_spi->daqgert_task) {
+
 			set_bit(AI_CMD_RUNNING, &devpriv->state_bits);
 			wake_up_interruptible(&daqgert_ai_thread_wq);
 			kthread_stop(devpriv->ai_spi->daqgert_task);
@@ -3417,6 +3450,7 @@ static int32_t spigert_spi_probe(struct spi_device * spi)
 		if (gert_autoload)
 			ret = comedi_auto_config(&spi->master->dev,
 						&daqgert_driver, 0);
+
 		if (ret < 0)
 			goto kfree_rx_exit;
 	}
@@ -3441,6 +3475,7 @@ static int32_t spigert_spi_remove(struct spi_device * spi)
 		kfree(pdata->rx_buff);
 	if (pdata->tx_buff)
 		kfree(pdata->tx_buff);
+
 	if (pdata)
 		kfree(pdata);
 	dev_info(&spi->dev, "released\n");
@@ -3462,6 +3497,7 @@ static struct spi_driver spigert_spi_driver = {
  */
 static int32_t daqgert_spi_setup(struct spi_param_type * spi)
 {
+
 	spi->spi->max_speed_hz = spi->device_spi->max_speed_hz;
 	spi->spi->mode = spi->device_spi->spi_mode;
 	return spi_setup(spi->spi);
@@ -3598,6 +3634,7 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 			spi_adc->bits = spi_adc->device_spi->n_chan_bits;
 		}
 		if (spi_adc->device_type == ads8330) {
+
 			daqgert_spi_setup(spi_adc);
 			reset = ADS8330_CMD_RESET;
 			spi_write(spi_adc->spi, &reset, 1);
@@ -3635,12 +3672,14 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 
 static int32_t __init daqgert_init(void)
 {
+
 	return spi_register_driver(&spigert_spi_driver);
 }
 module_init(daqgert_init);
 
 static void __exit daqgert_exit(void)
 {
+
 	struct comedi_spigert *pdata;
 	static struct spi_param_type *slave_spi;
 
