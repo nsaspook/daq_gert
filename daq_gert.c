@@ -1467,7 +1467,7 @@ static void daqgert_ai_set_chan_range_ads8330(struct comedi_device *dev,
 	 * we could just feed the raw bits to the Mux if needed
 	 */
 
-	if (devpriv->ai_chan != chan) {
+//	if (devpriv->ai_chan != chan) {
 		switch (chan) {
 		case 1:
 			cMux = ADS8330_CMR_CH1 >> 8;
@@ -1475,14 +1475,22 @@ static void daqgert_ai_set_chan_range_ads8330(struct comedi_device *dev,
 		default:
 			cMux = ADS8330_CMR_CH0 >> 8;
 		}
+
+		pdata->one_t.len = 2;
+		pdata->tx_buff[0] = (ADS8330_CMR_WCFR | ADS8330_CFR_D10 | ADS8330_CFR_D10) >> 8;
+		pdata->tx_buff[1] = ADS8330_CFR_D6_7 | ADS8330_CFR_D5 | ADS8330_CFR_D2_3_4 | ADS8330_CFR_D0;
+		spi_message_init_with_transfers(&m,
+						&pdata->one_t, 1);
+		spi_bus_lock(pdata->slave.spi->master);
+		spi_sync_locked(pdata->slave.spi, &m);
+		spi_bus_unlock(pdata->slave.spi->master);
 		pdata->tx_buff[0] = cMux;
 		pdata->one_t.len = 1;
-		pdata->one_t.delay_usecs = 0;
 		spi_message_init_with_transfers(&m, &pdata->one_t, 1);
 		spi_bus_lock(pdata->slave.spi->master);
 		spi_sync_locked(pdata->slave.spi, &m);
 		spi_bus_unlock(pdata->slave.spi->master);
-	}
+//	}
 }
 
 /*
@@ -2865,7 +2873,6 @@ static int32_t daqgert_ai_rinsn(struct comedi_device *dev,
 
 	/* convert n samples */
 	for (n = 0; n < insn->n; n++) {
-
 		data[n] = daqgert_ai_get_sample(dev, s);
 	}
 	ai_count = devpriv->ai_count;
