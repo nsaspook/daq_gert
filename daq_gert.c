@@ -1473,20 +1473,26 @@ static void daqgert_ai_set_chan_range_ads8330(struct comedi_device *dev,
 		cMux = ADS8330_CMR_CH0 >> 8;
 	}
 
-	pdata->one_t.len = 2;
 	pdata->tx_buff[0] = (ADS8330_CMR_CONF) >> 8;
 	pdata->tx_buff[1] = ADS8330_CFR_CONF;
-	spi_message_init_with_transfers(&m,
-					&pdata->one_t, 1);
-	spi_bus_lock(pdata->slave.spi->master);
-	spi_sync_locked(pdata->slave.spi, &m);
-	spi_bus_unlock(pdata->slave.spi->master);
-	pdata->tx_buff[0] = cMux;
-	pdata->one_t.len = 1;
-	spi_message_init_with_transfers(&m, &pdata->one_t, 1);
-	spi_bus_lock(pdata->slave.spi->master);
-	spi_sync_locked(pdata->slave.spi, &m);
-	spi_bus_unlock(pdata->slave.spi->master);
+	pdata->tx_buff[2] = cMux;
+
+	/* automatic cs toggle between transfers */
+	pdata->t[0].cs_change = false;
+	pdata->t[0].len = 2;
+	pdata->t[0].tx_buf = &pdata->tx_buff[0];
+	pdata->t[0].rx_buf = &pdata->rx_buff[0];
+	pdata->t[0].delay_usecs = 0;
+	pdata->t[1].cs_change = false;
+	pdata->t[1].len = 1;
+	pdata->t[1].tx_buf = &pdata->tx_buff[2];
+	pdata->t[1].rx_buf = &pdata->rx_buff[2];
+	pdata->t[1].delay_usecs = 0;
+	spi_message_init_with_transfers(&m, &pdata->t[0], 2);
+	spi_bus_lock(spi->master);
+	spi_sync_locked(spi, &m);
+	spi_bus_unlock(spi->master);
+
 }
 
 /*
@@ -1628,6 +1634,8 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 				pdata->tx_buff[0] = ADS8330_CMR_RDATA >> 8;
 				pdata->tx_buff[1] = 0;
 				pdata->t[0].len = 2;
+				pdata->t[0].cs_change=false;
+				pdata->t[0].delay_usecs=0;
 				pdata->t[0].tx_buf = &pdata->tx_buff[0];
 				pdata->t[0].rx_buf = &pdata->rx_buff[0];
 				spi_message_init_with_transfers(&m,
@@ -1863,6 +1871,7 @@ static int32_t transfer_to_hunk_buf(struct comedi_device *dev,
 		/*
 		 *  format the transfer array 
 		 *  use cs_change to start the ADC on every transfer
+		 *  if it's not automatic
 		 *  the spec says a brief toggle but maybe it's too
 		 *  long at the default of 10us
 		 */
@@ -1985,7 +1994,7 @@ static void daqgert_ai_setup_eoc(struct comedi_device *dev,
 	pdata->tx_buff[1] = 0;
 
 	/* format the transfer array */
-	pdata->t[0].cs_change = 0;
+	pdata->t[0].cs_change = false;
 	pdata->t[0].len = len;
 	pdata->t[0].tx_buf = pdata->tx_buff;
 	pdata->t[0].rx_buf = pdata->rx_buff;
