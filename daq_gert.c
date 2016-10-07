@@ -187,19 +187,19 @@ by the module option variable daqgert_conf in the /etc/modprobe.d directory
 
 /* Command defs */
 #define ADS8330_CMR_DEFAULT 0x0f
-#define ADS8330_CMR_WCFR 0b1110000000000000 /* write commands */
-#define ADS8330_CMR_RCFR 0b1100000000000000 /* read commands */
-#define ADS8330_CMR_RDATA 0b1101000000000000 /* read data */
-#define ADS8330_CFR_D11  0b0000100000000000 /* auto channel */
-#define ADS8330_CFR_D10  0b0000010000000000 /* internal conversion clock */
-#define ADS8330_CFR_D9  0b0000001000000000 /* manual conversion */
-#define ADS8330_CFR_D6_7 0b0000000011000000 /* EOC low */
-#define ADS8330_CFR_D5  0b0000000000100000 /* EOC output */
-#define ADS8330_CFR_D2_3_4 0b0000000000011100 /* power save */
-#define ADS8330_CFR_D1  0b0000000000000010 /* tag bit */
-#define ADS8330_CFR_D0  0b0000000000000001 /* device run normal/reset */
-#define ADS8330_CMR_CH0  0b0000000000000000
-#define ADS8330_CMR_CH1  0b0001000000000000
+#define ADS8330_CMR_WCFR    0b1110000000000000ul /* write commands */
+#define ADS8330_CMR_RCFR    0b1100000000000000ul /* read commands */
+#define ADS8330_CMR_RDATA   0b1101000000000000ul /* read data */
+#define ADS8330_CFR_D11     0b0000100000000000 /* auto channel */
+#define ADS8330_CFR_D10     0b0000010000000000 /* internal conversion clock */
+#define ADS8330_CFR_D9      0b0000001000000000 /* manual conversion */
+#define ADS8330_CFR_D6_7    0b0000000011000000 /* EOC low */
+#define ADS8330_CFR_D5      0b0000000000100000 /* EOC output */
+#define ADS8330_CFR_D2_3_4  0b0000000000011100 /* power save */
+#define ADS8330_CFR_D1      0b0000000000000010 /* tag bit */
+#define ADS8330_CFR_D0      0b0000000000000001 /* device run normal/reset */
+#define ADS8330_CMR_CH0     0b0000000000000000ul
+#define ADS8330_CMR_CH1     0b0001000000000000ul
 
 /* Error Return Values */
 #define ADS1220_NO_ERROR           0
@@ -658,15 +658,6 @@ static const struct comedi_lrange daqgert_ao_range = {1,
 	}};
 
 static const struct comedi_lrange range_ads1220_ai = {
-	3,
-	{ /* gains 1,2,4 */
-		BIP_RANGE(2.048),
-		BIP_RANGE(1.024),
-		BIP_RANGE(0.512)
-	}
-};
-
-static const struct comedi_lrange range_ads8330_ai = {
 	3,
 	{ /* gains 1,2,4 */
 		BIP_RANGE(2.048),
@@ -1432,35 +1423,31 @@ static void daqgert_ai_set_chan_range_ads1220(struct comedi_device *dev,
 	 * convert chanspec to input MUX switches/gains if needed
 	 * we could just feed the raw bits to the Mux if needed
 	 */
-	switch (chan) {
-	case 0:
-		cMux = ADS1220_MUX_0_1;
-		break;
-	case 1:
-		cMux = ADS1220_MUX_2_3;
-		break;
-	case 2:
-		cMux = ADS1220_MUX_2_G;
-		break;
-	case 3:
-		cMux = ADS1220_MUX_3_G;
-		break;
-	case 4:
-		cMux = ADS1220_MUX_DIV2;
-		break;
-	default:
-		cMux = ADS1220_MUX_0_1;
-	}
 
 	if ((devpriv->ai_chan != chan) || (devpriv->ai_range != range)) {
-
+		switch (chan) {
+		case 0:
+			cMux = ADS1220_MUX_0_1;
+			break;
+		case 1:
+			cMux = ADS1220_MUX_2_3;
+			break;
+		case 2:
+			cMux = ADS1220_MUX_2_G;
+			break;
+		case 3:
+			cMux = ADS1220_MUX_3_G;
+			break;
+		case 4:
+			cMux = ADS1220_MUX_DIV2;
+			break;
+		default:
+			cMux = ADS1220_MUX_0_1;
+		}
 		cMux |= ((range & 0x03) << 1); /* setup the gain bits for range with NO pga */
 		cMux |= ads1220_r0_for_mux_gain;
 		ADS1220WriteRegister(ADS1220_0_REGISTER, 0x01, &cMux, s);
 	}
-
-	devpriv->ai_chan = CR_CHAN(chanspec);
-	devpriv->ai_range = CR_RANGE(chanspec);
 }
 
 static void daqgert_ai_set_chan_range_ads8330(struct comedi_device *dev,
@@ -1468,29 +1455,34 @@ static void daqgert_ai_set_chan_range_ads8330(struct comedi_device *dev,
 					      uint32_t chanspec)
 {
 	struct daqgert_private *devpriv = dev->private;
-	uint32_t range = CR_RANGE(chanspec);
+	struct spi_param_type *spi_data = s->private;
+	struct spi_device *spi = spi_data->spi;
+	struct comedi_spigert *pdata = spi->dev.platform_data;
+	struct spi_message m;
 	uint32_t chan = CR_CHAN(chanspec);
 	uint32_t cMux;
 
 	/*
-	 * convert chanspec to input MUX switches/gains if needed
+	 * convert chanspec to input MUX switches if needed
 	 * we could just feed the raw bits to the Mux if needed
 	 */
-	switch (chan) {
-	case 1:
-		cMux = ADS8330_CMR_CH1 >> 8;
-		break;
-	default:
-		cMux = ADS8330_CMR_CH0 >> 8;
+
+	if (devpriv->ai_chan != chan) {
+		switch (chan) {
+		case 1:
+			cMux = ADS8330_CMR_CH1 >> 8;
+			break;
+		default:
+			cMux = ADS8330_CMR_CH0 >> 8;
+		}
+		pdata->tx_buff[0] = cMux;
+		pdata->one_t.len = 1;
+		pdata->one_t.delay_usecs = 0;
+		spi_message_init_with_transfers(&m, &pdata->one_t, 1);
+		spi_bus_lock(pdata->slave.spi->master);
+		spi_sync_locked(pdata->slave.spi, &m);
+		spi_bus_unlock(pdata->slave.spi->master);
 	}
-
-	if ((devpriv->ai_chan != chan) || (devpriv->ai_range != range)) {
-
-
-	}
-
-	devpriv->ai_chan = CR_CHAN(chanspec);
-	devpriv->ai_range = CR_RANGE(chanspec);
 }
 
 /*
@@ -1629,21 +1621,18 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			}
 			if (devpriv->ai_spi->device_type == ads8330) {
 				/* read the ads8330 2 byte data result */
-				pdata->one_t.len = 6;
-				pdata->one_t.delay_usecs = 0;
-				pdata->tx_buff[0] = ADS8330_CMR_WCFR >> 8;
-				pdata->tx_buff[1] = ADS8330_CFR_D6_7 | ADS8330_CFR_D5 | ADS8330_CFR_D2_3_4 | ADS8330_CFR_D0;
-				pdata->tx_buff[2] = ADS1220_CMD_RDATA >> 8;
-				pdata->tx_buff[3] = 0;
-				pdata->tx_buff[4] = ADS1220_CMD_RDATA >> 8;
-				pdata->tx_buff[5] = 0;
+				pdata->tx_buff[0] = ADS8330_CMR_RDATA >> 8;
+				pdata->tx_buff[1] = 0;
+				pdata->t[0].len = 2;
+				pdata->t[0].tx_buf = &pdata->tx_buff[0];
+				pdata->t[0].rx_buf = &pdata->rx_buff[0];
 				spi_message_init_with_transfers(&m,
-								&pdata->one_t, 1);
+								&pdata->t[0], 1);
 				spi_bus_lock(spi->master);
 				spi_sync_locked(spi, &m);
 				spi_bus_unlock(spi->master);
-				val = pdata->rx_buff[5];
-				val += (pdata->rx_buff[4] << 8);
+				val = pdata->rx_buff[1];
+				val += (pdata->rx_buff[0] << 8);
 			}
 		}
 		devpriv->ai_count++;
@@ -2872,6 +2861,7 @@ static int32_t daqgert_ai_rinsn(struct comedi_device *dev,
 		daqgert_ai_set_chan_range_ads8330(dev, s, insn->chanspec);
 
 	devpriv->ai_chan = CR_CHAN(insn->chanspec);
+	devpriv->ai_range = CR_RANGE(insn->chanspec);
 
 	/* convert n samples */
 	for (n = 0; n < insn->n; n++) {
@@ -3120,7 +3110,6 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 						pdata->rx_buff[3], pdata->rx_buff[4]);
 					return -ENODEV;
 				}
-				usleep_range(50, 60);
 				pdata->one_t.len = 1;
 				pdata->tx_buff[0] = ADS1220_CMD_SYNC;
 				spi_message_init_with_transfers(&m,
@@ -3135,13 +3124,23 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 				 */
 				pdata->one_t.len = 2;
 				pdata->one_t.delay_usecs = 0;
-				pdata->tx_buff[0] = ADS8330_CMR_WCFR >> 8; /* manual chan, ext conv clock, auto trigger */
-				pdata->tx_buff[1] = ADS8330_CFR_D6_7 | ADS8330_CFR_D5 | ADS8330_CFR_D2_3_4 | ADS8330_CFR_D0;
+				pdata->tx_buff[0] = ADS8330_CMR_WCFR >> 8; /* software reset */
+				pdata->tx_buff[1] = 0;
 				spi_message_init_with_transfers(&m,
 								&pdata->one_t, 1);
 				pdata->slave.spi->max_speed_hz = daqgert_devices[ads8330].max_speed_hz;
 				pdata->slave.spi->mode = daqgert_devices[ads8330].spi_mode;
 				spi_setup(pdata->slave.spi);
+				spi_bus_lock(pdata->slave.spi->master);
+				spi_sync_locked(pdata->slave.spi, &m);
+				spi_bus_unlock(pdata->slave.spi->master);
+				usleep_range(400, 500);
+				pdata->one_t.len = 2;
+				pdata->one_t.delay_usecs = 0;
+				pdata->tx_buff[0] = (ADS8330_CMR_WCFR | ADS8330_CFR_D10 | ADS8330_CFR_D10) >> 8;
+				pdata->tx_buff[1] = ADS8330_CFR_D6_7 | ADS8330_CFR_D5 | ADS8330_CFR_D2_3_4 | ADS8330_CFR_D0;
+				spi_message_init_with_transfers(&m,
+								&pdata->one_t, 1);
 				spi_bus_lock(pdata->slave.spi->master);
 				spi_sync_locked(pdata->slave.spi, &m);
 				spi_bus_unlock(pdata->slave.spi->master);
@@ -3155,7 +3154,6 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 				spi_bus_lock(pdata->slave.spi->master);
 				spi_sync_locked(pdata->slave.spi, &m);
 				spi_bus_unlock(pdata->slave.spi->master);
-				usleep_range(40, 50);
 				/*
 				 * Check to be sure we have a device
 				 */
@@ -3163,9 +3161,9 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 					dev_err(dev->class_dev,
 						"ADS8330 configuration error: %x %x\n",
 						pdata->rx_buff[0], pdata->rx_buff[1]);
-					//	return -ENODEV;
+					return -ENODEV;
 				}
-				usleep_range(50, 60);
+				usleep_range(40, 50);
 				pdata->one_t.len = 1;
 				pdata->one_t.delay_usecs = 0;
 				pdata->tx_buff[0] = ADS8330_CMR_CH0; /* set to channel 0 */
@@ -3365,7 +3363,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		if (devpriv->ai_spi->device_type == ads8330) {
 			/* we support single-ended (ground) & diff  16-bit samples */
 			s->maxdata = (1 << devpriv->ai_spi->device_spi->n_chan_bits) - 1;
-			s->range_table = &range_ads8330_ai;
+			s->range_table = &daqgert_ai_range3_300;
 			s->n_chan = devpriv->ai_spi->device_spi->n_chan;
 			s->len_chanlist = 1;
 			s->insn_config = daqgert_ai_insn_config;
