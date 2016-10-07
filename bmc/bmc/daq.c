@@ -172,7 +172,7 @@ double get_adc_volts(int chan) {
     lsampl_t data;
     int retval;
 
-    retval = comedi_data_read_delayed(it, subdev_ai, chan, range_ai, aref_ai, &data, 0);
+    retval = comedi_data_read(it, subdev_ai, chan, range_ai, aref_ai, &data);
     if (retval < 0) {
         comedi_perror("comedi_data_read in get_adc_volts");
         ADC_ERROR = TRUE;
