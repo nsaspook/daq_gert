@@ -57,7 +57,7 @@ uint8_t sine_wave[256] = {
 int main(int argc, char *argv[])
 {
 	int blink[3], flip[2] = {0, 0}, z = 0;
-	int do_ao_only = FALSE; 
+	int do_ao_only = FALSE;
 	uint8_t i = 0;
 
 	if (do_ao_only) {
@@ -101,9 +101,10 @@ int main(int argc, char *argv[])
 			get_data_sample();
 			if (blink[2]++ >= 100) {
 				printf("         \r");
-				printf(" %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %u %u %u %u %u %u raw %x, %x",
-					bmc.pv_voltage, bmc.cc_voltage, bmc.input_voltage, bmc.b1_voltage, bmc.b2_voltage, bmc.system_voltage, bmc.logic_voltage,
-					bmc.datain.D0, bmc.datain.D1, bmc.datain.D2, bmc.datain.D3, bmc.datain.D6, bmc.datain.D7, bmc.adc_sample[0], bmc.adc_sample[1]);
+				printf(" %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %u %u %u %u %u %u raw %x, %x : %x %x",
+				bmc.pv_voltage, bmc.cc_voltage, bmc.input_voltage, bmc.b1_voltage, bmc.b2_voltage, bmc.system_voltage, bmc.logic_voltage,
+				bmc.datain.D0, bmc.datain.D1, bmc.datain.D2, bmc.datain.D3, bmc.datain.D6, bmc.datain.D7, bmc.adc_sample[0], bmc.adc_sample[1],
+				bmc.dac_sample[0], bmc.dac_sample[1]);
 				//        usleep(4990);
 				blink[2] = 0;
 

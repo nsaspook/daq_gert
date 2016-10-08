@@ -6,9 +6,9 @@
  */
 
 #ifndef BMC_H
-#define	BMC_H
+#define BMC_H
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -37,13 +37,14 @@ extern "C" {
         struct didata datain;
         union dio_buf_type dataout;
         int32_t adc_sample[32];
+        int32_t dac_sample[32];
         int32_t utc;
     }
     volatile bmctype;
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* BMC_H */
+#endif /* BMC_H */
 

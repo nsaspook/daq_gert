@@ -6,9 +6,9 @@
  */
 
 #ifndef DAQ_H
-#define	DAQ_H
+#define DAQ_H
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -63,9 +63,9 @@ extern "C" {
     int set_dio_output(int);
     int get_data_sample(void);
     double lp_filter(double, int, int);
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* DAQ_H */
+#endif /* DAQ_H */
 

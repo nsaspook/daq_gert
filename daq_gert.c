@@ -387,16 +387,16 @@ static const uint8_t ads1220_r2 = ADS1220_REJECT_OFF;
 static const uint8_t ads1220_r3 = ADS1220_IDAC_OFF | ADS1220_DRDY_MODE;
 
 /* analog chip types  */
-static const uint32_t defdev0 = 0;
-static const uint32_t mcp3002 = 1;
-static const uint32_t mcp3202 = 2;
-static const uint32_t mcp4802 = 3;
-static const uint32_t mcp4812 = 4;
-static const uint32_t mcp4822 = 5;
-static const uint32_t picsl10 = 6;
-static const uint32_t picsl12 = 7;
-static const uint32_t ads1220 = 8;
-static const uint32_t ads8330 = 9;
+#define defdev0  0
+#define mcp3002  1
+#define mcp3202  2
+#define mcp4802  3
+#define mcp4812  4
+#define mcp4822  5
+#define picsl10  6
+#define picsl12  7
+#define ads1220  8
+#define ads8330  9
 
 static const uint32_t PIC18_CONVD_25K22 = 24;
 static const uint32_t PIC18_CMDD_25K22 = 4;
@@ -538,21 +538,21 @@ static const struct daqgert_device daqgert_devices[] = {
 	},
 	{
 		.name = "mcp4802",
-		.max_speed_hz = 8000000,
+		.max_speed_hz = 16000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 4,
 	},
 	{
 		.name = "mcp4812",
-		.max_speed_hz = 8000000,
+		.max_speed_hz = 16000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 2,
 	},
 	{
 		.name = "mcp4822",
-		.max_speed_hz = 8000000,
+		.max_speed_hz = 16000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 0,
@@ -654,8 +654,9 @@ static const struct comedi_lrange daqgert_ai_range2_048 = {1,
 		RANGE(0, 2.048),
 	}};
 
-static const struct comedi_lrange daqgert_ao_range = {1,
-	{
+static const struct comedi_lrange daqgert_ao_range = {2,
+	{/* gains 2,1 */
+		RANGE(0, 4.096),
 		RANGE(0, 2.048),
 	}};
 
@@ -718,7 +719,7 @@ struct daqgert_private {
 	uint32_t ai_rate_max, ao_rate_max, ao_timer;
 	uint32_t ai_count, ao_count, ao_counter, hunk_count;
 	uint32_t ai_conv_delay_usecs, ai_conv_delay_10nsecs, ai_cmd_delay_usecs;
-	int32_t ai_chan, ao_chan, ai_range;
+	int32_t ai_chan, ao_chan, ai_range, ao_range;
 	struct mutex drvdata_lock, cmd_lock;
 	uint32_t val;
 	uint32_t ai_hunk;
@@ -1508,7 +1509,7 @@ static void daqgert_ai_set_chan_range_ads8330(struct comedi_device *dev,
 }
 
 /*
- * Only one AI range so only the channel is set unless its ads1220
+ * ADC SPI channel and voltage gains
  */
 static void daqgert_ai_set_chan_range(struct comedi_device *dev,
 				      uint32_t chanspec,
@@ -1529,7 +1530,7 @@ static void daqgert_ai_set_chan_range(struct comedi_device *dev,
 }
 
 /*
- * Only one AO range so only the channel is set
+ * DAC SPI channel and voltage gains
  */
 static void daqgert_ao_set_chan_range(struct comedi_device *dev,
 				      uint32_t chanspec,
@@ -1537,6 +1538,7 @@ static void daqgert_ao_set_chan_range(struct comedi_device *dev,
 {
 	struct daqgert_private *devpriv = dev->private;
 	devpriv->ao_chan = CR_CHAN(chanspec);
+	devpriv->ao_range = CR_RANGE(chanspec);
 
 	if (wait)
 		udelay(1);
@@ -1554,12 +1556,13 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
 	struct comedi_spigert *pdata = spi->dev.platform_data;
-	uint32_t chan;
+	uint32_t chan, range;
 
 	mutex_lock(&devpriv->drvdata_lock);
-	chan = CR_CHAN(devpriv->ao_chan);
+	chan = devpriv->ao_chan;
+	range = devpriv->ao_range;
 	pdata->tx_buff[1] = val & 0xff;
-	pdata->tx_buff[0] = (0x30 | ((chan & 0x01) << 7)
+	pdata->tx_buff[0] = (0x10 | ((chan & 0x01) << 7) | ((range & 0x01) << 5)
 		| (val >> 8));
 	spi_write(spi, pdata->tx_buff, 2);
 	s->readback[chan] = val;
@@ -1584,83 +1587,86 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 	int32_t val;
 
 	mutex_lock(&devpriv->drvdata_lock);
-	chan = CR_CHAN(devpriv->ai_chan);
+	chan = devpriv->ai_chan;
+
 	/* Make SPI messages for the type of ADC are we talking to */
-	/* The PIC Slave needs 8 bit transfers only */
-	if (unlikely(spi_data->pic18)) { /*  PIC18 SPI slave device. NO MULTI_MODE ever */
-		if (likely((devpriv->ai_spi->device_type != ads1220) && (devpriv->ai_spi->device_type != ads8330))) {
-			pdata->tx_buff[0] = CMD_ADC_GO + chan;
-			pdata->tx_buff[1] = CMD_ADC_DATA;
-			pdata->tx_buff[2] = CMD_ZERO;
-			/* use three spi transfers for the message */
-			pdata->t[0].cs_change = false;
-			pdata->t[0].len = 1;
-			pdata->t[0].tx_buf = &pdata->tx_buff[0];
-			pdata->t[0].rx_buf = &pdata->rx_buff[0];
-			pdata->t[0].delay_usecs = devpriv->ai_conv_delay_usecs;
-			pdata->t[1].cs_change = false;
-			pdata->t[1].len = 1;
-			pdata->t[1].tx_buf = &pdata->tx_buff[1];
-			pdata->t[1].rx_buf = &pdata->rx_buff[1];
-			pdata->t[1].delay_usecs = devpriv->ai_cmd_delay_usecs;
-			pdata->t[2].cs_change = false;
-			pdata->t[2].len = 1;
-			pdata->t[2].tx_buf = &pdata->tx_buff[2];
-			pdata->t[2].rx_buf = &pdata->rx_buff[2];
-			pdata->t[2].delay_usecs = devpriv->ai_cmd_delay_usecs;
-			spi_message_init_with_transfers(&m, &pdata->t[0], 3);
-			spi_bus_lock(spi->master);
-			spi_sync_locked(spi, &m);
-			spi_bus_unlock(spi->master);
-			val = pdata->rx_buff[1];
-			val += (pdata->rx_buff[2] << 8);
-		} else {
-			if (devpriv->ai_spi->device_type == ads1220) {
-				/* read the ads1220 3 byte data result */
-				pdata->one_t.len = 4;
-				pdata->one_t.cs_change = false;
-				pdata->one_t.delay_usecs = 0;
-				pdata->tx_buff[0] = ADS1220_CMD_RDATA;
-				pdata->tx_buff[1] = 0;
-				pdata->tx_buff[2] = 0;
-				pdata->tx_buff[3] = 0;
-				spi_message_init_with_transfers(&m,
-								&pdata->one_t, 1);
-				spi_bus_lock(spi->master);
-				spi_sync_locked(spi, &m);
-				spi_bus_unlock(spi->master);
-				val = pdata->rx_buff[1];
-				val = (val << 8) | pdata->rx_buff[2];
-				val = (val << 8) | pdata->rx_buff[3];
+	switch (devpriv->ai_spi->device_type) {
+	case ads1220:
+		/* read the ads1220 3 byte data result */
+		pdata->one_t.len = 4;
+		pdata->one_t.cs_change = false;
+		pdata->one_t.delay_usecs = 0;
+		pdata->tx_buff[0] = ADS1220_CMD_RDATA;
+		pdata->tx_buff[1] = 0;
+		pdata->tx_buff[2] = 0;
+		pdata->tx_buff[3] = 0;
+		spi_message_init_with_transfers(&m,
+						&pdata->one_t, 1);
+		spi_bus_lock(spi->master);
+		spi_sync_locked(spi, &m);
+		spi_bus_unlock(spi->master);
+		val = pdata->rx_buff[1];
+		val = (val << 8) | pdata->rx_buff[2];
+		val = (val << 8) | pdata->rx_buff[3];
 
-				/* mangle the data as necessary */
-				/* Bipolar Offset Binary */
-				val &= 0x0ffffff;
-				val ^= 0x0800000;
+		/* mangle the data as necessary */
+		/* Bipolar Offset Binary */
+		val &= 0x0ffffff;
+		val ^= 0x0800000;
 
-				sync = ADS1220_CMD_SYNC;
-				spi_write(spi, &sync, 1);
-			}
-			if (devpriv->ai_spi->device_type == ads8330) {
-				/* read the ads8330 2 byte data result */
-				pdata->tx_buff[0] = ADS8330_CMR_RDATA >> 8;
-				pdata->tx_buff[1] = 0;
-				pdata->t[0].len = 2;
-				pdata->t[0].cs_change = false;
-				pdata->t[0].delay_usecs = 0;
-				pdata->t[0].tx_buf = &pdata->tx_buff[0];
-				pdata->t[0].rx_buf = &pdata->rx_buff[0];
-				spi_message_init_with_transfers(&m,
-								&pdata->t[0], 1);
-				spi_bus_lock(spi->master);
-				spi_sync_locked(spi, &m);
-				spi_bus_unlock(spi->master);
-				val = pdata->rx_buff[1];
-				val += (pdata->rx_buff[0] << 8);
-			}
-		}
+		sync = ADS1220_CMD_SYNC;
+		spi_write(spi, &sync, 1);
 		devpriv->ai_count++;
-	} else { /* Gertboard onboard ADC device */
+		break;
+	case ads8330:
+		/* read the ads8330 2 byte data result */
+		pdata->tx_buff[0] = ADS8330_CMR_RDATA >> 8;
+		pdata->tx_buff[1] = 0;
+		pdata->t[0].len = 2;
+		pdata->t[0].cs_change = false;
+		pdata->t[0].delay_usecs = 0;
+		pdata->t[0].tx_buf = &pdata->tx_buff[0];
+		pdata->t[0].rx_buf = &pdata->rx_buff[0];
+		spi_message_init_with_transfers(&m,
+						&pdata->t[0], 1);
+		spi_bus_lock(spi->master);
+		spi_sync_locked(spi, &m);
+		spi_bus_unlock(spi->master);
+		val = pdata->rx_buff[1];
+		val += (pdata->rx_buff[0] << 8);
+		devpriv->ai_count++;
+		break;
+	case picsl10:
+	case picsl12:
+		pdata->tx_buff[0] = CMD_ADC_GO + chan;
+		pdata->tx_buff[1] = CMD_ADC_DATA;
+		pdata->tx_buff[2] = CMD_ZERO;
+		/* use three spi transfers for the message */
+		pdata->t[0].cs_change = false;
+		pdata->t[0].len = 1;
+		pdata->t[0].tx_buf = &pdata->tx_buff[0];
+		pdata->t[0].rx_buf = &pdata->rx_buff[0];
+		pdata->t[0].delay_usecs = devpriv->ai_conv_delay_usecs;
+		pdata->t[1].cs_change = false;
+		pdata->t[1].len = 1;
+		pdata->t[1].tx_buf = &pdata->tx_buff[1];
+		pdata->t[1].rx_buf = &pdata->rx_buff[1];
+		pdata->t[1].delay_usecs = devpriv->ai_cmd_delay_usecs;
+		pdata->t[2].cs_change = false;
+		pdata->t[2].len = 1;
+		pdata->t[2].tx_buf = &pdata->tx_buff[2];
+		pdata->t[2].rx_buf = &pdata->rx_buff[2];
+		pdata->t[2].delay_usecs = devpriv->ai_cmd_delay_usecs;
+		spi_message_init_with_transfers(&m, &pdata->t[0], 3);
+		spi_bus_lock(spi->master);
+		spi_sync_locked(spi, &m);
+		spi_bus_unlock(spi->master);
+		val = pdata->rx_buff[1];
+		val += (pdata->rx_buff[2] << 8);
+		devpriv->ai_count++;
+		break;
+	case mcp3002:
+	case mcp3202:
 		if (likely(devpriv->ai_hunk)) {
 			spi_message_init_with_transfers(&m,
 							&pdata->t[0], hunk_len);
@@ -1682,14 +1688,18 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 				val = ((pdata->rx_buff[0] << 7)
 					| (pdata->rx_buff[1] >> 1)) & 0x3FF;
 			} else {
-
 				val = (pdata->rx_buff[2]&0x80) >> 7;
 				val += pdata->rx_buff[1] << 1;
 				val += (pdata->rx_buff[0]&0x0f) << 9;
 			}
 			devpriv->ai_count++;
 		}
+		break;
+	default:
+		devpriv->ai_count++;
+		dev_dbg(dev->class_dev, "unknown ai device\n");
 	}
+
 	mutex_unlock(&devpriv->drvdata_lock);
 	clear_bit(SPI_AI_RUN, &devpriv->state_bits);
 	smp_mb__after_atomic();
@@ -1765,7 +1775,7 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 	next_chan = s->async->cur_chan;
 
 	if (cmd->chanlist[chan] != cmd->chanlist[next_chan])
-		daqgert_ao_set_chan_range(dev, cmd->chanlist[next_chan], 1);
+		daqgert_ao_set_chan_range(dev, cmd->chanlist[next_chan], false);
 	daqgert_ao_next_chan(dev, s);
 }
 
@@ -2127,7 +2137,7 @@ static int32_t daqgert_ao_cmd(struct comedi_device *dev,
 	}
 	devpriv->ao_counter = devpriv->ao_timer;
 	s->async->cur_chan = 0;
-	daqgert_ao_set_chan_range(dev, cmd->chanlist[s->async->cur_chan], 1);
+	daqgert_ao_set_chan_range(dev, cmd->chanlist[s->async->cur_chan], false);
 
 	if (cmd->start_src == TRIG_NOW) {
 		s->async->inttrig = NULL;
@@ -2932,7 +2942,7 @@ static int32_t daqgert_ao_winsn(struct comedi_device *dev,
 	uint32_t chan = CR_CHAN(insn->chanspec);
 	uint32_t n, val = s->readback[chan];
 
-	daqgert_ao_set_chan_range(dev, insn->chanspec, 1);
+	daqgert_ao_set_chan_range(dev, insn->chanspec, false);
 	for (n = 0; n < insn->n; n++) {
 
 		val = data[n];
