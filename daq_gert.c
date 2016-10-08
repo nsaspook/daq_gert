@@ -1417,6 +1417,7 @@ static void daqgert_ai_set_chan_range_ads1220(struct comedi_device *dev,
 					      struct comedi_subdevice *s,
 					      uint32_t chanspec)
 {
+	struct daqgert_private *devpriv = dev->private;
 	uint32_t range = CR_RANGE(chanspec);
 	uint32_t chan = CR_CHAN(chanspec);
 	uint32_t cMux;
@@ -1426,34 +1427,37 @@ static void daqgert_ai_set_chan_range_ads1220(struct comedi_device *dev,
 	 * we could just feed the raw bits to the Mux if needed
 	 */
 
-	switch (chan) {
-	case 0:
-		cMux = ADS1220_MUX_0_1;
-		break;
-	case 1:
-		cMux = ADS1220_MUX_2_3;
-		break;
-	case 2:
-		cMux = ADS1220_MUX_2_G;
-		break;
-	case 3:
-		cMux = ADS1220_MUX_3_G;
-		break;
-	case 4:
-		cMux = ADS1220_MUX_DIV2;
-		break;
-	default:
-		cMux = ADS1220_MUX_0_1;
+	if ((devpriv->ai_chan != chan) || (devpriv->ai_range != range)) {
+		switch (chan) {
+		case 0:
+			cMux = ADS1220_MUX_0_1;
+			break;
+		case 1:
+			cMux = ADS1220_MUX_2_3;
+			break;
+		case 2:
+			cMux = ADS1220_MUX_2_G;
+			break;
+		case 3:
+			cMux = ADS1220_MUX_3_G;
+			break;
+		case 4:
+			cMux = ADS1220_MUX_DIV2;
+			break;
+		default:
+			cMux = ADS1220_MUX_0_1;
+		}
+		cMux |= ((range & 0x03) << 1); /* setup the gain bits for range with NO pga */
+		cMux |= ads1220_r0_for_mux_gain;
+		ADS1220WriteRegister(ADS1220_0_REGISTER, 0x01, &cMux, s);
 	}
-	cMux |= ((range & 0x03) << 1); /* setup the gain bits for range with NO pga */
-	cMux |= ads1220_r0_for_mux_gain;
-	ADS1220WriteRegister(ADS1220_0_REGISTER, 0x01, &cMux, s);
 }
 
 static void daqgert_ai_set_chan_range_ads8330(struct comedi_device *dev,
 					      struct comedi_subdevice *s,
 					      uint32_t chanspec)
 {
+	struct daqgert_private *devpriv = dev->private;
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
 	struct comedi_spigert *pdata = spi->dev.platform_data;
@@ -1465,39 +1469,42 @@ static void daqgert_ai_set_chan_range_ads8330(struct comedi_device *dev,
 	 * convert chanspec to input MUX switches if needed
 	 * we could just feed the raw bits to the Mux if needed
 	 */
-	switch (chan) {
-	case 1:
-		cMux = ADS8330_CMR_CH1 >> 8;
-		break;
-	default:
-		cMux = ADS8330_CMR_CH0 >> 8;
+
+	if (devpriv->ai_chan != chan) {
+		switch (chan) {
+		case 1:
+			cMux = ADS8330_CMR_CH1 >> 8;
+			break;
+		default:
+			cMux = ADS8330_CMR_CH0 >> 8;
+		}
+
+		pdata->tx_buff[0] = (ADS8330_CMR_CONF) >> 8;
+		pdata->tx_buff[1] = ADS8330_CFR_CONF;
+		pdata->tx_buff[2] = cMux;
+		pdata->tx_buff[3] = 0;
+
+		/* automatic cs toggle between transfers */
+		pdata->t[0].cs_change = false;
+		pdata->t[0].len = 2;
+		pdata->t[0].tx_buf = &pdata->tx_buff[0];
+		pdata->t[0].rx_buf = &pdata->rx_buff[0];
+		pdata->t[0].delay_usecs = 0;
+		pdata->t[1].cs_change = false;
+		pdata->t[1].len = 2;
+		pdata->t[1].tx_buf = &pdata->tx_buff[2];
+		pdata->t[1].rx_buf = &pdata->rx_buff[2];
+		pdata->t[1].delay_usecs = 0;
+		pdata->t[2].cs_change = false;
+		pdata->t[2].len = 2;
+		pdata->t[2].tx_buf = &pdata->tx_buff[2]; /* send twice to stop channel change glitches */
+		pdata->t[2].rx_buf = &pdata->rx_buff[2];
+		pdata->t[2].delay_usecs = 0;
+		spi_message_init_with_transfers(&m, &pdata->t[0], 3);
+		spi_bus_lock(spi->master);
+		spi_sync_locked(spi, &m);
+		spi_bus_unlock(spi->master);
 	}
-
-	pdata->tx_buff[0] = (ADS8330_CMR_CONF) >> 8;
-	pdata->tx_buff[1] = ADS8330_CFR_CONF;
-	pdata->tx_buff[2] = cMux;
-	pdata->tx_buff[3] = 0;
-
-	/* automatic cs toggle between transfers */
-	pdata->t[0].cs_change = false;
-	pdata->t[0].len = 2;
-	pdata->t[0].tx_buf = &pdata->tx_buff[0];
-	pdata->t[0].rx_buf = &pdata->rx_buff[0];
-	pdata->t[0].delay_usecs = 0;
-	pdata->t[1].cs_change = false;
-	pdata->t[1].len = 2;
-	pdata->t[1].tx_buf = &pdata->tx_buff[2];
-	pdata->t[1].rx_buf = &pdata->rx_buff[2];
-	pdata->t[1].delay_usecs = 0;
-	pdata->t[2].cs_change = false;
-	pdata->t[2].len = 2;
-	pdata->t[2].tx_buf = &pdata->tx_buff[2]; /* send twice to stop channel change glitches */
-	pdata->t[2].rx_buf = &pdata->rx_buff[2];
-	pdata->t[2].delay_usecs = 0;
-	spi_message_init_with_transfers(&m, &pdata->t[0], 3);
-	spi_bus_lock(spi->master);
-	spi_sync_locked(spi, &m);
-	spi_bus_unlock(spi->master);
 }
 
 /*
@@ -1643,20 +1650,8 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 				pdata->t[0].delay_usecs = 0;
 				pdata->t[0].tx_buf = &pdata->tx_buff[0];
 				pdata->t[0].rx_buf = &pdata->rx_buff[0];
-
-				pdata->t[1].len = 2;
-				pdata->t[1].cs_change = false;
-				pdata->t[1].delay_usecs = 0;
-				pdata->t[1].tx_buf = &pdata->tx_buff[0];
-				pdata->t[1].rx_buf = &pdata->rx_buff[0];
-				pdata->t[2].len = 2;
-				pdata->t[2].cs_change = false;
-				pdata->t[2].delay_usecs = 0;
-				pdata->t[2].tx_buf = &pdata->tx_buff[0];
-				pdata->t[2].rx_buf = &pdata->rx_buff[0];
-
 				spi_message_init_with_transfers(&m,
-								&pdata->t[0], 3);
+								&pdata->t[0], 1);
 				spi_bus_lock(spi->master);
 				spi_sync_locked(spi, &m);
 				spi_bus_unlock(spi->master);
