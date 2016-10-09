@@ -83,8 +83,11 @@ daqgert_conf options:
 2 = MCP3002 ADC and MCP4822 DAC: 10bit in/12bit out
 3 = MCP3202 ADC and MCP4802 DAC: 12bit in/8bit out
 4 = ADS1220 ADC and MCP4822 DAC: 24bit in/12bit out
+14 = ADS1220 ADC and MCP4802 DAC: 24bit in/8bit out
 5 = force PIC slave P8722 mode
 6 = force PIC slave P25k22 mode
+16 = ADS8330 ADC and MCP4822 DAC: 16bit in/12bit out
+17 = ADS8330 ADC and MCP4802 DAC: 16bit in/8bit out
 
 gert_autolocal options:
 0 = don't autoload (mainly for testing)

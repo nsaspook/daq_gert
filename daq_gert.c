@@ -137,6 +137,7 @@ by the module option variable daqgert_conf in the /etc/modprobe.d directory
 2 = MCP3002 ADC and MCP4822 DAC: 10bit in/12bit out
 3 = MCP3202 ADC and MCP4802 DAC: 12bit in/8bit out
 4 = ADS1220 ADC and MCP4822 DAC: 24bit in/12bit out
+14 = ADS1220 ADC and MCP4802 DAC: 24bit in/8bit out
 5 = force PIC slave P8722 mode
 6 = force PIC slave P25k22 mode
 16 = ADS8330 ADC and MCP4822 DAC: 16bit in/12bit out
@@ -3051,7 +3052,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	} else {
 		use_hunking = false;
 	}
-	if (daqgert_conf == 4) /* single transfers, ADC is in continuous conversion mode */
+	if (daqgert_conf == 4|| daqgert_conf == 14) /* single transfers, ADC is in continuous conversion mode */
 		use_hunking = false;
 	devpriv->use_hunking = use_hunking; /* defaults to true */
 
@@ -3095,14 +3096,14 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		}
 		/*
 		 * we have a valid device pointer, see which one and 
-		 * init hardware for special cases that may need 
+		 * probe/init hardware for special cases that may need 
 		 * many SPI transfers
 		 */
 		if (pdata->slave.spi->chip_select == thisboard->ai_cs) {
 			devpriv->ai_spi = &pdata->slave;
 			pdata->one_t.tx_buf = pdata->tx_buff;
 			pdata->one_t.rx_buf = pdata->rx_buff;
-			if (daqgert_conf == 4) { /* ads1220 mode */
+			if (daqgert_conf == 4 || daqgert_conf == 14) { /* ads1220 mode */
 				/* 
 				 * setup ads1220 registers
 				 */
@@ -3698,6 +3699,10 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 	case 4:
 		spi_adc->device_type = ads1220;
 		spi_dac->device_type = mcp4822;
+		break;
+	case 14:
+		spi_adc->device_type = ads1220;
+		spi_dac->device_type = mcp4802;
 		break;
 	case 16:
 		spi_adc->device_type = ads8330;
