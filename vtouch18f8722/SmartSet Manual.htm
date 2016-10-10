@@ -1,0 +1,697 @@
+<html>
+<head>
+<title>SS manual</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<h3 align="left"><font face="Arial, Helvetica, sans-serif">SmartSet&#153;</font></h3>
+<h3 align="left"><font face="Arial, Helvetica, sans-serif">Touchscreen Controller 
+  Family </font></h3>
+<h3 align="left"><font face="Arial, Helvetica, sans-serif">Technical Reference 
+  Manual </font></h3>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif">Revision B</font></h4>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif">P/N 676553-000</font></h4>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif">Elo TouchSystems, Inc.</font></h4>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif">6500 Kaiser Drive</font></h4>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif">Fremont, CA 94555</font></h4>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif">1-800-ELO-TOUCH</font></h4>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif">www.elotouch.com</font></h4>
+<table width="600" border="0" align="left">
+  <tr> 
+    <td height="27"> 
+      <h3><font face="Arial, Helvetica, sans-serif">Copyright</font></h3>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Copyright &copy; 1993, 
+        2003 by Elo TouchSystems, Inc. All rights reserved. Reproduction, adaptation, 
+        or translation without prior written permission is prohibited, except 
+        as allowed under copyright laws. Printed in USA.</font></p>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <h3><font face="Arial, Helvetica, sans-serif">Disclaimer</font></h3>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">The information in 
+        this document is subject to change without notice. Elo TouchSystems makes 
+        no representations or warranties with respect to the contents hereof, 
+        and specifically disclaims any implied warranties of merchantability or 
+        fitness for a particular purpose. Elo TouchSystems reserves the right 
+        to revise this publication and to make changes from time to time in the 
+        content hereof without obligation of Elo TouchSystems to notify any person 
+        of such revisions or changes.</font></p>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <h3><font face="Arial, Helvetica, sans-serif">Trademark Acknowledgements</font></h3>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">IntelliTouch, AccuTouch, 
+        CarrollTouch, and MonitorMouse are registered trademarks, and COACh, COACh 
+        IIs, SecureTouch, iTouch, ELODEV, TouchUp, TouchBack, and SmartSet are 
+        trademarks of Elo TouchSystems, Inc. All other trademarks are the property 
+        of their respective holders.</font></p>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <h3><font face="Arial, Helvetica, sans-serif">End-User License Agreement</font></h3>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">BY DOWNLOADING AND/OR 
+        INSTALLING THE SOFTWARE YOU ARE AGREEING TO BECOME BOUND BY THE TERMS 
+        OF THIS AGREEMENT, INCLUDING THIS SOFTWARE PRODUCT LICENSE AND LIMITED 
+        WARRANTY.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">IMPORTANT READ CAREFULLY: 
+        This Elo TouchSystems End-User License Agreement (&quot;EULA&quot;) is 
+        a legal agreement between you (either an individual or a single entity) 
+        and Elo TouchSystems for the software portion of this Elo TouchSystems 
+        touchscreen and controller or touchmonitor, which includes the accompanying 
+        computer software, printed materials and any &quot;online&quot; or electronic 
+        documentation (&quot;SOFTWARE&quot;). By installing, copying or otherwise 
+        using the SOFTWARE, you agree to be bound by the terms of this EULA. User 
+        must accept the terms of this agreement when prompted, in order to complete 
+        download and/or installation of the software.</font></p>
+      <p></p>
+      <p><i><font face="Arial, Helvetica, sans-serif" size="2">Software Product 
+        License</font></i></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">The SOFTWARE is protected 
+        by U.S. and international copyright laws and treaties, as well as other 
+        intellectual property laws and treaties. The SOFTWARE is licensed, not 
+        sold.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">1. GRANT OF LICENSE. 
+        This EULA grants you the following rights:</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">* Software. You may 
+        install and use one copy of the SOFTWARE on a single computer associated 
+        with a single Elo TouchSystems touchscreen and controller or touchmonitor.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">* Storage/Network 
+        Use. You may also store or install a copy of the SOFTWARE on a storage 
+        device, such as a network server, used only to install or run the SOFTWARE 
+        on a client computer over an internal network; however, you must acquire 
+        and dedicate a license for each individual client computer on which the 
+        SOFTWARE is installed or run from the storage device, and each such client 
+        computer must use an Elo TouchSystem's touchscreen and controller or touchmonitor 
+        in conjunction with the SOFTWARE. A license for the SOFTWARE may not be 
+        shared or used concurrently on different computers.</font></p>
+      <p></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">* Multiple Elo TouchSystems 
+        Touchscreens and Controllers or Touchmonitors. If you purchase multiple 
+        Elo TouchSystems touchscreens and controllers or touchmonitors, you may 
+        make one (1) copy of the SOFTWARE included with your purchase, and you 
+        may use each copy in the manner specified above. </font> </p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">2. DESCRIPTION OF 
+        OTHER RIGHTS AND LIMITATIONS.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">* Limitations on Reverse 
+        Engineering, Decompilation and Disassembly. You agree not to reverse engineer, 
+        decompile, or disassemble the SOFTWARE, except and only to the extent 
+        that such activity is expressly permitted by applicable law notwithstanding 
+        this limitation.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">* Separation of Components. 
+        The SOFTWARE is licensed as a single product. Its component parts may 
+        not be separated for use on more than one computer.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">* Rental. You may 
+        not rent, lease, or sublicense the SOFTWARE.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">* Software Transfer. 
+        You may permanently transfer all of your rights under this EULA, provided 
+        you retain no copies, you transfer all of the SOFTWARE (including all 
+        component parts, the media and printed materials, any upgrades, this EULA 
+        and, if applicable, the certificate of Authenticity) along with the accompanying 
+        Elo TouchSystems touchscreen and controller or touchmonitor, and the recipient 
+        agrees to the terms of this EULA. If the SOFTWARE portion is an upgrade, 
+        any transfer must include all prior versions of the SOFTWARE.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">* Termination. Without 
+        prejudice to any other rights, Elo TouchSystems may terminate this EULA 
+        if you fail to comply with the terms and conditions of this EULA. In such 
+        event, you must destroy all copies of the SOFTWARE and all of its component 
+        parts.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">3. COPYRIGHT. All 
+        title and copyrights in and to the SOFTWARE (including but not limited 
+        to any images, photographs, animations, video, audio, music, text and 
+        &quot;applets,&quot; incorporated into the SOFTWARE), the accompanying 
+        printed materials, and any copies of the SOFTWARE, are owned by Elo TouchSystems 
+        or its suppliers. The SOFTWARE is protected by U.S. copyright laws and 
+        international treaty provisions. Therefore, you must treat the SOFTWARE 
+        like any other copyrighted material except that you may either (a) make 
+        one copy of the SOFTWARE solely for backup or archival purposes, or (b) 
+        install the SOFTWARE on a single computer provided you keep the original 
+        solely for backup or archival purposes. You may not copy the printed materials 
+        accompanying the Elo TouchSystems touchscreen and controller or touchmonitor.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">4. MEDIA SOFTWARE. 
+        You may receive the SOFTWARE in more than one medium or by downloading 
+        from the Elo website. Regardless of the type, you may use only one medium 
+        that is appropriate for your single computer. You may not use or install 
+        the other medium on another computer. You may not loan, rent, lease, or 
+        otherwise transfer the other medium to another use, except as part of 
+        the permanent transfer (as provided above) of the entire Elo TouchSystems 
+        touchscreen and controller or touchmonitor.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">5. U.S. GOVERNMENT 
+        RESTRICTED RIGHTS. The SOFTWARE and documentation are provided with RESTRICTED 
+        RIGHTS. Use, duplication, or disclosure by the Government is subject to 
+        restrictions as set forth in subparagraph (c )(1)(ii) of the Rights in 
+        Technical Data and Computer Software clause at DFARS 252.227-7013 or subparagraphs 
+        (c )(1) and (2) of the Commercial Computer Software-Restricted Rights 
+        at 48 CFR 52.227-19, as applicable. Manufacturer is Elo TouchSystems, 
+        Inc./6500 Kaiser Drive/Fremont, CA 94555.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2"><i>Limited Warranty</i></font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">THIS SOFTWARE AND 
+        ACCOMPANYING WRITTEN MATERIALS ARE PROVIDED &quot;AS IS&quot; WITHOUT 
+        WARRANTY OF ANY KIND. FURTHER, ELO TOUCHSYSTEMS (&quot;ELO&quot;) DOES 
+        NOT GUARANTEE, OR MAKE ANY REPRESENTATIONS REGARDING THE USE, OR THE RESULTS 
+        OF THE USE, OF THE SOFTWARE OR ACCOMPANYING WRITTEN MATERIALS IN TERMS 
+        OF CORRECTNESS, ACCURACY, RELIABILITY OR CURRENTNESS. IF THE INCLUDED 
+        SOFTWARE OR ACCOMPANYING WRITTEN MATERIALS ASSUME THE COST OF ALL NECESSARY 
+        SERVICING, REPAIR, OR CORRECTION. THE ENTIRE RISK AS TO THE RESULTS AND 
+        PERFORMANCE OF THE SOFTWARE AND ANY FURTHER PROGRAMS OR WRITTEN MATERIALS 
+        DEVELOPED UTILIZING THESE MATERIALS IS ASSUMED BY YOU.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">EXCEPT AS PROVIDED 
+        ABOVE, ELO DISCLAIMS ALL WARRANTIES, EITHER EXPRESSED OR IMPLIED, INCLUDING 
+        BUT NOT LIMITED TO IMPLIED WARRANTIES OR MERCHANTABILITY AND FITNESS FOR 
+        A PARTICULAR PURPOSE, WITH RESPECT TO THE SOFTWARE OR WRITTEN MATERIALS. 
+        IN NO EVENT SHALL ELO BE LIABLE FOR ANY INCIDENTAL OR CONSEQUENTIAL DAMAGES 
+        OF ANY KIND.</font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2"><i>Governing Law</i></font></p>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">This agreement shall 
+        be governed by and construed in accordance with the laws of the State 
+        of California.</font></p>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <h3>&nbsp;</h3>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <h3><font face="Arial, Helvetica, sans-serif"><a name="fcc_notice"></a>FCC 
+        Notice</font></h3>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">This device complies 
+        with Part 15 of the FCC Rules. Operation is subject to the following two 
+        conditions: (1) This device may not cause harmful interference, and (2) 
+        this device must accept any interference received, including interference 
+        that may cause undesired operation.</font></p>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <h3>&nbsp;</h3>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <h3><font face="Arial, Helvetica, sans-serif">UL Notice</font></h3>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Elo PC-Bus controllers 
+        are for use only with IBM or compatible UL Listed personal computers that 
+        have installation instructions detailing user installation of card cage 
+        accessories.</font></p>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <h3>&nbsp;</h3>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <table width="400" border="0" align="left">
+        <tr> 
+          <td> 
+            <h3><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_1.htm">Chapter 
+              1 Introduction</a></b></font></h3>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_1.htm#ss_controllers_and_features">SmartSet 
+              Controllers and Features</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_1.htm#at_e2712201_serial_controller">AccuTouch 
+                E271-2210 Serial Controller</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_1.htm#at_e2712201_pc_bus_controller">AccuTouch 
+                E271-2201 PC-Bus Controller</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_1.htm#it_2500s_serial_controller">IntelliTouch 
+                2500S Serial Controller</a></font></h5>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_1.htm#theory_of_operation">Theory 
+              of Operation</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_1.htm#at_touchscreen">The 
+                AccuTouch Touchscreen</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_1.htm#it_touchscreen">The 
+                IntelliTouch Touchscreen</a></font></h5>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_1.htm#about_this_manual">About 
+              This Manual</a></font></h4>
+            <h3><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_2.htm">Chapter 
+              2 Controller Jumper Settings </a></b></font></h3>
+            <h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#general_information">General 
+              Information</a> </font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#selecting_powr-on_set-w_jumpers">Selecting 
+                Power-On Settings with Jumpers</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#select_pwr-on_set_frm_nvram">Selecting 
+                Power-On Settings from NVRAM</a></font></h5>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#e271-2210_serial_controller">E271-2210 
+              Serial Controller</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#sel_the_data_trans_rate">Selecting 
+                the Data Transmission Rate</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#sel_data_format">Selecting 
+                the Data Format</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#hardware_handshaking">Hardware 
+                Handshaking</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm">Choosing 
+                Single-Point or Stream Modes</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#emulation_mode">Emulation 
+                Mode</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#reserved_jumpers">Reserved 
+                Jumpers</a></font></h5>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#e271-2201_pc_bus_controller">E271-2201 
+              PC-Bus Controller</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#select_base_i/o_port">Selecting 
+                the Base I/O Port</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#sel_interrupt_irq">Selecting 
+                the Interrupt (IRQ)</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#choosing_single-point_or_stream_modes">Choosing 
+                Single-Point or Stream Modes</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#select_touchscreen_type">Selecting 
+                the Touchscreen Type</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#emulation_mode">Emulation 
+                Mode</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#8_and_12_bit_modes">8- 
+                and 12-Bit Modes</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#reserved_jumpers">Reserved 
+                Jumpers</a></font></h5>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#2500s_serial_controller">2500S 
+              Serial Controller</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#set_nvram_to_defaults_pwr_up">Set 
+                NVRAM to Defaults on Power Up</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_2.htm#e281A-4002_emulation_mode">E281A-4002 
+                Emulation Mode</a></font></h5>
+            </blockquote>
+            <h3><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm">Chaper 
+              3 Installation and Connections</a></font></h3>
+            <div align="left"> 
+              <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#e271-2210_serial_controller">E271-2210 
+                Serial Controller</a></font></h4>
+            </div>
+            <blockquote> 
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#installation">Installation</a></font></h5>
+              </div>
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#mounting_controller_and_connect_chassis_grnd">Mounting 
+                  the Controller and Connecting Chassis Ground</a></font></h5>
+              </div>
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#connections">Connections</a></font></h5>
+              </div>
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#power_connections">Power 
+                  Connections</a></font></h5>
+              </div>
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#serial_connections">Serial 
+                  Connections</a></font></h5>
+              </div>
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#touchscreen_connections">Touchscreen 
+                  Connections</a></font></h5>
+              </div>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#e271-2201_pc-bus_controller">E271-2201 
+              PC-Bus Controller</a></font></h4>
+            <blockquote> 
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#installation">Installation</a></font></h5>
+              </div>
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#e271-2201_pc_bus_controller_connections">Connections</a></font></h5>
+              </div>
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#accutouch">AccuTouch</a></font></h5>
+              </div>
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#duratouch">DuraTouch</a></font></h5>
+              </div>
+            </blockquote>
+            <div align="left"> 
+              <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#2500s_serial_controller">2500S 
+                Serial Controller</a></font></h4>
+            </div>
+            <blockquote> 
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_3.htm#2500s_serial_controller_installation">Installation</a></font></h5>
+                <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#mounting_controller_and_connecting_chassis_ground">Mounting 
+                  the Controller and Connecting Chassis Ground</a></b></font></h5>
+              </div>
+            </blockquote>
+            <div align="left"> 
+              <h4><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#2500s_serial_controller_connections">Connections</a></b></font></h4>
+            </div>
+            <blockquote> 
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#2500s_serial_controller_power_connection">Power 
+                  Connection</a></b></font></h5>
+                <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#2500s_serial_controler_connection">Serial 
+                  Connection</a></b></font></h5>
+                <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#touchscreen_connection">Touchscreen 
+                  Connection</a></b></font></h5>
+              </div>
+            </blockquote>
+            <div align="left"> 
+              <h4><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#diagnostic_leds">Diagnostic 
+                LEDs</a></b></font></h4>
+            </div>
+            <blockquote> 
+              <div align="left"> 
+                <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#e271-2210_controller">E271-2210 
+                  Controller</a></b></font></h5>
+                <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#e271-2201_controller">E271-2201 
+                  Controller</a></b></font></h5>
+                <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#2500s_controller">2500S 
+                  Controller</a></b></font></h5>
+                <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_3.htm#remote_led_capability">Remote 
+                  LED Capability</a></b></font></h5>
+              </div>
+            </blockquote>
+            <h3><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm">Chapter 
+              4 SmartSet Tutorial</a></font></h3>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#intro_to_ss_program">Introduction 
+              to the SmartSet Program</a></font></h4>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#running_ss">Running 
+              SmartSet</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#main_menu_categories">Main 
+                Menu Categories</a></font></h5>
+            </blockquote>
+            <h4> <font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#sample_ss_session">Sample 
+              SmartSet Session</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#enabling_touch_reporting">Enabling 
+                Touch Reporting</a> </font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#changing_touch_mode">Changing 
+                the Touch Mode </a> </font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#calibration">Calibration</a> 
+                </font></h5>
+              <h5><b><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#range_check_mode">Range 
+                Checking Mode</a></font></b></h5>
+              <h5><b><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#trim_mode">Trim 
+                Mode</a></font></b></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#scaling">Scaling</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_4.htm#axis_inversion">Axis 
+                Inversion</a></b></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#saving_setup">Saving 
+                the Setup</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><b><a href="pages/chapter_4.htm#second_calib_scaling">Second 
+                Calibration/Scaling</a></b></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#programming_multi_controllers">Programming 
+                Multiple Controllers</a></font></h5>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_4.htm#where_to_go_from_here">Where 
+              To Go From Here</a></font></h4>
+            <h3><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm">Chapter 
+              5 Software Interface</a></font></h3>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#packet_structure">Packet 
+              Structure</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#commands_and_responses">Commands 
+                and Responses</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#commands_and_acknldgmnts">Commands 
+                and Acknowledgements</a></font></h5>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#interface_specifics">Interface 
+              Specifics</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#serial_controllers">Serial 
+                Controllers</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#lead_in_byte">Lead-in 
+                Byte</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#checksum_byte">Checksum 
+                Byte</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#key_byte">Key 
+                Byte</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#software_handshaking">Software 
+                Handshaking</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#hardware_handshaking">Hardware 
+                Handshaking</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#duplex">Duplex</a></font></h5>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#bus_controller">Bus 
+              Controllers</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#base_io_port">Base 
+                I/O Port</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#polled_mode">Polled 
+                Mode</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#interrupt_mode">Interrupt 
+                Mode</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#pc_bus_interrupt_specifics">PC-Bus 
+                Interrupt Specifics</a></font></h5>
+            </blockquote>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#sample_driver_code">Sample 
+              Driver Code</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#example1">Example1 
+                - Display Controller Defaults and Raw Touch Coordinates </a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#example2_calibrate_fingerpaint">Example2 
+                - Calibrate and Finger Paint </a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#packet_c">PACKET.C 
+                - Interface-Independent Driver Code </a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#serialc">SERIAL.C 
+                - Machine-Independent Serial Driver Code </a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#busc_pcbus_code">BUS.C 
+                - PC-Bus Code</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_5.htm#interrupt_driven_code">Interrupt-Driven 
+                Code</a> </font></h5>
+            </blockquote>
+            <h3><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm">Chapter 
+              6 Command Reference</a></font></h3>
+            <h4><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#introduction">Introduction</a></font></h4>
+            <blockquote> 
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#terms">Terms</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#notation">Notation</a></font></h5>
+              <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#reserved_bytes">Reserved 
+                Bytes</a></font></h5>
+            </blockquote>
+            <h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#command_descriptions">Command 
+              Descriptions</a> </font></h4>
+            <table width="395" border="0">
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#acknowledge_a">Acknowledge 
+                    ('a')</a></font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#key_k_serial_cont_only">Key 
+                    ('K','k') - Serial Controllers Only </a></font></h5>
+                </td>
+              </tr>
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#report_b">Report 
+                    ('B','b')</a></font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#low_power_l">Low 
+                    Power ('L','l')</a> </font></h5>
+                </td>
+              </tr>
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#calibration_c">Calibration 
+                    ('C','c')</a> </font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#mode_m">Mode 
+                    ('M','m')</a> </font></h5>
+                </td>
+              </tr>
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#diagnostics_d">Diagnostics 
+                    ('D','d')</a> </font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#nonvolatile_ram_n">Nonvolatile 
+                    RAM ('N')</a> </font></h5>
+                </td>
+              </tr>
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#emulate_e">Emulate 
+                    ('E','e')<br>
+                    Serial Controllers Only</a></font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#owner_o">Owner 
+                    ('o')</a></font></h5>
+                </td>
+              </tr>
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#filter_f">Filter 
+                    ('F','f')</a></font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#parameter_p">Parameter 
+                    ('P','p')</a> </font></h5>
+                </td>
+              </tr>
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#configuration_g">Configuration 
+                    ('g')</a></font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#quite_q">Quiet 
+                    ('Q','q')</a></font></h5>
+                </td>
+              </tr>
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#timer_h">Timer 
+                    ('H','h')</a> </font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#reset_r">Reset 
+                    ('R')</a> </font></h5>
+                </td>
+              </tr>
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#id_i">ID 
+                    ('i')</a> </font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#scaling_s">Scaling 
+                    ('S','s')</a> </font></h5>
+                </td>
+              </tr>
+              <tr valign="top"> 
+                <td width="159"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#jumpers_j">Jumpers 
+                    ('j'</a>) </font></h5>
+                </td>
+                <td width="226"> 
+                  <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/chapter_6.htm#touch_t">Touch 
+                    ('t') </a></font></h5>
+                </td>
+              </tr>
+            </table>
+            <h3 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_a.htm">Appendix 
+              A Optional Software Protocols</a></font></h3>
+            <h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_a.htm#e2712210_controller">E271-2210 
+              Controller</a></font></h4>
+            <div align="left"> 
+              <blockquote> 
+                <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_a.htm#smartset_ascii_mode">SmartSet 
+                  ASCII Mode</a></font></h5>
+                <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_a.htm#e271140_and_e281A4002_emulation">E271-140 
+                  and E281A-4002 Emulation</a> </font></h5>
+                <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_a.htm#e261280_emulation">E261-280 
+                  Emulation</a> </font></h5>
+              </blockquote>
+            </div>
+            <h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_a.htm#2500s_controller">2500S 
+              Controller</a></font></h4>
+            <div align="left"> 
+              <blockquote> 
+                <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_a.htm#e281a4002_emulation">E281A-4002 
+                  Emulation</a> </font></h5>
+              </blockquote>
+            </div>
+            <div align="left"> 
+              <h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_a.htm#e2712201_controller">E271-2201 
+                Controller</a> </font></h4>
+            </div>
+            <div align="left"> 
+              <blockquote> 
+                <h5><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_a.htm#e271141_emulation">E271-141 
+                  Emulation</a> </font></h5>
+              </blockquote>
+            </div>
+            <div align="left"> 
+              <h3><font face="Arial, Helvetica, sans-serif"><a href="pages/appendix_b.htm">Appendix 
+                B Calibration and Scaling Algorithims</a></font></h3>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <h3>&nbsp;</h3>
+    </td>
+  </tr>
+</table>
+<h2 align="center">&nbsp;</h2>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</body>
+</html>

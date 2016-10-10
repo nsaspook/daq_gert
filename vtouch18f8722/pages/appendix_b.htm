@@ -1,0 +1,143 @@
+<html>
+<head>
+<title>Appendix B</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<h3><font face="Arial, Helvetica, sans-serif">Appendix B</font></h3>
+<h3><font face="Arial, Helvetica, sans-serif">Calibration and Scaling Algorithms 
+  </font></h3>
+<hr>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Typically, SmartSet controllers 
+  are setup through software and/or NVRAM to supply the host with calibrated and 
+  scaled touch coordinates, as described in <a href="chapter_5.htm">Chapter 5</a>. 
+  If you cannot set up the controller with this procedure, you will receive raw 
+  coordinates from the controller. The host software must then map these coordinates 
+  within the calibration range (defining the position and size of the screen image) 
+  and scaled into screen coordinates, such as 80x25. These operations can be performed 
+  with the formula given below. (For more information on calibration and scaling, 
+  see the tutorial in <a href="chapter_4.htm">Chapter 4</a>).</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2"><a href="chapter_4.htm#fig4_5">Figure 
+  4-5</a> shows a bezel opening and the position of an image within it. The touchscreen 
+  extends beyond the image into the overscan area, which is inaccessible to a 
+  program. The points at the extremes of the image are given two names, one in 
+  raw coordinates (denoted by &quot;R&quot;) and one in screen coordinates (denoted 
+  by &quot;S&quot;). Low points may be greater than high points and vice versa 
+  -- the formula works with any orientation. The point of touch to be converted 
+  will be at the &quot;+&quot;. It is also given two names: Cx,Cy for the raw 
+  coordinates, and X,Y for the screen coordinates.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The coordinates at the corners 
+  of the image are obtained by a calibration program that you write. See <a href="chapter_5.htm">Chapter 
+  5</a> for an example. This program simply outputs a point near one corner, lets 
+  the user touch it, then repeats the process near the opposite corner. These 
+  points are then extrapolated to the actual corners of the image, to reduce the 
+  effects of non-linearities in the display image. The calibration program stores 
+  the raw coordinates for each corner in a file. The driver or application you 
+  write will later load these points and use them in the conversion formula.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The screen coordinates in 
+  our example will be from 1 to 80 in X, and 1 to 25 in Y. Therefore, Sxlow=1, 
+  Sxhigh=80, Sylow=1, and Syhigh=25. Any coordinate scaling may be used, such 
+  as 0 to 99999 or -10 to 10.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The conversion process must 
+  be performed for both X and Y, but for simplicity, we will only give the formula 
+  in X:</font> </p>
+<table width="300" border="0" align="center">
+  <tr>
+    <td>X = (<img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Sx(Cx-Rxlow)/<img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Rx) 
+      + Sxlow</td>
+  </tr>
+</table>
+<p><font face="Arial, Helvetica, sans-serif" size="2">where</font></p>
+<table width="420" border="0" align="center">
+  <tr> 
+    <td> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Cx is the raw coordinate 
+        at &quot;+&quot; in the X-axis.</font></p>
+    </td>
+  </tr>
+  <tr> 
+    <td height="14"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X is the translated 
+        coordinate at &quot;+&quot; in screen coordinates.</font></p>
+    </td>
+  </tr>
+  <tr> 
+    <td height="19"> 
+      <pre><font face="Arial, Helvetica, sans-serif" size="2"><img src="../images/triangle.gif" width="12" height="14">Rx = Rxhigh - Rxlow  (range of raw calibration coordinates).</font></pre>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2"><img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Sx 
+        = Sxhigh - Sxlow (range of screen coordinates, e.g. 79 = 80-).</font></p>
+    </td>
+  </tr>
+</table>
+<p><font face="Arial, Helvetica, sans-serif" size="2">This algorithm can be computed 
+  with integer arithmetic if you do the following:</font></p>
+<ol>
+  <li> 
+    <p><font face="Arial, Helvetica, sans-serif" size="2">Do the multiply <img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Sx(Cx-Rxlow) 
+      before dividing by <img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Rx. 
+      <img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Rx 
+      and <img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Sx 
+      can be pre-computed to improve performance, but <img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Sx/<img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Rx 
+      will likely be zero if pre-computed because <img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Sx 
+      may be smaller than <img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Rx.</font></p>
+  </li>
+  <li> 
+    <p><font face="Arial, Helvetica, sans-serif" size="2">To adjust for slight 
+      rounding errors introduced in integer arithmetic, add a rounding constant 
+      to the formula:</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">X = (<img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Sx(Cx-Rxlow+(<img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Rx/2<img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Sx))/<img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Rx) 
+      + Sxlow</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The rounding constant 
+      may be pre-computed.</font></p>
+  </li>
+</ol>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Other notes:</font></p>
+<ol>
+  <li><font face="Arial, Helvetica, sans-serif" size="2">Touches outside the calibration 
+    range may be pushed just inside before the conversion is performed, (equivalent 
+    of Trim Mode), although add the rounding constant first. This effectively 
+    enlarges any touch zones at the edge of the image. It also insures coordinates 
+    will always be in the desired range. For example:</font></li>
+</ol>
+<table width="336" border="0" align="center">
+  <tr> 
+    <td> 
+      <p><font face="Courier New, Courier, mono" size="2">IF Cx &lt; Rxlow THEN 
+        Cx := Rxlow</font></p>
+    </td>
+  </tr>
+  <tr> 
+    <td> 
+      <p><font face="Courier New, Courier, mono" size="2">ELSE IF Cx &gt; Rxhigh 
+        THEN Cx := Rxhigh;</font></p>
+    </td>
+  </tr>
+</table>
+<ol start="2">
+  <li><font face="Arial, Helvetica, sans-serif" size="2">The calibration points 
+    should not appear anywhere inside your application program. By loading them 
+    at run time, your application has kept touchscreen and controller independent.</font></li>
+  <li><font face="Arial, Helvetica, sans-serif" size="2">The above formula works 
+    with signed numbers. This means that if your touchscreen is installed upside 
+    down, while <img src="../images/triangle.gif" width="12" height="14" align="absmiddle">Ry 
+    may be negative, the translated coordinates will still be as expected. Also, 
+    if you wish to invert the X-axis for example, just specify a Sxhigh that is 
+    less than Sxlow, such as 80 to 1.</font></li>
+  <li><font face="Arial, Helvetica, sans-serif" size="2">If you prefer the default 
+    origin in the lower left for example, just make the low calibration point 
+    be in the lower left, and the high in the upper right. As you can see, the 
+    formula allows any origin, axis orientation and scaling, independent of the 
+    touchscreen and controller.</font></li>
+  <li><font face="Arial, Helvetica, sans-serif" size="2">A third calibration point 
+    may be added to detect swapped axes. If the coordinates of the third corner 
+    change in what should be the constant axis, then the axes are swapped. See 
+    <a href="chapter_5.htm#example2_calibrate_fingerpaint">EXAMPLE2.C</a>.</font></li>
+</ol>
+<p>&nbsp;</p>
+</body>
+</html>

@@ -1,10 +1,5 @@
-# For more options and information see 
-# http://www.raspberrypi.org/documentation/configuration/config-txt.md
-# Some settings may impact device functionality. See link above for details
-
 # uncomment if you get no picture on HDMI for a default "safe" mode
 #hdmi_safe=1
-#boot_delay=1
 
 # uncomment this if your display has a black border of unused pixels visible
 # and your display can output without overscan
@@ -43,10 +38,11 @@
 #uncomment to overclock the arm. 700 MHz is the default.
 #arm_freq=800
 
-#device_tree=
-dtparam=spi=on
-kernel=kernel_new_d1.img
+# for more options see http://elinux.org/RPi_config.txt
+gpu_mem=16
+kernel=kernel_new.img
 #kernel=kernel7.img
-dtparam=i2c_arm=off
+dtparam=spi=on
 dtoverlay=rpi-spigert
-gpu_mem=64
+dtoverlay=spi0-hw-cs
+dtparam=i2c_arm=off

@@ -1,0 +1,128 @@
+requirement for carroll screen.
+
+Point Mode
+Add exit point Modifer
+
+3c	software reset
+2b	scanning off
+44	report transfer on
+25	enter point mode
+29	add exit point modifer
+44	report transfer on
+3d	clear touch report buffer
+2a	touch scanning on
+
+unsigned char elocodes_s[ELO_SIZE]=
+{
+    0x0d,0x0d,0x0d,0x0d,0x0d,0x3c,0x2b,0x44,0x25,0x29,0x44,0x3d,0x2a
+}; 	// initial touch config codes, single with exit
+
+The Add Exit Point Coordinate Report has the following format:
+FD X Y FF
+FD = Start of Add Exit Point Coordinate report.
+X = X-axis logical touch coordinate.
+Y = Y-axis logical touch coordinate.
+FF = End of report.
+Example
+An example of an Add Exit Point Coordinate Report is:
+FD 10 00 FF
+It indicates that the center of the stylus exited at x coordinate 16 and at
+
+
+
+The Touch Coordinate Report has the following format:
+FE X Y FF
+FE = Start of Touch Coordinate Report.
+X = X-axis logical touch coordinate.
+Y = Y-axis logical touch coordinate.
+FF = End of report.
+
+
+
+data to host port
+
+Z-Data Enabled (E281A-4002 Mode) J2-N, J10-N, J11-Y; 0/1,6
+
+Byte
+ MSB
+ 
+ 
+ 
+ 
+ 
+ 
+ LSB
+ 
+1
+ 1
+ 1
+ X11
+ X10
+ X9
+ X8
+ X7
+ X6
+ 
+2
+ 1
+ 0
+ X5
+ X4
+ X3
+ X2
+ X1
+ X0
+ 
+3
+ 0
+ 1
+ Y11
+ Y10
+ Y9
+ Y8
+ Y7
+ Y6
+ 
+4
+ 0
+ 0
+ Y5
+ Y4
+ Y3
+ Y2
+ Y1
+ Y0
+ 
+5
+ 0
+ 0
+ Z11
+ Z10
+ Z9
+ Z8
+ Z7
+ Z6
+ 
+6
+ 
+ 0
+ Z5
+ Z4
+ Z3
+ Z2
+ Z1
+ Z0
+ 
+
+Since the Z coordinate is only a 4-bit number, bit positions Z11-Z4 will be 0. This includes all of byte 5.
+
+If jumpered for E281A-4002 emulation mode, or TouchFlag is 1, the Z value will be zero on untouch.
+
+
+Viision untouch sequence. always the same.
+
+C0 80 40 00 00 00    = 0X, 0Y, 0Z
+
+typical touch
+
+C3 99 42 1C 00 04    = 217X, 76Y, 4Z

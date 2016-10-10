@@ -1,0 +1,305 @@
+FILE		0x0	0	"C:\MCC18\v3_39\src\extended\startup\c018i_e.c"
+FN_START	0x0	25	"C:\MCC18\v3_39\src\extended\startup\c018i_e.c"	"_entry"	"external"	
+FN_END		0x4	27	
+FILE		0x0	0	"C:\MCC18\v3_39\src\extended\stdclib\__init.c"
+FN_START	0x6	9	"C:\MCC18\v3_39\src\extended\stdclib\__init.c"	"__init"	"external"	
+FN_END		0x6	9	
+FILE		0x0	0	"/fred/vtouch18f8722/example2.c"
+FN_START	0x8	190	"/fred/vtouch18f8722/example2.c"	"rx_int"	"external"	
+FN_END		0xc	191	
+FN_START	0x28	196	"/fred/vtouch18f8722/example2.c"	"rxtx_handler"	"external"	
+ADJUST		0x80	196	20
+CALL		0xac	212	"/fred/vtouch18f8722/example2.c"	"__pa_4"	0
+ADJUST		0xd4	230	1
+ADJUST		0xd8	230	1
+CALL		0xdc	230	"C:\MCC18\v3_39\src\pmc_common\Timers\t0write.c"	"WriteTimer0"	0
+ADJUST		0xe0	230	-2
+CALL		0xe4	232	"/fred/vtouch18f8722/example2.c"	"__pa_4"	0
+CALL		0x162	270	"/fred/vtouch18f8722/example2.c"	"__pa_1"	0
+CALL		0x174	275	"/fred/vtouch18f8722/example2.c"	"__pa_1"	0
+CALL		0x17e	276	"/fred/vtouch18f8722/example2.c"	"__pa_1"	0
+CALL		0x192	280	"/fred/vtouch18f8722/example2.c"	"__pa_1"	0
+CALL		0x19a	281	"/fred/vtouch18f8722/example2.c"	"__pa_1"	0
+CALL		0x1a4	282	"/fred/vtouch18f8722/example2.c"	"__pa_1"	0
+CALL		0x1ac	283	"/fred/vtouch18f8722/example2.c"	"__pa_7"	0
+CALL		0x1b0	284	"/fred/vtouch18f8722/example2.c"	"__pa_7"	0
+CALL		0x1b4	285	"/fred/vtouch18f8722/example2.c"	"__pa_7"	0
+CALL		0x1d4	296	"/fred/vtouch18f8722/example2.c"	"__pa_1"	0
+CALL		0x1fe	318	"/fred/vtouch18f8722/example2.c"	"__pa_4"	0
+CALL		0x224	333	"/fred/vtouch18f8722/example2.c"	"__pa_4"	0
+ADJUST		0x2ac	353	1
+ADJUST		0x2b0	353	1
+ADJUST		0x2b4	353	1
+ADJUST		0x2b8	353	1
+ADJUST		0x2bc	353	1
+CALL		0x2c0	353	"/fred/vtouch18f8722/example2.c"	"__pa_2"	0
+ADJUST		0x2c6	354	1
+ADJUST		0x2ca	354	1
+ADJUST		0x2ce	354	1
+ADJUST		0x2d2	354	1
+ADJUST		0x2d6	354	1
+CALL		0x2da	354	"/fred/vtouch18f8722/example2.c"	"__pa_2"	0
+ADJUST		0x2fe	355	1
+CALL		0x304	355	"/fred/vtouch18f8722/example2.c"	"__pa_5"	0
+ADJUST		0x30e	356	1
+CALL		0x314	356	"/fred/vtouch18f8722/example2.c"	"__pa_5"	0
+ADJUST		0x334	357	1
+CALL		0x33c	357	"/fred/vtouch18f8722/example2.c"	"__pa_5"	0
+ADJUST		0x344	358	1
+CALL		0x34c	358	"/fred/vtouch18f8722/example2.c"	"__pa_5"	0
+CALL		0x34e	359	"/fred/vtouch18f8722/example2.c"	"__pa_6"	0
+CALL		0x364	365	"/fred/vtouch18f8722/example2.c"	"__pa_0"	0
+CALL		0x36c	366	"/fred/vtouch18f8722/example2.c"	"__pa_0"	0
+CALL		0x376	367	"/fred/vtouch18f8722/example2.c"	"__pa_0"	0
+CALL		0x380	368	"/fred/vtouch18f8722/example2.c"	"__pa_0"	0
+CALL		0x384	369	"/fred/vtouch18f8722/example2.c"	"__pa_6"	0
+ADJUST		0x432	405	-20
+FN_END		0x436	405	
+FN_START	0x438	407	"/fred/vtouch18f8722/example2.c"	"wdtdelay"	"external"	
+ADJUST		0x438	407	1
+ADJUST		0x442	407	4
+ADJUST		0x476	413	-5
+FN_END		0x47c	413	
+FN_START	0x47e	415	"/fred/vtouch18f8722/example2.c"	"elocmdout"	"external"	
+ADJUST		0x47e	415	1
+ADJUST		0x488	415	3
+ADJUST		0x4da	423	1
+CALL		0x4de	423	"C:\MCC18\v3_39\src\pmc_common\USART\u2write.c"	"Write2USART"	0
+ADJUST		0x4e2	423	-1
+CALL		0x4e4	424	"/fred/vtouch18f8722/example2.c"	"__pa_4"	0
+ADJUST		0x4f0	426	1
+ADJUST		0x4f4	426	1
+CALL		0x4f4	426	"/fred/vtouch18f8722/example2.c"	"__pa_3"	0
+ADJUST		0x500	428	1
+ADJUST		0x504	428	1
+CALL		0x504	428	"/fred/vtouch18f8722/example2.c"	"__pa_3"	0
+ADJUST		0x506	429	-4
+FN_END		0x50c	429	
+FN_START	0x50e	431	"/fred/vtouch18f8722/example2.c"	"main"	"external"	
+ADJUST		0x50e	431	1
+ADJUST		0x518	431	2
+ADJUST		0x54a	475	1
+ADJUST		0x54c	475	1
+ADJUST		0x550	475	1
+CALL		0x552	475	"C:\MCC18\v3_39\src\pmc_common\USART\u1open.c"	"Open1USART"	0
+ADJUST		0x556	475	-3
+ADJUST		0x55a	483	1
+ADJUST		0x55c	483	1
+ADJUST		0x560	483	1
+CALL		0x562	483	"C:\MCC18\v3_39\src\pmc_common\USART\u2open.c"	"Open2USART"	0
+ADJUST		0x566	483	-3
+ADJUST		0x56a	485	1
+CALL		0x56c	485	"C:\MCC18\v3_39\src\pmc_common\Timers\t0open.c"	"OpenTimer0"	0
+ADJUST		0x570	485	-1
+ADJUST		0x572	486	1
+ADJUST		0x576	486	1
+CALL		0x57a	486	"C:\MCC18\v3_39\src\pmc_common\Timers\t0write.c"	"WriteTimer0"	0
+ADJUST		0x57e	486	-2
+CALL		0x58a	496	"C:\MCC18\v3_39\src\pmc_common\USART\u1read.c"	"Read1USART"	0
+CALL		0x596	499	"C:\MCC18\v3_39\src\pmc_common\USART\u2read.c"	"Read2USART"	0
+ADJUST		0x5a0	504	1
+ADJUST		0x5a4	504	1
+ADJUST		0x5a8	504	1
+CALL		0x5aa	504	"C:\MCC18\v3_39\src\pmc_common\USART\u1putrs.c"	"putrs1USART"	0
+ADJUST		0x5ae	504	-3
+ADJUST		0x5b4	507	1
+ADJUST		0x5b8	507	1
+ADJUST		0x5bc	507	1
+ADJUST		0x5be	507	1
+CALL		0x5c0	507	"/fred/vtouch18f8722/example2.c"	"wdtdelay"	0
+ADJUST		0x5c2	507	-4
+ADJUST		0x5cc	509	1
+ADJUST		0x5d0	509	1
+ADJUST		0x5d4	509	1
+CALL		0x5d6	509	"/fred/vtouch18f8722/example2.c"	"elocmdout"	0
+ADJUST		0x5d8	509	-3
+ADJUST		0x5e4	513	1
+ADJUST		0x5e8	513	1
+ADJUST		0x5ec	513	1
+CALL		0x5ee	513	"/fred/vtouch18f8722/example2.c"	"elocmdout"	0
+ADJUST		0x5f0	513	-3
+ADJUST		0x5f4	514	1
+ADJUST		0x5f8	514	1
+ADJUST		0x5fc	514	1
+CALL		0x5fe	514	"/fred/vtouch18f8722/example2.c"	"elocmdout"	0
+ADJUST		0x600	514	-3
+ADJUST		0x604	515	1
+ADJUST		0x608	515	1
+ADJUST		0x60c	515	1
+CALL		0x60e	515	"/fred/vtouch18f8722/example2.c"	"elocmdout"	0
+ADJUST		0x610	515	-3
+ADJUST		0x614	516	1
+ADJUST		0x618	516	1
+ADJUST		0x61c	516	1
+CALL		0x61e	516	"/fred/vtouch18f8722/example2.c"	"elocmdout"	0
+ADJUST		0x620	516	-3
+ADJUST		0x624	517	1
+ADJUST		0x628	517	1
+ADJUST		0x62c	517	1
+CALL		0x62e	517	"/fred/vtouch18f8722/example2.c"	"elocmdout"	0
+ADJUST		0x630	517	-3
+ADJUST		0x634	518	1
+ADJUST		0x638	518	1
+ADJUST		0x63c	518	1
+CALL		0x63e	518	"/fred/vtouch18f8722/example2.c"	"elocmdout"	0
+ADJUST		0x640	518	-3
+ADJUST		0x6dc	551	1
+ADJUST		0x6de	551	1
+ADJUST		0x6e0	551	1
+ADJUST		0x6e2	551	1
+ADJUST		0x6e4	551	1
+ADJUST		0x6e8	551	1
+ADJUST		0x6ec	551	1
+ADJUST		0x6f0	551	1
+CALL		0x6f4	551	"mul32.O"	"__mul32"	0
+ADJUST		0x6f8	551	-1
+ADJUST		0x6fa	551	-1
+ADJUST		0x6fe	551	-1
+ADJUST		0x702	551	-1
+ADJUST		0x720	554	1
+ADJUST		0x722	554	1
+ADJUST		0x724	554	1
+ADJUST		0x726	554	1
+ADJUST		0x728	554	1
+ADJUST		0x72c	554	1
+ADJUST		0x730	554	1
+ADJUST		0x734	554	1
+CALL		0x738	554	"div32s.O"	"__div32s"	0
+ADJUST		0x73c	554	-1
+ADJUST		0x73e	554	-1
+ADJUST		0x742	554	-1
+ADJUST		0x746	554	-1
+ADJUST		0x7ce	570	1
+ADJUST		0x7d2	570	1
+ADJUST		0x7d6	570	1
+CALL		0x7d8	570	"/fred/vtouch18f8722/example2.c"	"elocmdout"	0
+ADJUST		0x7da	570	-3
+ADJUST		0x7e8	578	-3
+FN_END		0x7ee	578	
+FN_START	0x7f0	358	"/fred/vtouch18f8722/example2.c"	"__pa_0"	"static"	
+FN_END		0x7fa	358	
+FN_START	0x7fc	296	"/fred/vtouch18f8722/example2.c"	"__pa_1"	"static"	
+FN_END		0x806	296	
+FN_START	0x808	353	"/fred/vtouch18f8722/example2.c"	"__pa_2"	"static"	
+FN_END		0x818	353	
+FN_START	0x81a	426	"/fred/vtouch18f8722/example2.c"	"__pa_3"	"static"	
+FN_END		0x824	426	
+FN_START	0x826	424	"/fred/vtouch18f8722/example2.c"	"__pa_4"	"static"	
+FN_END		0x82c	425	
+FN_START	0x82e	357	"/fred/vtouch18f8722/example2.c"	"__pa_5"	"static"	
+CALL		0x82e	357	"/fred/vtouch18f8722/example2.c"	"__pa_0"	0
+ADJUST		0x832	357	-1
+CALL		0x836	357	"mulFP.O"	"__mulFP"	0
+FN_END		0x836	357	
+FN_START	0x838	359	"/fred/vtouch18f8722/example2.c"	"__pa_6"	"static"	
+CALL		0x838	359	"/fred/vtouch18f8722/example2.c"	"wdtdelay"	0
+ADJUST		0x83c	359	-4
+CALL		0x83c	359	"/fred/vtouch18f8722/example2.c"	"__pa_0"	0
+CALL		0x83e	359	"/fred/vtouch18f8722/example2.c"	"wdtdelay"	0
+ADJUST		0x842	360	-4
+FN_END		0x846	360	
+FN_START	0x848	285	"/fred/vtouch18f8722/example2.c"	"__pa_7"	"static"	
+CALL		0x84a	285	"/fred/vtouch18f8722/example2.c"	"__pa_1"	0
+FN_END		0x84e	285	
+FILE		0x0	0	"cast08FP.O"
+FN_START	0x850	43	"cast08FP.O"	"__cast08uFP"	"visibility"	
+BRANCH	0x852	46	0x856
+FN_END		0x852	46	
+FN_START	0x854	50	"cast08FP.O"	"__cast08sFP"	"visibility"	
+LABEL	0x856	54	0x856
+ADJUST		0x856	54	17
+ADJUST		0x858	54	1
+ADJUST		0x85c	54	1
+FN_END		0x886	78	
+FILE		0x0	0	"packFP.O"
+FN_START	0x88a	43	"packFP.O"	"__FpPack"	"visibility"	
+ADJUST		0x8fe	131	-1
+ADJUST		0x900	131	-1
+ADJUST		0x908	131	-14
+FN_END		0x942	182	
+FILE		0x0	0	"castFP08.O"
+FN_START	0x944	48	"castFP08.O"	"__castFP08"	"visibility"	
+ADJUST		0x944	48	5
+ADJUST		0x946	48	1
+ADJUST		0x94a	48	1
+ADJUST		0x9a8	98	-1
+ADJUST		0x9aa	98	-1
+ADJUST		0x9b2	98	-8
+FN_END		0x9b4	100	
+FILE		0x0	0	"unpackFP.O"
+FN_START	0x9b6	52	"unpackFP.O"	"__FpUnPackA"	"visibility"	
+FN_END		0x9e4	97	
+FN_START	0x9e6	104	"unpackFP.O"	"__FpUnPackB"	"visibility"	
+FN_END		0xa10	144	
+FILE		0x0	0	"div32s.O"
+FN_START	0xa2a	80	"div32s.O"	"__div32s"	"visibility"	
+ADJUST		0xa2a	80	7
+BRANCH	0xa2e	84	0xa32
+FN_END		0xa2e	84	
+FN_START	0xa30	90	"div32s.O"	"__mod32s"	"visibility"	
+ADJUST		0xa30	90	7
+LABEL	0xa32	93	0xa32
+ADJUST		0xab6	169	-1
+ADJUST		0xab8	171	-1
+ADJUST		0xac0	177	-9
+FN_END		0xacc	186	
+FILE		0x0	0	"mul32.O"
+FN_START	0xace	46	"mul32.O"	"__mul32"	"visibility"	
+ADJUST		0xace	46	4
+ADJUST		0xad0	50	1
+ADJUST		0xad4	52	1
+ADJUST		0xb62	175	-1
+ADJUST		0xb64	177	-1
+ADJUST		0xb6c	183	-8
+FN_END		0xb6e	185	
+FILE		0x0	0	"mulFP.O"
+FN_START	0xb70	53	"mulFP.O"	"__mulFP"	"visibility"	
+ADJUST		0xb70	53	10
+ADJUST		0xb72	53	1
+ADJUST		0xb76	53	1
+FN_END		0xc5a	193	
+FILE		0x0	0	"div32u.O"
+FN_START	0xc76	77	"div32u.O"	"__div32u"	"visibility"	
+ADJUST		0xc76	77	7
+BRANCH	0xc7a	81	0xc82
+FN_END		0xc7a	81	
+FN_START	0xc7c	87	"div32u.O"	"__mod32u"	"visibility"	
+ADJUST		0xc7c	87	7
+LABEL	0xc82	96	0xc82
+ADJUST		0xcf4	171	-1
+ADJUST		0xcf6	173	-1
+ADJUST		0xcfe	179	-9
+FN_END		0xd00	182	
+FILE		0x0	0	"C:\MCC18\v3_39\src\extended\startup\c018i_e.c"
+FN_START	0xdc8	81	"C:\MCC18\v3_39\src\extended\startup\c018i_e.c"	"_do_cinit"	"external"	
+FN_END		0xe64	184	
+FILE		0x0	0	"C:\MCC18\v3_39\src\pmc_common\USART\u2open.c"
+FN_START	0xe66	64	"C:\MCC18\v3_39\src\pmc_common\USART\u2open.c"	"Open2USART"	"external"	
+FN_END		0xee8	114	
+FILE		0x0	0	"C:\MCC18\v3_39\src\pmc_common\USART\u1open.c"
+FN_START	0xeea	71	"C:\MCC18\v3_39\src\pmc_common\USART\u1open.c"	"Open1USART"	"external"	
+FN_END		0xf62	119	
+FILE		0x0	0	"C:\MCC18\v3_39\src\pmc_common\USART\u1putrs.c"
+FN_START	0xf64	15	"C:\MCC18\v3_39\src\pmc_common\USART\u1putrs.c"	"putrs1USART"	"external"	
+FN_END		0xfbe	22	
+FILE		0x0	0	"C:\MCC18\v3_39\src\pmc_common\USART\u2read.c"
+FN_START	0x1016	16	"C:\MCC18\v3_39\src\pmc_common\USART\u2read.c"	"Read2USART"	"external"	
+FN_END		0x1052	38	
+FILE		0x0	0	"C:\MCC18\v3_39\src\pmc_common\USART\u1read.c"
+FN_START	0x1054	17	"C:\MCC18\v3_39\src\pmc_common\USART\u1read.c"	"Read1USART"	"external"	
+FN_END		0x1090	39	
+FILE		0x0	0	"C:\MCC18\v3_39\src\pmc_common\Timers\t0open.c"
+FN_START	0x1092	18	"C:\MCC18\v3_39\src\pmc_common\Timers\t0open.c"	"OpenTimer0"	"external"	
+FN_END		0x10c6	31	
+FILE		0x0	0	"C:\MCC18\v3_39\src\pmc_common\Timers\t0write.c"
+FN_START	0x10c8	16	"C:\MCC18\v3_39\src\pmc_common\Timers\t0write.c"	"WriteTimer0"	"external"	
+FN_END		0x10f6	24	
+FILE		0x0	0	"C:\MCC18\v3_39\src\pmc_common\USART\u2write.c"
+FN_START	0x10f8	14	"C:\MCC18\v3_39\src\pmc_common\USART\u2write.c"	"Write2USART"	"external"	
+FN_END		0x1124	24	
+FILE		0x0	0	"C:\MCC18\v3_39\src\pmc_common\USART\u1write.c"
+FN_START	0x1126	14	"C:\MCC18\v3_39\src\pmc_common\USART\u1write.c"	"Write1USART"	"external"	
+FN_END		0x1152	24	
+FILE		0x0	0	"C:\MCC18\v3_39\src\extended\startup\c018i_e.c"
+FN_START	0x1174	34	"C:\MCC18\v3_39\src\extended\startup\c018i_e.c"	"_startup"	"external"	
+FN_END		0x118c	51	

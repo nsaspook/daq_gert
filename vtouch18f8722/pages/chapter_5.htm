@@ -1,0 +1,576 @@
+<html>
+<head>
+<title>Chapter 5</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<h3 align="left"><font face="Arial, Helvetica, sans-serif">Chapter 5 </font></h3>
+<h3 align="left"><font face="Arial, Helvetica, sans-serif">Software Interface</font></h3>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#packet_structure">Packet 
+  Structure </a></font></h4>
+<blockquote>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#commands_and_responses">Commands 
+    and Responses</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#commands_and_acknldgmnts">Commands 
+    and Acknowledgements</a></font></h5>
+</blockquote>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#interface_specifics">Interface 
+  Specifics</a></font></h4>
+<blockquote> 
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#serial_controllers">Serial 
+    Controllers</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#lead_in_byte">Lead-in 
+    Byte</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#checksum_byte">Checksum 
+    Byte</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#key_byte">Key 
+    Byte</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#software_handshaking">Software 
+    Handshaking</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#hardware_handshaking">Hardware 
+    Handshaking</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#duplex">Duplex</a></font></h5>
+</blockquote>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#bus_controller">Bus 
+  Controllers</a></font></h4>
+<blockquote>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#base_io_port">Base 
+    I/O Port</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#polled_mode">Polled 
+    Mode</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#interrupt_mode">Interrupt 
+    Mode</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#pc_bus_interrupt_specifics">PC-Bus 
+    Interrupt Specifics </a></font></h5>
+</blockquote>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#sample_driver_code">Sample 
+  Driver Code</a></font></h4>
+<blockquote>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#example1">Example1 
+    - Display Controller Defaults and Raw Touch Coordinates </a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#example2_calibrate_fingerpaint">Example2 
+    - Calibrate and Finger Paint </a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#packet_c">PACKET.C 
+    - Interface-Independent Driver Code </a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#serialc">SERIAL.C 
+    - Machine-Independent Serial Driver Code </a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#busc_pcbus_code">BUS.C 
+    - PC-Bus Code</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#interrupt_driven_code">Interrupt-Driven 
+    Code</a></font></h5>
+</blockquote>
+<hr>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">This chapter 
+  describes the communication between the host computer and the SmartSet controllers. 
+  The basic packet structure is introduced and how packets are sent and received. 
+  The SMARTSET utility is used as a demonstration. Specifics about each interface 
+  are given next, followed by a sample driver in machine-independent C source 
+  code.</font></p>
+<h4 align="left"><b><font face="Arial, Helvetica, sans-serif"><a name="packet_structure"></a>Packet 
+  Structure</font></b></h4>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">High-level 
+  communication with all SmartSet controllers is through an eight-byte <i>packet</i>. 
+  Packets sent to the controller are called<i> command packets</i>. Packets received 
+  from the controller are called <i>response packets</i>. The command and response 
+  packets are identical for all SmartSet controllers.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">For PC-Bus 
+  and Micro Channel controllers, packets are transmitted and received through 
+  eight consecutive read/write I/O ports. For serial controllers, the eight-byte 
+  packet is transmitted over the serial line framed by two additional bytes for 
+  synchronization. Specifics on the bus and serial interfaces will be covered 
+  later in this chapter.</font><font face="Arial, Helvetica, sans-serif"> </font> 
+</p>
+<h5 align="left"><b><font face="Arial, Helvetica, sans-serif"><a name="commands_and_responses"></a>Commands 
+  and Responses</font></b></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The first byte 
+  of each packet is the <i>command byte</i>, and the seven remaining bytes are 
+  the <i>data bytes</i>. The command byte is an ASCII character, currently from 
+  'A' to 'T'. Chapter 6<b>, </b>the <a href="chapter_6.htm#command_descriptions">Command 
+  Reference</a>, details each command and response.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">A command byte 
+  in upper-case indicates a set <i>command</i> to the controller. The data bytes 
+  then alter an internal setting of the controller.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">A command byte 
+  in lower-case indicates a <i>query command</i> to the controller. The data bytes 
+  in the query command are ignored by the controller. A query command tells the 
+  controller to report the internal settings of the controller as they relate 
+  to the command. The controller reports this data in a <i>response packet</i>.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The format 
+  of the response packet is identical to that of the set command, including the 
+  command byte being in upper-case. This allows the host to query a current setting, 
+  modify a specific parameter, and return the same packet to the controller as 
+  a set command. Unused or unknown parameters can be ignored.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The structure 
+  for each type of packet is shown below</font><font face="Arial, Helvetica, sans-serif">:</font></p>
+<p align="left"><font size="2"><img src="../images/Chp%205%20Command_Response%20packet.gif" width="395" height="234" border="0"></font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Note the command 
+  byte (byte 0) is in lower-case for the query command, and is in upper-case in 
+  the response packet and set commands.</font></p>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif"><b><a name="commands_and_acknldgmnts"></a>Commands 
+  and Acknowledgements</b></font></h4>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Each command 
+  sent to a SmartSet controller is confirmed by an <i>Acknowledge response</i>. 
+  This response packet indicates any errors in the command and any other pending 
+  errors. See in the <i><a href="chapter_6.htm#error_codes">Command Reference</a></i> 
+  for a list of the possible error codes.</font></p>
+<p align="left"> <font face="Arial, Helvetica, sans-serif" size="2">A typical 
+  query/response/set interaction flows as follows:</font> </p>
+<table width="395" border="0">
+  <tr> 
+    <td> 
+      <blockquote> 
+        <div align="left">
+          <p><font face="Arial, Helvetica, sans-serif" size="2">Host sends query 
+            command packet</font></p>
+          <p><font face="Arial, Helvetica, sans-serif" size="2">Controller sends 
+            a response packet</font></p>
+          <p><font face="Arial, Helvetica, sans-serif" size="2">Controller sends 
+            an Acknowledge response packet</font></p>
+          <p><font face="Arial, Helvetica, sans-serif" size="2">Host sends a set 
+            command packet</font></p>
+          <p><font face="Arial, Helvetica, sans-serif" size="2">Controller sends 
+            an Acknowledge response packet</font></p>
+        </div>
+      </blockquote>
+    </td>
+  </tr>
+</table>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The only commands that do 
+  not return an <i>Acknowledge</i> response are the Hard <i>Reset</i> and <i>Quiet</i>-all 
+  commands.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Let's use the SMARTSET utility 
+  to demonstrate this interaction. Type:</font> </p>
+<table width="306" border="0">
+  <tr>
+    <td>
+      <div align="center"><font face="Arial, Helvetica, sans-serif" size="2">SMARTSET 
+        (not case sensitive)</font></div>
+    </td>
+  </tr>
+</table>
+<p><font face="Arial, Helvetica, sans-serif" size="2">at the DOS prompt, select 
+  your interface, and proceed to the Main Menu. (For more information on using 
+  SMARTSET, see <a href="chapter_4.htm">Chapter 4</a>.)</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Make sure touches are enabled 
+  by typing &quot;P&quot;. (PC-Bus and Micro Channel controllers are not enabled 
+  by default). Change Touch Reporting to Report as necessary.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Next select the Touch Mode 
+  submenu by typing &quot;M&quot;. Initial Touches, Stream Touches, and Untouches 
+  should all be Enabled.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Now type &quot;A&quot; for 
+  ASCII Setup. Touch the touchscreen and notice the stream of packets received 
+  by SMARTSET. A sample display is shown below in Figure 5-1.</font></p>
+<p> <font face="Arial, Helvetica, sans-serif" size="2">The &quot;T&quot; in byte 
+  0 indicates the packets are <i>Touch</i> packets. <a href="chapter_6.htm#touch_t">Click 
+  here</a> for detailed information on the contents of the <i>Touch</i> packet. 
+  Byte 1 contains the Status bits, the X coordinate is the Intel (byte swapped) 
+  integer formed by bytes 2 &amp; 3, Y is in bytes 4 &amp; 5, and Z follows in 
+  bytes 6 &amp; 7. As you move your finger, bytes 2-5 should change. Byte 1 should 
+  indicate your Initial Touch, Stream Touches, and Untouch with 1, 2, and 4 respectively. 
+  These values correspond to the bit positions defined for the <i><a href="chapter_6.htm#touch_t">Touch</a></i><a href="chapter_6.htm#touch_t"> 
+  packet</a>. Bytes 6 &amp; 7 are constant on AccuTouch controllers as they do 
+  not support a Z-axis (pressure).</font></p>
+<p><img src="../images/fig_5-1.gif" width="647" height="197"><a name="fig5_1"></a></p>
+<p><i><font face="Arial, Helvetica, sans-serif" size="2">Figure 5-1. SmartSet 
+  Utility ASCII Setup Display with Touch Packets</font></i></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Next, let's send a command 
+  to the controller. Type &quot;m&quot; and press [Enter]. Commands in lower-case 
+  indicate a query. The <i><a href="chapter_6.htm#mode_m">Mode</a></i><a href="chapter_6.htm#mode_m"> 
+  command</a> is described in Chapter 6. Pressing [Enter] causes SMARTSET to fill 
+  any unentered bytes will nulls, and transmit the complete packet to the controller.</font></p>
+<p><img src="../images/fig_5-2.gif" width="585" height="212"><a name="fig5_2"></a></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2"><i>Figure 5-2. SmartSet 
+  Utility ASCII Setup Showing Mode Query</i></font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Notice that the <i>Mode</i> 
+  query returned a <i>Mode</i> response followed by an <i>Acknowledge</i> response. 
+  Byte 2 of the <i>Mode</i> response is 87 (hex), indicating the Initial Touch, 
+  Stream, and Untouch bits are set, corresponding to what we observed on the Touch 
+  Mode submenu.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Let's change the controller 
+  into Single-Point Mode by clearing the Initial Touch and Stream bits in the 
+  <i>Mode</i> packet. Type &quot;M&quot;, &quot;$00&quot;, &quot;$81&quot;, [Enter]. 
+  Note the command byte is in upper-case because this is a set command. The '$' 
+  keystroke signals SMARTSET that you are entering a binary value in hex, rather 
+  than an ASCII value. Note the controller returns an <i>Acknowledge</i> response 
+  after the set command. If the &quot;A&quot; is followed by anything but '0's, 
+  <a href="chapter_6.htm#error_codes">click here</a> for a list of possible error 
+  codes. Retry the Mode set command as necessary.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Now touch the touchscreen 
+  again to verify you selected Single-Point Mode. Press [ESC] and return to the 
+  Main Menu. Examine the Mode settings and you will see that SMARTSET reflects 
+  the changes you made manually in ASCII Setup. When writing a driver, the SMARTSET 
+  utility is valuable for understanding the query/response/set interaction for 
+  the various commands and for verifying the settings you program into the controller.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">You may wish to experiment 
+  with other queries in ASCII Setup. Type &quot;o&quot; to query the <i>Owner</i> 
+  string. Type &quot;g&quot; to download the whole configuration of the controller. 
+  You should be able to identify each packet and their contents by referring to 
+  <a href="chapter_6.htm">Chapter 6</a>.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">From the Main Menu, type 
+  &quot;R&quot; and select Soft Reset to restore the default settings of the controller. 
+  Exit SMARTSET.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">In the next section, we 
+  will detail the communication at an even lower level-the specifics for each 
+  type of interface: serial, PC-Bus, and Micro Channel. The SMARTSET utility hides 
+  these details, just as you may hide them at a certain level when developing 
+  a driver that supports multiple interfaces.</font></p>
+<h4><font face="Arial, Helvetica, sans-serif"><a name="interface_specifics"></a>Interface 
+  Specifics</font></h4>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="serial_controllers"></a>Serial 
+  Controllers</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The serial interface uses 
+  the eight-byte packet with an additional Lead-in byte and a trailing Checksum 
+  byte for a total of ten bytes.</font></p>
+<blockquote>
+  <p><code>&lt;Lead in byte&gt;&lt;8-byte Command or Response&gt;&lt;Checksum 
+    byte&gt;</code></p>
+</blockquote>
+<p><font face="Arial, Helvetica, sans-serif" size="2">An optional <a href="#key_byte">Key 
+  byte</a> may also be included. </font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="lead_in_byte"></a>Lead-in 
+  Byte</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The Lead-in byte is used 
+  to signal the start of a packet. The standard Lead-in byte is an ASCII 'U' (55h). 
+  This character was chosen due to its distinctive alternating bit pattern.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The Lead-in byte is different 
+  if the optional Key byte is included in the packet. See <a href="#key_byte">Key 
+  Byte</a> for more information.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="checksum_byte"></a>Checksum 
+  Byte</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The trailing Checksum byte 
+  may be used to validate the serial communication and to synchronize with the 
+  received data stream.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The Checksum is calculated 
+  as follows:</font></p>
+<blockquote>
+  <p><code>Checksum byte = &lt;AAh&gt; + &lt;Lead in byte&gt; + &lt;8 Data bytes&gt;</code></p>
+</blockquote>
+<p><font face="Arial, Helvetica, sans-serif" size="2">where the addition is performed 
+  with 8-bit unsigned numbers and overflow is ignored.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">By default, the host is 
+  not required to send a properly calculated Checksum in command packets. A dummy 
+  value, such as 0, is required to provide the correct packet length.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">If a higher confidence is 
+  needed in the serial communications, the host may use the <i><a href="chapter_6.htm#parameter_p">Parameter</a></i><a href="chapter_6.htm#parameter_p"> 
+  command</a> to enable Checksum verification by the controller. With this function 
+  enabled, the controller checks each command packet for a valid Checksum value 
+  before processing the command.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="key_byte"></a>Key Byte</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">An optional format, available 
+  on some controllers, extends the standard serial packet by adding a Key byte. 
+  This extended packet is used in specialized installations where more than one 
+  serial controller is to be connected on a single serial communication link. 
+  In such an installation, a unique Key value may be programmed into each controller 
+  with the <i><a href="chapter_6.htm#key_k_serial_cont_only">Key</a></i><a href="chapter_6.htm#key_k_serial_cont_only"> 
+  command</a> and stored in NVRAM.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">A command intended for only 
+  one of the interconnected controllers is sent in an extended packet. Although 
+  all controllers on the link receive the command, only the one with the matching 
+  Key processes the command. If a standard packet is sent along the link, all 
+  the interconnected controllers will process the command (it acts as a global 
+  command).</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Similarly, responses from 
+  each controller contain the programmed Key byte. This permits the host to discriminate 
+  between touch data generated by the controllers.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">As there is no standard 
+  way of allowing the controllers in this type of installation to send data on 
+  the same serial data line, a custom wired OR configuration is necessary for 
+  the hardware to function properly. The controllers must also have automatic 
+  touch reporting disabled with the <i>Mode</i> command and be polled with a Touch 
+  query issued to each controller. See <i><a href="chapter_6.htm#touch_t">Touch</a></i><a href="chapter_6.htm#touch_t"> 
+  command</a>. Other hardware considerations must also be evaluated when attempting 
+  this type of installation.</font></p>
+<p> <font face="Arial, Helvetica, sans-serif" size="2">The structure of the extended 
+  serial communications packet is:</font></p>
+<p><code>&lt;Lead In byte&gt;&lt;8 byte Command or Response&gt;&lt;Key byte&gt;&lt;Checksum 
+  byte&gt;</code></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The Lead In byte of an extended 
+  packet is an ASCII Control-V character (16h). The host can check for either 
+  a 'U' or ^V as the Lead-in byte. If the byte is a 'U', the host knows 9 bytes 
+  will follow. If the byte is a ^V, 10 bytes will follow.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">As with the standard packet, 
+  the Checksum is calculated by summing the bytes without regard to overflow. 
+  The Key byte is included in the sum.</font></p>
+<p><code>Checksum byte = &lt;AAh&gt; + &lt;Lead in byte&gt; + &lt;8 Data bytes&gt; 
+  + &lt;Key byte&gt;</code></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The Key byte is not used 
+  by factory default.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="software_handshaking"></a>Software 
+  Handshaking</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Some controllers recognize 
+  the software flow control convention of XON/ XOFF (ASCII &quot;Control Q&quot; 
+  and &quot;Control S&quot;). If the host sends a ^S character to the controller, 
+  outside the context of a command packet, the controller will stop sending data 
+  to the host. Upon receipt of a ^Q, the controller will once again be enabled 
+  to send data to the host.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The controller can also 
+  send XOFF/XON characters to the host as a software handshaking method. Upon 
+  receipt of a valid command, a ^S character may be sent to the host. When the 
+  command is processed completely, a corresponding ^Q is sent. This will allow 
+  devices which do not properly handle hardware handshaking signals to use software 
+  flow control.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Software handshaking may 
+  be enabled or disabled with the <i><a href="chapter_6.htm#parameter_p">Parameter</a></i><a href="chapter_6.htm#parameter_p"> 
+  command</a>. It is disabled by factory default.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="hardware_handshaking"></a>Hardware 
+  Handshaking</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The controller supports 
+  hardware handshake signals typically implemented in EIA RS-232 communications. 
+  If the handshaking signals are not connected, the controller defaults to a transmit-enabled 
+  mode.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">If the handshaking signals 
+  are connected, the following protocol should be used:</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The signal DSR (Data Set 
+  Ready) is kept asserted by the controller. This signal indicates to the host 
+  that a controller is present and powered on.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The signal DTR (Data Terminal 
+  Ready) tells the controller that the host is present. The controller will only 
+  transmit if DTR is asserted by the host. Typically, the host should keep DTR 
+  asserted.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">When the controller receives 
+  a valid command, it de-asserts the handshaking signal CTS (Clear To Send). The 
+  host should suppress further output until the controller has processed the command 
+  and is ready to receive another, indicated by when it asserts CTS.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The host should assert RTS 
+  (Request To Send) when it is ready to accept data, and de-assert RTS when it 
+  cannot accept data. Typically, the host will de-assert RTS while it is processing 
+  a complete packet, then reassert RTS when it is ready to receive another packet.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">To ease troubleshooting 
+  of the initial installation, jumper J3 can be used to force the controller to 
+  ignore hardware handshaking.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">On some controllers, Hardware 
+  handshaking may also be enabled, disabled, or inverted with the <i><a href="chapter_6.htm#parameter_p">Parameter</a></i><a href="chapter_6.htm#parameter_p"> 
+  command</a>. It is enabled by factory default.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="duplex"></a>Duplex</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">When full-duplex is selected, 
+  each character sent to the controller is echoed. When half-duplex is selected, 
+  the controller does not retransmit each received character.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Full-duplex mode is useful 
+  when a dumb terminal, also in full-duplex mode, is used to manually test or 
+  set up the controller. Half-duplex mode is used if the terminal is also in half-duplex 
+  mode.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Half-duplex mode is normally 
+  used when software is communicating directly with the controller.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Full or half-duplex is selected 
+  with the <i><a href="chapter_6.htm#parameter_p">Parameter</a></i><a href="chapter_6.htm#parameter_p"> 
+  command</a>. Half-duplex is the factory default.</font></p>
+<h4><font face="Arial, Helvetica, sans-serif"><a name="bus_controller"></a>Bus 
+  Controllers</font></h4>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The PC-Bus and Micro Channel 
+  SmartSet controllers use read/write I/O ports for communicating the eight-byte 
+  packet. The Micro Channel controller is obsolete.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="base_io_port"></a>Base 
+  I/O Port</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The <i>Base I/O Port</i> 
+  is the location of first I/O port through which the controller and the host 
+  exchange data. The Base I/O Port is selected from jumpers or NVRAM with the 
+  E271-2201 PC-Bus controller, and through &quot;automatic configuration&quot; 
+  with the E271-2202 Micro Channel controller. For more information on Base I/O 
+  Port selection, see <a href="chapter_2.htm">Chapter 2</a>.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">A block of eight consecutive 
+  ports are used for the eight-byte packet. They are denoted as &quot;Base Port&quot;, 
+  &quot;Base Port + 1&quot;, etc., through &quot;Base Port + 7&quot;.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">To receive a packet from 
+  the controller, the host reads the eight I/O ports in ascending order starting 
+  with the Base Port. The controller senses the completion of the transfer when 
+  all eight ports have been read.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">To send a packet to the 
+  controller, the host writes to the same eight I/O ports in ascending order starting 
+  with the Base Port. The controller processes the command after all eight ports 
+  have been written. A command received by the controller takes priority over 
+  any background processing. This includes the processing of another command. 
+  Therefore, the host must wait for an <i>Acknowledge</i> response before issuing 
+  another command.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The controller informs the 
+  host that data is available by clearing a status bit and optionally asserting 
+  an interrupt request line (IRQ). This allows the host driver software to be 
+  polled or interrupt-driven.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="polled_mode"></a>Polled 
+  Mode</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Polled Mode is commonly 
+  used in computer systems which do not have a hardware interrupt signal available 
+  to assign to the touchscreen controller. Polled drivers are easier to write 
+  but do not allow multi-tasking or event-driven programming. (Elo drivers are 
+  interrupt-driven).</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Bit 7 of the Base Port (the 
+  command byte), is the Not Ready bit. If the host is polling the controller, 
+  it should wait until the <i>Not Ready</i> bit is 0 before reading the remaining 
+  bytes. This negative logic is used so bit 7 does not need to be cleared in response 
+  packets before they are resent to the controller as set commands. It also makes 
+  packets received from bus controllers identical to those received from serial 
+  controllers.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="interrupt_mode"></a>Interrupt 
+  Mode</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">If Interrupt Mode is enabled 
+  either by jumpers or software setup, the controller asserts the selected IRQ 
+  signal when data becomes available (as it clears the Not Ready bit). It is not 
+  necessary for the host to poll the Not Ready bit in Interrupt Mode. Upon interrupt, 
+  the host jumps to a corresponding interrupt service routine (ISR) whose location 
+  is stored in its interrupt vector table. The ISR retrieves the data from the 
+  controller and then returns to the interrupted process. A full discussion on 
+  writing interrupt-driven code is language and operating system dependent, and 
+  is beyond the scope of this manual. It is possible to setup the controller through 
+  polling, then switch to interrupt-driven code to receive touch packets.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="pc_bus_interrupt_specifics"></a>PC-Bus 
+  Interrupt Specifics</font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">An IRQ signal can be used 
+  by only one device at a time in the PC architecture. It is possible, however, 
+  for the E271-2201 PC-Bus controller to share an IRQ signal with another device 
+  if the other device can release (tri-state) its interrupt line drivers. Most 
+  serial and parallel controllers on the PC have this feature (see the IBM Technical 
+  Reference Manuals).</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">To share an IRQ, the E271-2201 
+  controller should be programmed to use the IRQ only when the other device is 
+  tri stated. When the other device needs the IRQ, the host must reprogram the 
+  E271-2201 to IRQ0 (Polled Mode). This way, only one device is driving the interrupt 
+  line at a time.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The E271-2201 is shipped 
+  without an IRQ jumpered. For information on selecting an interrupt, see <a href="chapter_2.htm">Chapter 
+  2</a>. For the most flexibility, an interrupt-driven driver should use the <i><a href="chapter_6.htm#parameter_p">Parameter</a></i><a href="chapter_6.htm#parameter_p"> 
+  command</a> to select an interrupt as the driver is loaded.</font></p>
+<h4><font face="Arial, Helvetica, sans-serif"><a name="sample_driver_code"></a>Sample 
+  Driver Code</font></h4>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The rest of this chapter 
+  provides sample application and driver code for SmartSet touchscreen controllers. 
+  The example source code is written in ANSI C, and can be found on the<i> SmartSet 
+  Companion Disk</i> available for download on <a href="http://www.elotouch.com/">www.elotouch.com</a>. 
+  The code is organized in modules as follows:</font></p>
+<p><img src="../images/fig_5-3.gif" width="555" height="134" border="1"><a name="fig5_3"></a></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2"><i>Figure 5-3. Example Code 
+  Organization</i></font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">EXAMPLE1.C and EXAMPLE2.C 
+  are sample applications. Each uses high-level <i>interface-independent</i> controller 
+  interface functions in PACKET.C, such as querycommand ( ) and setcommand ( ). 
+  The <i>interface-dependent</i> functions are supplied in SERIAL.C for the E271-2210 
+  or 2500S serial controllers, or BUS.C for the E271-2201 PC-Bus controller and 
+  the E271-2202 Micro Channel controller.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">BUS.C contains some code 
+  that is Micro Channel specific. This code is commented for easily deletion if 
+  support on this architecture is not required. SERIAL.C is written to be machine-independent. 
+  The <i>PC-dependent</i> serial port configuration and character input/output 
+  code is given in PC_COMM.C. PC_MISC.C contains miscellaneous PC-dependent code 
+  to clear the screen, hide the cursor, etc. PC_COMM and PC_MISC can be rewritten 
+  for other architectures. Source code for all modules is included in this chapter, 
+  except for PC_COMM.C and PC_MISC.C.</font> </p>
+<h4><font face="Arial, Helvetica, sans-serif"><a name="example1"></a>Example1-Display 
+  Controller Defaults and Raw Toouch Coordinates</font></h4>
+<p><font face="Arial, Helvetica, sans-serif" size="2">EXAMPLE1.C polls Elo SmartSet 
+  touchscreen controllers. The controller ID, jumper settings, and power on diagnostics 
+  results are displayed, as shown in Figure 5-4 below. Raw touch coordinates are 
+  then displayed, along with the status flag, indicating initial touch, stream 
+  touches, and untouch.</font></p>
+<p><img src="../images/fig_5-4.gif" width="596" height="246"><a name="fig5_4"></a></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2"><i>Figure 5-4. EXAMPLE1.C 
+  Output</i></font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">In the following source 
+  code, initcontroller(), defined in SERIAL.C or BUS.C, detects and initializes 
+  the controller. An error condition aborts the program with a message describing 
+  the problem. The querycommand(), checkdiags(), and gettouch() functions are 
+  defined in PACKET.C. Source code for these modules is included later in this 
+  chapter. Refer to the <a href="chapter_6.htm#command_descriptions">Command Reference</a> 
+  in Chapter 6 for the structure of the <i>Owner</i>, <i>ID</i>, <i>Jumpers</i>, 
+  and <i>Diag</i> packets used in displayjumpers().</font></p>
+<p align="left"><img src="../images/example1c.gif" width="577" height="1067"></p>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif" size="2"><a name="example2_calibrate_fingerpaint"></a>Example2 
+  - Calibrate and Finger Paint</font></h4>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">EXAMPLE2.C 
+  also polls Elo SmartSet touchscreen controllers. The controller is first set 
+  up for calibration by changing the Mode to report raw coordinates. The calibration 
+  screen appears as follows:</font></p>
+<p><img src="../images/5-5.gif" width="439" height="221"><a name="fig5_5"></a></p>
+<blockquote> 
+  <div align="left"> 
+    <p><font size="2" face="Arial, Helvetica, sans-serif"><i>Figure 5-5. EXAMPLE2.C 
+      Calibration Screen</i></font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">A three-point calibration 
+      sequence is used. The touch points are taken near the corners of the screen 
+      image, then extrapolated to the actual edges of the image. This reduces 
+      the effects on calibration of &quot;pin cushion&quot; and other non-linearities 
+      at the edges of the image. The calibration sequence causes the origin to 
+      be in the upper-left, regardless of the orientation of the touchscreen. 
+      Untouch coordinates are used in the calibration, so the user can carefully 
+      position their finger before release.</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The program then displays 
+      the results of the calibration, important information if troubleshooting 
+      is necessary:</font></p>
+    <p><img src="../images/fig_5-6.gif" width="585" height="64"><a name="fig5_6"></a></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2"><i>Figure 5-6. EXAMPLE2.C 
+      Calibration Results Output</i></font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">Next, the controller 
+      is programmed for 80x25 Scaling and the Mode is set to Calibration, Scaling, 
+      Trim, and Stream. The point of touch can now be mapped to the display, as 
+      in this example:</font></p>
+    <p><img src="../images/fig_5-7.gif" width="584" height="189"><a name="fig5_7"></a></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2"><i>Figure 5-7. EXAMPLE2.C 
+      Finger Painting</i></font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">In the following source 
+      code, the <i>Mode</i>, <i>Calibration</i>, and <i>Scaling</i> commands are 
+      queried, modified, then set. This preserves the contents of reserved bytes. 
+      Refer to the <a href="chapter_6.htm#command_descriptions">Command Reference</a> 
+      in Chapter 6 for details on each command.</font></p>
+    <pre><img src="../images/example2c.gif" width="577" height="2222"><font face="Courier New, Courier, mono"> </font> </pre>
+    <h4><font face="Arial, Helvetica, sans-serif"><a name="packet_c"></a>PACKET.C 
+      - Interface-Independent Driver Code</font></h4>
+    <p> <font face="Arial, Helvetica, sans-serif" size="2">The following code 
+      implements high-level functions querycommand() and setcommand(). The protocol 
+      for querying commands, setting commands, and receiving acknowledgements 
+      is described in this chapter. <i>Touch</i> packets are sent automatically 
+      (a query is not necessary). The gettouch() function accepts these packets, 
+      and returns the coordinates and status byte. <a href="chapter_6.htm#touch_t">Click 
+      here</a> for the structure of the <i>Touch</i> packet.</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">Functions getpacket() 
+      and sendpacket() are implemented in SERIAL.C or BUS.C. </font></p>
+    <p><img src="../images/packet_c.gif" width="576" height="1187"></p>
+    <h4><font face="Arial, Helvetica, sans-serif"><a name="serialc"></a>SERIAL.C 
+      - Machine-Independent Serial Driver Code</font></h4>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The following machine-independent 
+      code implements the getpacket() and sendpacket() functions for the E271-2210 
+      and 2500S serial controllers. Machine-dependent code to initialize the serial 
+      port, enable and disable it, and send and receive characters, is supplied 
+      in a separate module, such as PC_COMM.C (found on the<i> <a href="http://www.elotouch.com/support/dnld.asp">SmartSet 
+      Companion Disk</a></i>).</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The getpacket() function 
+      discards all packets until the requested packet is received. The getanypacketserial() 
+      function synchronizes with the packets in the data stream by looking for 
+      a 'U' Lead-in byte and verifying the trailing Checksum byte. The sendpacket() 
+      function computes and transmits the trailing Checksum. See <a href="#serial_controllers">Serial 
+      Controllers</a> for information on communicating with serial controllers.</font></p>
+    <p><img src="../images/serial_c.gif" width="576" height="1607"></p>
+    <h4><font face="Arial, Helvetica, sans-serif"><a name="busc_pcbus_code"></a>BUS.C 
+      - PC-Bus Code</font></h4>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The following machine-dependent 
+      code implements the getpacket() and sendpacket() functions for the E271-2201 
+      PC-Bus and E271-2202 Micro Channel controllers. The Micro Channel controller 
+      is obsolete.</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The getpacket() function 
+      discards all packets until the requested packet is received. The getanypacketbus() 
+      function polls the Not Ready bit and reads the eight I/O ports. The sendpacket() 
+      function writes to the I/O ports. See <a href="#bus_controller">Bus Controllers</a> 
+      for information on communicating with bus controllers.</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The E271-2202 is located 
+      by checking the POS registers for the ID of the &quot;adapter&quot; in each 
+      slot. Once the E271-2202 is located, the Base I/O Port (and optionally the 
+      Interrupt) can be read. This auto-detect procedure can only be run after 
+      a hard system reset, a soft reset (Control-Alt-Delete), or after sending 
+      a <i>Quiet</i>-all command to the E271-2202. Therefore, call disablecontroller() 
+      when you are finished with the controller so others may locate and use it. 
+      For more information on the interrupt 15h BIOS calls used in this code, 
+      see the <i>IBM Personal System/2 and Personal Computer BIOS Interface Technical 
+      Reference</i>.</font></p>
+    <p><img src="../images/bus_c_pc_bus_code.gif" width="576" height="1898"></p>
+    <h4><font face="Arial, Helvetica, sans-serif"><a name="interrupt_driven_code"></a>Interrupt-Driven 
+      Code</font></h4>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">Interrupt-driven code 
+      is hardware and operating system dependent, and is therefore beyond the 
+      scope of this manual. To simplify the code required, you may use the polled 
+      code in the previous examples to locate and set up the controller, then 
+      operate with one-way communication only. The interrupt service routine then 
+      only has to accept <i>Touch</i> packets.</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">For more information 
+      on bus controller interrupts see <a href="#interrupt_mode">Interrupt Mode</a>.</font></p>
+    <p>    
+  </div>
+</blockquote>
+</body>
+</html>

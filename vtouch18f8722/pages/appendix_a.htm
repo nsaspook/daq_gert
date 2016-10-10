@@ -1,0 +1,1057 @@
+<html>
+<head>
+<title>Appendix A</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<h3><font face="Arial, Helvetica, sans-serif">Appendix A</font></h3>
+<h3><font face="Arial, Helvetica, sans-serif">Optional Software Protocols</font></h3>
+<h4><font face="Arial, Helvetica, sans-serif"><a href="#e2712210_controller">E271-2210 
+  Controller</a></font></h4>
+<blockquote> 
+  <h5><font face="Arial, Helvetica, sans-serif"><a href="#smartset_ascii_mode">SmartSet 
+    ASCII Mode</a></font></h5>
+  <h5><font face="Arial, Helvetica, sans-serif"><a href="#e271140_and_e281A4002_emulation">E271-140 
+    and E281A-4002 Emulation</a></font></h5>
+  <blockquote> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#binary_output_data">Binary 
+      Output Data </a></font></h5>
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#ascii_output_data">ASCII 
+      Output Data</a></font></h5>
+  </blockquote>
+  <h5><font face="Arial, Helvetica, sans-serif"><a href="#e261280_emulation">E261-280 
+    Emulation</a></font></h5>
+  <blockquote> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#output_formats">Output 
+      Formats</a></font></h5>
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#software_setup">Software 
+      Setup</a></font></h5>
+  </blockquote>
+</blockquote>
+<h4><font face="Arial, Helvetica, sans-serif"><a href="#2500s_controller">2500S 
+  Controller</a></font></h4>
+<blockquote> 
+  <h5><font face="Arial, Helvetica, sans-serif"><a href="#e281a4002_emulation">E281A-4002 
+    Emulation</a></font></h5>
+</blockquote>
+<h4><font face="Arial, Helvetica, sans-serif"><a href="#e2712201_controller">E271-2201 
+  Controller</a></font></h4>
+<blockquote> 
+  <h5><font face="Arial, Helvetica, sans-serif"><a href="#e271141_emulation">E271-141 
+    Emulation</a></font></h5>
+  <blockquote> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#io_port_assignments">I/O 
+      Port Assignments</a></font></h5>
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#coordinate_data_format">Coordinate 
+      Data Format</a></font></h5>
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#polled_vs_interrupt_mode">Polled 
+      vs. Interrupt Mode</a></font></h5>
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#polling_considerations">Polling 
+      Considerations</a></font></h5>
+    <blockquote> 
+      <h5><font face="Arial, Helvetica, sans-serif"><a href="#polled_programming_example">Polled 
+        Programming Example</a></font></h5>
+    </blockquote>
+    <hr width="600">
+  </blockquote>
+</blockquote>
+<h4><font face="Arial, Helvetica, sans-serif"><a name="e2712210_controller"></a>E271-2210 
+  CONTROLLER</font></h4>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The E271-2210 controller 
+  can be jumpered or configured with software setup for optional software protocols. 
+  Emulation can be full or partial.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">If J2 is jumpered for ASCII 
+  Mode, the standard <i>Touch</i> packet is replaced with the SmartSet ASCII Mode 
+  packet, described in the following section. All other communication remains 
+  the same.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">If J10 and J11 are jumpered 
+  to select an Emulation Mode, (full emulation), the controller will no longer 
+  respond to the SmartSet protocol. <a href="chapter_2.htm#hardware_handshaking">(See 
+  this section in chapter 2</a>.) When emulating the AccuTouch E271-140, IntelliTouch 
+  E281A-4002 controller, or the DuraTouch E261-280 controller, only one-way communication 
+  is possible.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">When E271-140 emulation 
+  is jumpered, the <font face="Courier New, Courier, mono">TouchFlag</font> in 
+  the <i>Emulate</i> command is forced to 0. When E281A-4002 emulation is jumpered, 
+  Z-axis scaling is enabled, with a constant value of 15 being returned. When 
+  E261-280 emulation is jumpered, the scaling range is set to 2-255, and Scaling, 
+  Range Checking, and Trim Modes are enabled. All other jumpers and NVRAM settings, 
+  (except the Key byte), remain available within each emulation mode.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The controllers may also 
+  be programmed through software setup for Output Format Emulation (partial emulation). 
+  In this mode, the controller will still respond to the SmartSet protocol, but 
+  the <i>Touch</i> packet will be replaced with a packet defined by the selected 
+  output format. See the <a href="chapter_6.htm#emulate_e"><i>Emulate</i></a> 
+  command for details on selecting the output format.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Emulation modes are only 
+  documented here for purposes of completeness. It is not recommended that new 
+  applications use an emulation mode, as the controller being emulated may no 
+  longer be manufactured by Elo. Backwards compatibility can not be guaranteed 
+  indefinitely.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">In the following sections 
+  describing each protocol, jumper settings are given followed by the equivalent 
+  <font face="Courier New, Courier, mono">TouchFlag</font> and <font face="Courier New, Courier, mono">Format</font> 
+  values for the <i>Emulate</i> command. For example, J2-Y, J10-N, J11-N; 0/1,5.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="smartset_ascii_mode"></a>SmartSet 
+  ASCII Mode </font></h5>
+<table width="191" border="0">
+  <tr>
+    <td>
+      <p><font face="Arial, Helvetica, sans-serif" size="2">J2-Y, J10-N, J11-N; 
+        0/1,5</font></p>
+    </td>
+  </tr>
+</table>
+<p><font face="Arial, Helvetica, sans-serif" size="2">In this mode, coordinate 
+  data is formatted as three ASCII decimal numbers for X, Y, and Z. The range 
+  of the coordinates is determined by the calibration and scaling options of the 
+  controller. Coordinate values of less than 1000 are padded with leading zeroes 
+  so each number will have at least four digits. Scaling may require the addition 
+  of an additional digit for values greater than 9999. Scaling may also add a 
+  leading minus sign (&quot;-&quot;). Plus signs are suppressed.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">The Z coordinate is followed 
+  by an optional status indicator. A &quot;T&quot; indicates initial or stream 
+  touch, a &quot;U&quot; indicates untouch. In the example below, optional characters 
+  are underlined.</font></p>
+<p align="center"><font face="Arial, Helvetica, sans-serif" size="2">&lt;-&gt;XXXXX&lt;space&gt;&lt;-&gt;YYYYY&lt;space&gt;&lt;-&gt;ZZZZZ&lt;space&gt;&lt;T|U&gt;&lt;CR&gt;&lt;LF&gt;</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"><a name="e271140_and_e281A4002_emulation"></a>E271-140 
+  and E281A-4002 Emulation</font></h5>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="binary_output_data"></a>Binary 
+  Output Data </font></h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Transmission of a single 
+  touch packet in Binary Mode requires 4 bytes, or 6 bytes if Z data is enabled 
+  in E281A-4002 mode. The beginning of a packet is uniquely identified by the 
+  two most significant bits being 1. </font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2"><b>Z-Data Disabled (E271-140 
+  Mode) </b> J2-N, J10-Y, J11-N; 0,0</font></p>
+<table width="400" border="1" align="center">
+  <tr align="center"> 
+    <td width="50"> 
+      <p><b><font face="Arial, Helvetica, sans-serif" size="2">Byte</font></b></p>
+    </td>
+    <td width="50"> 
+      <p><b><font face="Arial, Helvetica, sans-serif" size="2">MSB</font></b></p>
+    </td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p><b><font face="Arial, Helvetica, sans-serif" size="2">LSB</font></b></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X11</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X10</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X9</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X8</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X7</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X6</font></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">2</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X5</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X4</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X3</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X2</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">X0</font></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">3</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y11</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y10</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y9</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y8</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y7</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y6</font></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">4</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y5</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y4</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y3</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y2</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2">Y0</font></p>
+    </td>
+  </tr>
+</table>
+<p><b><font face="Arial, Helvetica, sans-serif" size="2">Z-Data Enabled (E281A-4002 
+  Mode)</font></b><font face="Arial, Helvetica, sans-serif" size="2"> J2-N, J10-N, 
+  J11-Y; 0/1,6</font></p>
+<table width="400" border="1" align="center">
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2"><b>Byte</b></font></p>
+    </td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2"><b>MSB</b></font></p>
+    </td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p><font face="Arial, Helvetica, sans-serif" size="2"><b>LSB</b></font></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X11</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X10</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X9</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X8</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X7</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X6</font></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">2</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X5</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X4</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X3</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X2</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">X0</font></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">3</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y11</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y10</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y9</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y8</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y7</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y6</font></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">4</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y5</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y4</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y3</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y2</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Y0</font></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">5</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z11</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z10</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z9</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z8</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z7</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z6</font></p>
+    </td>
+  </tr>
+  <tr align="center"> 
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">6</font></p>
+    </td>
+    <td width="50"> 
+      <p></td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">0</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z5</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z4</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z3</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z2</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z1</font></p>
+    </td>
+    <td width="50"> 
+      <p><font size="2" face="Arial, Helvetica, sans-serif">Z0</font></p>
+    </td>
+  </tr>
+</table>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Since the Z coordinate is 
+  only a 4-bit number, bit positions Z11-Z4 will be 0. This includes all of byte 
+  5.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">If jumpered for E281A-4002 
+  emulation mode, or TouchFlag is 1, the Z value will be zero on untouch.</font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">After a driver receives 
+  a complete packet, it typically masks off the upper two bits by logically ANDing 
+  each byte with 3Fh, shifts the most significant byte of each coordinate left 
+  6 bits, then ORs it with the least significant byte.</font></p>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="ascii_output_data"></a>ASCII 
+  Output Data </font> </h5>
+<p><font face="Arial, Helvetica, sans-serif" size="2">Transmission of a single 
+  touch packet in ASCII Mode requires 11 bytes, or 16 bytes if Z data is enabled. 
+  The packet is identified by leading carriage return and line feed characters. 
+  The coordinates are separated by a space character. The coordinate range may 
+  be for 0 to 9999.</font></p>
+<blockquote> 
+  <blockquote> 
+    <table width="500" border="0">
+      <tr> 
+        <td> 
+          <p><b><font face="Arial, Helvetica, sans-serif" size="2">Z Data Disabled 
+            without Untouch Flag (E271-140 Mode)</font></b></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font face="Arial, Helvetica, sans-serif" size="2">J2-Y, J10-Y, J11-N; 
+            0,1</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font face="Arial, Helvetica, sans-serif" size="2">&lt;CR&gt;&lt;LF&gt;XXXX 
+            YYYY</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><b><font face="Arial, Helvetica, sans-serif" size="2">Z Data Disabled 
+            with Untouch Flag (E271-140 Mode) N/A; 1,1</font></b></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font face="Arial, Helvetica, sans-serif" size="2">&lt;CR&gt;&lt;LF&gt;XXXX 
+            YYYY &lt;T|U&gt;</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><b><font face="Arial, Helvetica, sans-serif" size="2">Z Data Enabled 
+            without Untouch Flag (E281-4002 Mode) N/A; 0,7</font></b></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font face="Arial, Helvetica, sans-serif" size="2">&lt;CR&gt;&lt;LF&gt;XXXX 
+            YYYY ZZZZ</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><b><font face="Arial, Helvetica, sans-serif" size="2">Z Data Enabled 
+            with Untouch Flag (E281A-4002 Mode)</font></b></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font face="Arial, Helvetica, sans-serif" size="2">J2-Y, J10-N, J11-Y; 
+            1,7</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font face="Arial, Helvetica, sans-serif" size="2">&lt;CR&gt;&lt;LF&gt;XXXX 
+            YYYY ZZZZ</font></p>
+        </td>
+      </tr>
+    </table>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The Z value is zero 
+      on untouch.</font></p>
+    </blockquote>
+</blockquote>
+<h5><font face="Arial, Helvetica, sans-serif"><a name="e261280_emulation"></a>E261-280 
+  Emulation</font></h5>
+<blockquote> 
+  <h5> <font face="Arial, Helvetica, sans-serif"><a name="output_formats"></a>Output 
+    Formats</font></h5>
+  <p> <font face="Arial, Helvetica, sans-serif" size="2">The E271-2210 controller 
+    supports a variety of E261-280 output formats, including ASCII or Binary, 
+    Single-Point or Stream Mode, and untouch reporting. The default depends on 
+    the Output Format and Mode jumpers, J2 and J4 respectively. The Untouch Flag 
+    is included by default.</font></p>
+  <h5><font face="Arial, Helvetica, sans-serif"><a name="software_setup"></a>Software 
+    Setup</font></h5>
+  <p><font face="Arial, Helvetica, sans-serif" size="2">The E271-2210 SmartSet 
+    controller does not support software setup when in E261-280 emulation mode.</font><font face="Arial, Helvetica, sans-serif"> 
+    </font> </p>
+</blockquote>
+<h4><font face="Arial, Helvetica, sans-serif"><a name="2500s_controller"></a>2500S 
+  Controller</font></h4>
+<blockquote> 
+  <h5><font face="Arial, Helvetica, sans-serif"><a name="e281a4002_emulation"></a>E281A-4002 
+    Emulation</font></h5>
+  <p><font face="Arial, Helvetica, sans-serif" size="2">The 2500S controller can 
+    be jumpered for emulation of the E281A-4002 controller with J2 in Binary Mode 
+    with Z data enabled. <a href="#binary_output_data">Click here</a> for details 
+    of the protocol. In Emulation Mode, the controller will no longer respond 
+    to the SmartSet protocol.</font></p>
+</blockquote>
+<h4><font face="Arial, Helvetica, sans-serif"><a name="e2712201_controller"></a>E271-2201 
+  Controller</font></h4>
+<blockquote> 
+  <p><font face="Arial, Helvetica, sans-serif" size="2">When selecting an Emulation 
+    Mode, all other jumpers and NVRAM settings are still available.</font></p>
+  <h5><font face="Arial, Helvetica, sans-serif"><a name="e271141_emulation"></a>E271-141 
+    Emulation</font></h5>
+  <blockquote> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a name="io_port_assignments"></a>I/O 
+      Port Assignments</font></h5>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">When in emulation mode, 
+      the E271-2201 only has four registers available for communication with the 
+      host processor. Each register is addressed by its offset from the Base I/O 
+      Port address as selected by jumpers J0 and J1 (see <a href="chapter_2.htm#select_base_i/o_port">Selecting 
+      the Base I/O Port</a>). The functions and formats of these registers are 
+      defined below:</font></p>
+    <table width="600" border="0">
+      <tr> 
+        <td> 
+          <p><font face="Arial, Helvetica, sans-serif" size="2"><b>Base Port</b></font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <blockquote> 
+            <p><font face="Arial, Helvetica, sans-serif" size="2">8-Bit Mode Contains 
+              the X coordinate</font></p>
+          </blockquote>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <blockquote> 
+            <p><font face="Arial, Helvetica, sans-serif" size="2">12-Bit Mode 
+              Contains the high-order byte of the X or Y coordinate</font></p>
+          </blockquote>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font face="Arial, Helvetica, sans-serif" size="2"><b>Base Port+1</b></font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <blockquote> 
+            <p><font face="Arial, Helvetica, sans-serif" size="2">8-Bit Mode Contains 
+              the Y coordinate</font></p>
+          </blockquote>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <blockquote> 
+            <p><font face="Arial, Helvetica, sans-serif" size="2">12-Bit Mode 
+              Contains the low-order byte of the X or Y coordinate</font></p>
+          </blockquote>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font face="Arial, Helvetica, sans-serif" size="2"><b>Base Port+2</b></font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <blockquote> 
+            <p><font face="Arial, Helvetica, sans-serif" size="2">Contains controller 
+              status as defined below:</font></p>
+          </blockquote>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <table width="600" border="0">
+            <tr valign="middle"> 
+              <td width="82" height="20"> 
+                <blockquote> 
+                  <p><font size="2" face="Arial, Helvetica, sans-serif"><b>Bit</b></font></p>
+                </blockquote>
+              </td>
+              <td width="96" height="20"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2"><b>Hex</b></font></p>
+                </blockquote>
+              </td>
+              <td width="158" height="20"> 
+                <blockquote>&nbsp;</blockquote>
+              </td>
+              <td width="196" height="20"> 
+                <blockquote>&nbsp;</blockquote>
+              </td>
+            </tr>
+            <tr valign="middle"> 
+              <td width="82"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">0</font></p>
+                </blockquote>
+              </td>
+              <td width="96"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">01</font></p>
+                </blockquote>
+              </td>
+              <td width="158"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">1=8-Bit 
+                    Mode</font></p>
+                </blockquote>
+              </td>
+              <td width="196"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">0=12-Bit 
+                    Mode</font></p>
+                </blockquote>
+              </td>
+            </tr>
+            <tr valign="middle"> 
+              <td width="82"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">1</font></p>
+                </blockquote>
+              </td>
+              <td width="96"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">02</font></p>
+                </blockquote>
+              </td>
+              <td width="158"> 
+                <blockquote> 
+                  <p>                  
+                </blockquote>
+              </td>
+              <td width="196"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">always 
+                    0 </font></p>
+                </blockquote>
+              </td>
+            </tr>
+            <tr valign="middle"> 
+              <td width="82"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">2</font></p>
+                </blockquote>
+              </td>
+              <td width="96"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">04</font></p>
+                </blockquote>
+              </td>
+              <td width="158"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">1=Stream 
+                    Mode </font></p>
+                </blockquote>
+              </td>
+              <td width="196"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">0=Single-Point 
+                    Mode </font></p>
+                </blockquote>
+              </td>
+            </tr>
+            <tr valign="middle"> 
+              <td width="82"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">3</font></p>
+                </blockquote>
+              </td>
+              <td width="96"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">08</font></p>
+                </blockquote>
+              </td>
+              <td width="158"> 
+                <blockquote> 
+                  <p>                  
+                </blockquote>
+              </td>
+              <td width="196"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">always 
+                    0 </font></p>
+                </blockquote>
+              </td>
+            </tr>
+            <tr valign="middle"> 
+              <td width="82"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">4</font></p>
+                </blockquote>
+              </td>
+              <td width="96"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">10</font></p>
+                </blockquote>
+              </td>
+              <td width="158"> 
+                <blockquote> 
+                  <p>                  
+                </blockquote>
+              </td>
+              <td width="196"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">always 
+                    0 </font></p>
+                </blockquote>
+              </td>
+            </tr>
+            <tr valign="middle"> 
+              <td width="82"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">5</font></p>
+                </blockquote>
+              </td>
+              <td width="96"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">20</font></p>
+                </blockquote>
+              </td>
+              <td width="158"> 
+                <blockquote> 
+                  <p>                  
+                </blockquote>
+              </td>
+              <td width="196"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">always 
+                    0 </font></p>
+                </blockquote>
+              </td>
+            </tr>
+            <tr valign="middle"> 
+              <td width="82"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">6</font></p>
+                </blockquote>
+              </td>
+              <td width="96"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">40</font></p>
+                </blockquote>
+              </td>
+              <td width="158"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">1=X data 
+                    </font></p>
+                </blockquote>
+              </td>
+              <td width="196"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">0=Y data 
+                    </font></p>
+                </blockquote>
+              </td>
+            </tr>
+            <tr valign="middle"> 
+              <td width="82"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">7</font></p>
+                </blockquote>
+              </td>
+              <td width="96"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">80</font></p>
+                </blockquote>
+              </td>
+              <td width="158"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">1= data 
+                    ready</font></p>
+                </blockquote>
+              </td>
+              <td width="196"> 
+                <blockquote> 
+                  <p><font face="Arial, Helvetica, sans-serif" size="2">0= not 
+                    ready</font></p>
+                </blockquote>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><b><font size="2" face="Arial, Helvetica, sans-serif">Base Port+3 </font></b></p>
+        </td>
+      </tr>
+      <tr> 
+        <td height="20"> 
+          <p></td>
+      </tr>
+      <tr> 
+        <td> 
+          <h5><font face="Arial, Helvetica, sans-serif"><a name="coordinate_data_format"></a>Coordinate
+            Data Format</font></h5>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">The coordinate
+            data is formatted as follows:</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td height="20">&nbsp;</td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif"><b>8-Bit Mode</b></font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">two-byte transfer</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">Base Port XXXX
+            XXXX X coordinate data</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">Base Port+1 YYYY
+            YYYY Y coordinate data</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td height="20"> 
+          <p></td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><b><font size="2" face="Arial, Helvetica, sans-serif">12-Bit Mode</font></b></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">first two-byte
+            transfer</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">Base Port XXXX
+            XXXX X high order byte</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">Base Port+1 XXXX
+            0000 X low order byte</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">second two-byte
+            transfer</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">Base Port YYYY
+            YYYY Y high order byte</font></p>
+        </td>
+      </tr>
+      <tr> 
+        <td> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">Base Port+1 YYYY
+            0000 Y low order byte</font></p>
+        </td>
+      </tr>
+    </table>
+    <p>&nbsp;</p>
+    <table width="438" border="1" align="center">
+      <tr> 
+        <td bgcolor="#CCCCCC" bordercolor="#333333"> 
+          <p align="center"><font face="Arial, Helvetica, sans-serif" size="2"><b><u>Note</u></b></font></p>
+          <p align="left"><font face="Arial, Helvetica, sans-serif" size="2"><i>The 
+            8-bit data is the same as the highest-order 8 bits of the 12-bit data.</i></font></p>
+        </td>
+      </tr>
+    </table>
+    <h5><font face="Arial, Helvetica, sans-serif"><a name="polled_vs_interrupt_mode"></a>Polled 
+      vs. Interrupt Mode</font></h5>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The host processing 
+      can be performed by polling the controller or by using interrupts when in 
+      E271-141 emulation mode. Polling consists of constantly checking the status 
+      of the controller for data to become ready, and then retrieving that data. 
+      Polled or Interrupt Mode is selected by jumpers J2 and J3 (see <a href="chapter_2.htm#sel_interrupt_irq"><i>Selecting 
+      the Interrupt (IRQ)</i></a>).</font></p>
+    <h5><font face="Arial, Helvetica, sans-serif"><a name="polling_considerations"></a>Polling 
+      Considerations</font></h5>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">In Polled Mode, bit 
+      7 (data ready) of the emulated status register (see page 116) must be checked 
+      continuously. If it is a 1, the data registers contain the coordinates of 
+      a touch and can be read. If it is a 0, no data is ready.</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">Bit 0 of the status 
+      register indicates whether the controller is in 8 or 12-Bit Mode. A 1 indicates 
+      8-Bit Mode; a 0 indicates 12-Bit Mode.</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">In 8-Bit Mode, a single 
+      two-byte transfer will read both the X and Y coordinates. The application 
+      program must read X before Y because reading Y signals the controller to 
+      transmit new data as soon as it becomes available.</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">In 12-Bit Mode, two 
+      separate two-byte transfers are required to read the X and Y coordinates. 
+      The first two-byte transfer returns the high and low-order bytes of X. You 
+      must poll a second time to obtain the second two-byte transfer, which returns 
+      the high and low-order bytes of Y. Bit 6 of the status register indicates 
+      whether X or Y is being read. If bit 6 is 1, it is X data; if it is 0, Y 
+      data. In both cases, you must read the high-order byte before the low-order 
+      byte because reading the low-order byte signals the controller to transmit 
+      new data as soon as it becomes available.</font></p>
+    <h5><font face="Arial, Helvetica, sans-serif"><a name="polled_programming_example"></a>Polled 
+      Programming Example</font></h5>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">The following program 
+      polls the E271-2201 controller in E271-141 emulation mode. The code supports 
+      both 8 and 12-Bit Modes.</font></p>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">Here is typical output:</font></p>
+    <table width="500" border="0">
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">C:&gt;bpgettch</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">Touch screen for 
+          polled coordinate output.</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">Press any key to 
+          abort...</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1408 Y=1104</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1424 Y=1120</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1424 Y=1136</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1440 Y=1152</font> 
+        </td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1456 Y=1152</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1456 Y=1136</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1440 Y=1120</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1424 Y=1136</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1408 Y=1120</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1408 Y=1136</font></td>
+      </tr>
+      <tr> 
+        <td><font face="Courier New, Courier, mono" size="2">X=1424 Y=1152</font></td>
+      </tr>
+    </table>
+    <p><font face="Arial, Helvetica, sans-serif" size="2">And here is the program: 
+      </font></p>
+    <p><img src="../images/polled_prgrm_example_append_a.gif" width="576" height="864"></p>
+    <p>&nbsp; </p>
+  </blockquote>
+</blockquote>
+</body>
+</html>

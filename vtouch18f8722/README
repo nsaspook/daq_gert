@@ -1,0 +1,26 @@
+APPLICATION:  CREATING LARGE DATA OBJECTS AND THE USART
+
+The following sample application prompts the user (via HyperTerminal) to enter
+a digit between 0 and 9.  Upon receiving a character from the USART, the
+program will then either output a string from an array of data or if the
+character received is not between 0 and 9, output an error string.
+The command line used to build this application is:
+
+mcc18 -p 18f452 -I c:\mcc18\h example2.c
+
+where c:\mcc18 is the directory in which the compiler is installed.
+This sample application is designed for use with the MPLAB ICD2, the
+PICDEM 2 Plus demo board, and the PIC18F452 device.  This sample covers the
+following items:
+
+1.  Creating large data objects
+2.  Reading from and writing to the USART. 
+3.  Interrupt handling (#pragma interrupt, interrupt vectors, and
+    interrupt service routines)
+4.  System header files
+5.  Processor-specific header files
+6.  #pragma sectiontype
+7.  Inline assembly
+
+Details can be found in the "MPLAB C18 C Compiler's User's Guide" under the
+Examples chapter.

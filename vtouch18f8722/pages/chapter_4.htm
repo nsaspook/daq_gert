@@ -1,0 +1,533 @@
+<html>
+<head>
+<title>Chapter 4</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<h3 align="left"><font face="Arial, Helvetica, sans-serif">Chapter 4</font></h3>
+<h3 align="left"><font face="Arial, Helvetica, sans-serif"> SmartSet Tutorial</font></h3>
+<div align="left">
+  <h4><font face="Arial, Helvetica, sans-serif"><a href="#intro_to_ss_program">Introduction 
+    to the SmartSet Program</a></font></h4>
+</div>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#running_ss">Running 
+  SmartSet</a></font></h4>
+<blockquote> 
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#main_menu_categories">Main 
+    Menu Categories</a></font> </h5>
+</blockquote>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#sample_ss_session">Sample 
+  SmartSet Session</a></font></h4>
+<blockquote> 
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#enabling_touch_reporting">Enabling 
+    Touch Reporting </a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#changing_touch_mode">Changing 
+    the Touch Mode </a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#calibration">Calibration 
+    </a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#range_check_mode">Range 
+    Checking Mode</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#trim_mode">Trim 
+    Mode</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#scaling">Scaling</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#axis_inversion">Axis 
+    Inversion</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#saving_setup">Saving 
+    the Setup</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#second_calib_scaling">Second 
+    Calibration/Scaling</a></font></h5>
+  <h5 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#programming_multi_controllers">Programming 
+    Multiple Controllers </a></font></h5>
+</blockquote>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif"><a href="#where_to_go_from_here">Where 
+  to Go From Here </a></font> 
+</h4>
+<hr>
+<p><font face="Arial, Helvetica, sans-serif" size="2">This chapter will introduce 
+  some of the important concepts in touchscreen driver programming as they relate 
+  to the SmartSet controllers. The concepts will be presented in tutorial form 
+  using software accompanying this manual.</font></p>
+<h4 align="left"><font face="Arial, Helvetica, sans-serif"><b><a name="intro_to_ss_program"></a>Introduction 
+  to the SmartSet Program</b></font></h4>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The SMARTSET.EXE 
+  program is found on the SmartSet Companion Disk which may be downloaded separately 
+  from <a href="http://www.elotouch.com/">www.elotouch.com</a>. The SMARTSET program, 
+  (indicated in this manual by capital letters), requires an IBM PC or compatible 
+  running MS-DOS. We recommend connecting the SmartSet controller to a PC for 
+  this tutorial even if your target platform is not a PC running DOS. Elo's DOS 
+  driver, ELODEV, is not required.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">This tutorial 
+  will use the SMARTSET program to go beyond the basic issue of receiving touchscreen 
+  coordinates and demonstrate many of the features of the SmartSet controller 
+  family. These features include on-board calibration, coordinate scaling, diagnostics, 
+  various operating modes, communication protocols, timers, filtering parameters, 
+  and NVRAM. Two-way communication is used between the host driver software and 
+  the controller's firmware for sending commands and receiving responses.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">SMARTSET is 
+  useful to driver writers in the following ways:</font></p>
+<ul>
+  <li> <font size="2" face="Arial, Helvetica, sans-serif">SMARTSET can be used 
+    to experiment with the functionality of each command in menu form, display 
+    the context-sensitive help, and learn how each option works in conjunction 
+    with others, all before writing any driver code.</font></li>
+  <li><font size="2" face="Arial, Helvetica, sans-serif">Once the controller's 
+    features are understood, SMARTSET can be used to examine the underlying command 
+    set and communication. SMARTSET can be used to send and receive packets of 
+    data to the controller in binary or ASCII form. This protocol must be understood 
+    before attempting to write driver code.</font></li>
+  <li><font size="2" face="Arial, Helvetica, sans-serif">SMARTSET can be used 
+    to test the state of a controller. For example, a programmer can use SMARTSET 
+    to verify a driver changed an option correctly. In fact, most programmers 
+    will choose to program controller options directly from their driver, rather 
+    than using SMARTSET.</font></li>
+</ul>
+<p align="left"><font size="2" face="Arial, Helvetica, sans-serif">Besides programmers, 
+  others may use SMARTSET in the following ways:</font></p>
+<ul>
+  <li><font size="2" face="Arial, Helvetica, sans-serif">SMARTSET can be used 
+    to customize the controller, saving all details in a file. Later, the configuration 
+    can be loaded from disk directly into the NVRAM of other controllers. SMARTSET 
+    is not required for use with Elo or third-party driver software. However, 
+    special options such as filtering and timing values can be adjusted with SMARTSET 
+    for use with these drivers.</font></li>
+  <li><font face="Arial, Helvetica, sans-serif" size="2"> SMARTSET can be used 
+    for diagnostic purposes.</font></li>
+</ul>
+<h4 align="left"><b><font face="Arial, Helvetica, sans-serif"><a name="running_ss"></a>Running 
+  SmartSet</font></b></h4>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">SMARTSET is 
+  invoked by typing:</font></p>
+<table width="231" border="0">
+  <tr> 
+    <td> 
+      <div align="right"><font face="Arial, Helvetica, sans-serif" size="2">SMARTSET 
+        (not case sensitive)</font></div>
+    </td>
+  </tr>
+</table>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">at the DOS 
+  prompt.</font></p>
+<p align="left"><img src="../images/fig_4-1.gif" width="395" height="83"><a name="fig4_1"></a></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2"><i>Figure 4-1. 
+  SmartSet Utility Interface Selection </i></font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Select Serial, 
+  PC-Bus, or Micro Channel interface. (A selection for Micro Channel replaces 
+  PC-Bus if you are running on a system with a Micro Channel bus.)</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Enter the Base 
+  I/O Port address or COM port as requested. SMARTSET locates the controller and 
+  displays the controller's jumper settings as shown below:</font></p>
+<p align="left"><img src="../images/fig_4-2.gif" width="395" height="120"><a name="fig4_2"></a></p>
+<p align="left"> <i><font face="Arial, Helvetica, sans-serif" size="2">Figure 
+  4-2. SmartSet Utility Jumper Settings Display </font></i></p>
+<table width="500" border="1" align="left">
+  <tr> 
+    <td bgcolor="#CCCCCC"> 
+      <div align="left"> 
+        <p align="center"><font face="Arial, Helvetica, sans-serif" size="2"><b>NOTE</b></font></p>
+        <p align="left"><font face="Arial, Helvetica, sans-serif" size="2">A warning 
+          message is displayed if the controller is not detected. You may proceed 
+          to the Main Menu and SMARTSET will assume default settings for all controller 
+          parameters. You may then change any parameters and save all settings 
+          to a disk file. This file can later be transferred to a connected controller. 
+          If you change the communication parameters from the Main Menu, SMARTSET 
+          will attempt to establish communication with the controller again.</font></p>
+      </div>
+    </td>
+  </tr>
+</table>
+<p align="left">&nbsp;</p>
+<p align="left">&nbsp;</p>
+<p align="left">&nbsp;</p>
+<p align="left">&nbsp;</p>
+<p align="left">&nbsp;</p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Press a key 
+  to display the Main Menu, shown below.</font></p>
+<p align="left"><img src="../images/fig_4-3.gif" width="395" height="190"><font face="Arial, Helvetica, sans-serif"> 
+  <a name="fig4_3"></a> </font> </p>
+<p align="left"><i><font face="Arial, Helvetica, sans-serif" size="2">Figure 4-3. 
+  SmartSet Utility Main Menu</font></i></p>
+<p align="left"><font size="2" face="Arial, Helvetica, sans-serif">The top of 
+  the screen shows the version of the SMARTSET program, the type of controller 
+  and touchscreen, the ROM revision level of the controller firmware, and the 
+  Owner ID string, factory set to &quot;EloInc.&quot; unless you have a special 
+  OEM configuration.</font></p>
+<p align="left"><font size="2" face="Arial, Helvetica, sans-serif">The bottom 
+  of the screen contains some status information which is updated after each command. 
+  The Communication Status indicates if SMARTSET is communicating with a connected 
+  controller. The communication status may change if communication parameters 
+  are changed. The bottom line says &quot;Idle&quot; if SMARTSET is ready to accept 
+  a command, or indicates a command is in progress. The help line gives context 
+  sensitive help on the highlighted command. Additional information can be displayed 
+  for the highlighted command at any time by pressing the [F1] key.</font></p>
+<p align="left"><font size="2"> </font> <font face="Arial, Helvetica, sans-serif" size="2">The 
+  left half of the screen, the Main Menu, lists categories of available controller 
+  commands. The right half, or submenu, lists available controller commands for 
+  each category and their current setting. Use the <img src="../images/up_down_arrows.gif" width="20" height="26" align="absmiddle">arrow 
+  keys to move the highlighting up or down on the Main Menu. The submenu changes 
+  with each category. Press the right arrow key or [Enter] to move the highlighting 
+  to the submenu for the highlighted category. Press the left arrow to move back. 
+  When the highlighting is in the submenu, controller parameters may be changed. 
+  <i>Hot keys</i> indicated for the Main Menu categories may be used to jump quickly 
+  from submenu to submenu.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Take a moment 
+  to move through the menus using the arrow keys and hot keys. Press [F1] for 
+  help on any category or controller command. Do not change any settings yet.</font> 
+</p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"><b><a name="main_menu_categories"></a>Main 
+  Menu Categories</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The Main Menu 
+  includes the following categories, described in general below. All commands 
+  will be detailed later in this manual.</font> </p>
+<table width="600" border="0">
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Load/Save 
+      Setup </font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Lets you 
+      load and save controller settings to disk and/or nonvolatile RAM (NVRAM). 
+      Saving settings to NVRAM will change the controller's power-on defaults, 
+      unless the controller is booting from jumper settings. Saving settings to 
+      disk will allow other controllers to be quickly programmed to the identical 
+      settings. Multiple controllers can be programmed identically by loading 
+      settings from disk, then saving those settings in NVRAM.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Communications</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Lets you 
+      examine and change the parameters for communication with the SmartSet controllers. 
+      The parameters and their use vary depending on the interface.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Touch Mode 
+      </font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Various 
+      options can be selected for which portions of a touch will be reported. 
+      You may select the initial touch point, the last point touched (the untouch 
+      point), the entire stream of intervening points (stream points), intervening 
+      points which do not repeat the coordinate value (tracking points), or combinations 
+      of these. Touch coordinates may be trimmed and scaled to specified ranges.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Touch Reporting</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Used to 
+      select various touch reporting options, touch packet emulation, and low 
+      power mode.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Calibration</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">A touchscreen 
+      calibration sequence may be performed, or calibration points specified manually. 
+      X and Y axes may be swapped.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Scaling</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Touch coordinate 
+      scaling ranges can be specified with any axis inversion.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Timer</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Lets you 
+      select and configure the on-board timer features of the controller.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Filter</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Allows 
+      you to select low-level filtering parameters for optimizing controller performance 
+      for extreme environments.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Touch Testing</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Allows 
+      you to test the touchscreen and see the data transmitted by the controller.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Diagnostics</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Runs the 
+      various on-board diagnostic routines.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Reset Controller</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Performs 
+      a soft or hard reset on the controller.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">ASCII Setup</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Lets you 
+      communicate directly with the controller by entering command packets with 
+      the keyboard. By manually communicating with the controller and studying 
+      its responses, you can learn the details of the host-controller interaction.</font></td>
+  </tr>
+  <tr valign="top"> 
+    <td width="115"><font face="Arial, Helvetica, sans-serif" size="2">Exit</font></td>
+    <td width="475"><font face="Arial, Helvetica, sans-serif" size="2">Exits the 
+      SMARTSET program.</font></td>
+  </tr>
+</table>
+<h4 align="left"><b><font face="Arial, Helvetica, sans-serif">Sample SmartSet 
+  Session<a name="sample_ss_session"></a></font></b></h4>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">We will now 
+  proceed to configure some basic operating parameters of the SmartSet controller. 
+  The SMARTSET program will be used to change settings and examine their effects. 
+  Press [F1] for on-line information for each command, or refer to <a href="chapter_6.htm">Chapter 
+  6</a> for detailed information.</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"><b><a name="enabling_touch_reporting"></a>Enabling 
+  Touch Reporting</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">First confirm 
+  touch reporting is enabled by pressing &quot;P&quot; for the &quot;Touch Reporting&quot; 
+  menu, then moving the highlighting to &quot;Touch Reporting&quot; and press 
+  [Enter] so &quot;Report&quot; is indicated. (Only serial controllers power-on 
+  enabled).</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Skip to Touch 
+  Testing by pressing &quot;T&quot;. Touch the touchscreen. X and Y coordinates 
+  will be displayed for the position of your touch, as well as a constant Z-axis 
+  value will vary with pressure on IntelliTouch screens, or remain constant on 
+  AccuTouch screens.</font></p>
+<p align="left"><img src="../images/fig_4-4.gif" width="395" height="135"> <a name="fig4_4"></a></p>
+<p align="left"><i><font face="Arial, Helvetica, sans-serif" size="2">Figure 4-4. 
+  SmartSet Utility Touch Testing Display.</font></i></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The Touch Flag 
+  indicates whether a touch coordinate is for the point of Initial touch, the 
+  point of release (Untouch), or points between those events (Stream).</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"> <b><a name="changing_touch_mode"></a>Changing 
+  the Touch Mode</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The SmartSet 
+  controller can be configured so it reports any combination of these types of 
+  events. Press [ESC] to exit the Touch Testing screen, and &quot;M&quot; to enter 
+  the Touch Mode submenu. Use the arrow keys and [Enter] to enable various combinations 
+  of &quot;Initial Touches&quot;, &quot;Stream Touches&quot;, and &quot;Untouches&quot;. 
+  Type &quot;T&quot; to return to the Touch Testing screen to examine their effects.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Return the 
+  controller to the &quot;Enabled&quot; setting for &quot;Initial Touches&quot;, 
+  &quot;Stream Touches&quot;, and &quot;Untouches&quot;.</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"> <a name="calibration"></a><b>Calibration</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The need for 
+  calibration is unique to the touchscreen. Unlike mouse or keyboard applications 
+  where the cursor is part of the image, a touchscreen is a physical overlay with 
+  an independent coordinate system. Only by knowing the position of the image 
+  can the touchscreen coordinates be converted into image coordinates.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Besides the 
+  differences in touchscreens and controllers, calibration also compensates for 
+  the variation in video image among displays. The image is affected by horizontal 
+  and vertical adjustments on the monitor and by the physical mounting of the 
+  touchscreen.</font></p>
+<p align="left"> <font face="Arial, Helvetica, sans-serif" size="2">Additional 
+  calibration complications include image blooming, where bright-colored images 
+  expand, and the &quot;pin cushion&quot; effect, which causes the corners of 
+  the display to be stretched. Poor display linearity can cause similarly-sized 
+  boxes to be larger at the edges of the screen than they are in the middle, or 
+  vice-versa. The displayed image can also be tilted. Even changing video modes 
+  can affect the screen size.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Perfect calibration 
+  cannot be achieved in all circumstances. For example, the user can encounter 
+  parallax problems with a change in position, or because the present user is 
+  not the same stature as the person who calibrated the screen.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Even the most 
+  sophisticated calibration techniques can only partially overcome such variations. 
+  Therefore, most touchscreen software uses only a two or three-point calibration 
+  sequence and instead relies on well-placed touch zones and appropriate user 
+  feedback.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The three-point 
+  calibration sequence used by the SMARTSET program automatically corrects inverted 
+  touchscreen installations and backwards cable connections.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Type &quot;T&quot; 
+  and locate the corner where the X and Y values of the touchscreen are lowest. 
+  This is the default origin of the touchscreen coordinate system. The X and Y 
+  coordinates increase as you move to the diagonally opposite corner. Because 
+  the coordinate values at the extremes of the touchscreen vary with every touchscreen 
+  and controller combination, touchscreen coordinates are only useful if mapped 
+  to the coordinate system of the image behind the touchscreen.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">For example, 
+  your touchscreen may have its origin in the lower-left corner and have a coordinate 
+  system ranging from 352,536 to 3715,3550. The active area of the touchscreen 
+  will usually extend beyond the image, into the overscan area of video displays. 
+  Your image may have its origin in the upper-left corner and have a coordinate 
+  system from 1,1 to 80,25.</font></p>
+<p align="left"> <font face="Arial, Helvetica, sans-serif" size="2">In Figure 
+  4-5 below, Rx and Ry denote the raw coordinate system of the touchscreen controller, 
+  and Sx and Sy denote the coordinate system for the screen image. Rxlow, Rylow, 
+  Rxhigh, and Ryhigh are the calibration points for the position of the image 
+  in raw coordinates. Given point Cx and Cy in raw coordinates, the X and Y values 
+  must be determined in screen coordinates.</font><font face="Arial, Helvetica, sans-serif"> 
+  </font> </p>
+<p align="left"><img src="../images/fig_4-5.gif" width="395" height="174" border="1"><i><font face="Arial, Helvetica, sans-serif" size="2"><a name="fig4_5"></a></font></i></p>
+<p align="left"><i><font face="Arial, Helvetica, sans-serif" size="2">Figure 4-5. 
+  Calibration Point Coordinates</font></i></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">We will now 
+  use the on-board calibration and scaling features of the SmartSet controller 
+  so coordinates will be reported in the coordinate system of your image. (If 
+  you do not wish to use this feature of the SmartSet controller, <a href="appendix_b.htm">Appendix 
+  B</a> gives generalized calibration and scaling algorithms that a driver program 
+  can use.)</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Go to the Calibration 
+  submenu. Note the default calibration points are 0-4095 for each axis. Choose 
+  &quot;Do Calibration&quot;, type &quot;C&quot; to calibrate in 80x25 text mode, 
+  and touch the three points indicated.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">When you complete 
+  the calibration sequence and return to the menu, the calibration points have 
+  been changed. The new calibration points are the coordinates of the upper-left 
+  and lower-right corners of the 80x25 image.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">If the default 
+  orientation of your touchscreen had the origin in the lower-left corner, as 
+  is typical, the calibration points will reflect a change in orientation by having 
+  a low value greater than the high value in the Y axis. If your origin was in 
+  the upper-right, the X values will be reversed. The process of calibration not 
+  only defines the position of your image, it also aligns the origin of the touchscreen 
+  coordinate system with that of the image. This is called hardware axis inversion. 
+  In general, the first calibration point becomes the origin.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The third calibration 
+  point was used only to detect swapped axes. This can correct inverted cabling 
+  or touchscreens rotated 90&deg;. Normally after calibrating, the X/Y Axis field 
+  indicates Normal, not Swapped.</font></p>
+<p align="left"> <font face="Arial, Helvetica, sans-serif" size="2">You may have 
+  noticed that the calibration routine did not acquire its calibration points 
+  in the corners of the video image. The points taken are offset from the corners, 
+  then extrapolated to achieve an estimated value at the corners. This is because 
+  the image on some monitors is not very linear, and usually least linear in the 
+  corners, due to the &quot;pin cushion&quot; effect. By acquiring calibration 
+  points near the corners instead of at the corners, more of the video will be 
+  closely calibrated with the touchscreen.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The calibration 
+  routine used by SMARTSET lets you select a video mode supported by your display 
+  before you calibrate. As the screen size and position may vary among video modes, 
+  you should calibrate in the video mode used by your application. For our example, 
+  we calibrated in text mode.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Typically, 
+  touchscreen driver developers will write their own calibration routine rather 
+  than using this feature of SMARTSET. Later in this manual, sample source code 
+  for a calibration program is given.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Now Enable 
+  the Calibration Mode on the Touch Mode submenu. The calibration points are ignored 
+  until Calibration Mode is enabled.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Return to the 
+  Touch Testing screen. Notice that the origin is now in the upper-left corner, 
+  and the coordinate is approximately 0,0 at the edge of the image, and 4095,4095 
+  at the lower right corner of the image. If you touch beyond the image in the 
+  overscan area, you will see negative coordinates in the upper left, and coordinates 
+  greater than 4095,4095 in the lower right.</font><font face="Arial, Helvetica, sans-serif"> 
+  </font> </p>
+<h5 align="left"><b><a name="range_check_mode"></a><font face="Arial, Helvetica, sans-serif">Range 
+  Checking Mode</font></b></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Next, Enable 
+  Range Checking on the Touch Mode submenu. This mode instructs the controller 
+  to check if a touch is within the calibrated area or in the overscan area.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Return to the 
+  Touch Testing screen again. Now the controller indicates &quot;out of range&quot; 
+  by adding 40 to the Status field when you touch the overscan area. Range Checking 
+  does not affect the coordinates. The only effect is a slight degradation in 
+  coordinate throughput because the controller has to perform additional analysis.</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"> <b><a name="trim_mode"></a>Trim 
+  Mode</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Enable Trim 
+  Mode on the Touch Mode submenu. This mode instructs the controller to push the 
+  coordinates of a touch in the overscan area to the edge of the calibrated area. 
+  In most applications, a touch in the overscan area should be accepted as a valid 
+  touch in the closest touch zone on the edge of the image. <i>Trim Mode only 
+  works if Range Checking is also Enabled.</i></font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Return to the 
+  Touch Testing screen again. The Status still indicates &quot;out of Range&quot; 
+  when you touch the overscan area. However, the coordinates are trimmed to 0,0 
+  and 4095,4095 at the extremes.</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"> <a name="scaling"></a><b>Scaling</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The process 
+  of scaling is similar to that of calibration. Usually it is desired to map the 
+  touch coordinates into a range other than the controller's default range of 
+  0 to 4095. For our example, we will want coordinates scaled to values of 1 to 
+  80 horizontally and 1 to 25 vertically.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Select the 
+  Scaling submenu by pressing &quot;S&quot;. Change the X Low value to 1, the 
+  X High to 80, the Y Low to 1, and the Y High to 25.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Now, return 
+  to the Touch Mode submenu and enable Scaling. The scaling values are ignored 
+  until Scaling Mode is enabled.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">On the Touch 
+  Testing screen, observe how the coordinates are scaled to 80x25. The combination 
+  of calibration and scaling now make the touch coordinates match the image coordinates. 
+  A touch on the touchscreen now reports the character location on the image. 
+  This is the mode where the touchscreen data is most useful to an application.</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"> <a name="axis_inversion"></a><b>Axis 
+  Inversion</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The coordinate 
+  scaling values can be signed numbers from -32767 to +32768. If the low scale 
+  value is greater than the high value, <i>software axis inversion</i> is indicated. 
+  Software axis inversion is performed after any automatic hardware axis inversions 
+  directed by the calibration points. For example, the corrected hardware origin 
+  may be the upper left, but on one application screen, 1st Quadrant 1000x1000 
+  Cartesian Coordinates may be desired with the origin in the lower left. Simply 
+  set the scaling values 0-999 and 999-0 for X and Y. The calibration points do 
+  not need to be changed.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Each axis may 
+  also be inverted by selecting the Orientation command on the Scaling submenu.</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"><a name="saving_setup"></a><b>Saving 
+  the Setup</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Once all controller 
+  parameters have been configured with the SMARTSET program, the Load/Save Setup 
+  command may be used to load and save the settings to disk and/or nonvolatile 
+  RAM (NVRAM).</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Saving settings 
+  to NVRAM will change the controller's power-on defaults, unless you have an 
+  AccuTouch controller which is booting from jumper settings (J7 is installed).</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Saving settings 
+  to disk will allow other controllers to be quickly programmed to the identical 
+  settings.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Type &quot;L&quot; 
+  to jump to the Load/Save Setup submenu. Select Save for the Data Direction, 
+  and To Disk for the Destination. Move the highlighting to Setup and press [Enter]. 
+  The status line says it is creating or updating the &quot;SmartSet configuration 
+  file&quot;.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Before we demonstrate 
+  restoring the settings from disk, let's change the settings by using the Reset 
+  command to restore all defaults. Press &quot;R&quot; to jump to the Reset Menu. 
+  Use [F1] to display the differences between Soft Reset and Hard Reset. Execute 
+  a Hard Reset. Depending on OEM options, a Hard Reset may take a few seconds. 
+  Watch the status line until it reports Idle. Scroll through the menus and verify 
+  that the calibration, scaling, modes, and all other parameters are reset.</font></p>
+<p align="left"><font size="2" face="Arial, Helvetica, sans-serif"> Now select
+    Load From Disk on the Load/Save Setup submenu. Move the highlighting to Setup,
+    and press [Enter]. Scroll through the menus and verify that the calibration,
+  scaling, modes, and all other parameters are restored.</font></p>
+<p align="left"><font size="2" face="Arial, Helvetica, sans-serif">The same procedure
+    is used for loading and saving all parameters from/to NVRAM. Simply change
+  the Data Source/Destination to NVRAM.</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"> <b><a name="second_calib_scaling"></a>Second 
+  Calibration/Scaling</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The SmartSet 
+  controllers can also store a secondary set of calibration and scaling values 
+  in NVRAM which can be recalled at any time.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Create a secondary 
+  set of calibration and scaling values by changing the values on the Calibration 
+  and Scaling submenus. Now select Save to Disk, highlight 2nd Calib/Scaling, 
+  and press [Enter]. The modified calibration and scaling values are added to 
+  the SMARTSET.DAT file.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Restoring the 
+  Setup from Disk will restore the primary calibration and scaling values. Selecting 
+  Load From Disk and 2nd Calib/Scaling will replace the primary values with the 
+  secondary values saved on disk.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The same procedure 
+  is used for loading and saving the secondary values from/to NVRAM. Simply change 
+  the Data Source/Destination to NVRAM.</font></p>
+<h5 align="left"><font face="Arial, Helvetica, sans-serif"> <a name="programming_multi_controllers"></a><b>Programming 
+  Multiple Controllers</b></font></h5>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">In most applications, 
+  more than one touchscreen will be used. The SMARTSET program includes a feature 
+  for quickly configuring power-on defaults on multiple controllers.</font></p>
+<p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Once a setup 
+  has been saved to disk (and optionally secondary calibration and scaling values), 
+  the Program Controller command on the Load/Save Setup submenu can be used. In 
+  one operation, this command loads the setup from disk and saves it to the controller's 
+  NVRAM. The controller can then be replaced with another controller, and identical 
+  settings programmed in one operation.</font></p>
+<h4 align="left"><b><font face="Arial, Helvetica, sans-serif"><a name="where_to_go_from_here"></a>Where 
+  To Go From Here</font></b></h4>
+<p align="left"><font size="2" face="Arial, Helvetica, sans-serif">From the Main 
+  Menu, type &quot;R&quot; and select Soft Reset to restore the default settings 
+  of the controller. You may now exit the SMARTSET program by selecting Exit from 
+  the Main Menu.</font></p>
+<p align="left"><font size="2" face="Arial, Helvetica, sans-serif">In the next 
+  chapter, we will discuss how data is communicated to the SmartSet controllers. 
+  The ASCII Setup portion of the SMARTSET program will be used to study this communication 
+  and the command structure.</font></p>
+<p align="left"><font size="2" face="Arial, Helvetica, sans-serif"><a href="chapter_6.htm">Chapter 
+  6</a> then describes the commands supported by the SmartSet controllers. The 
+  commands in the SMARTSET program correspond to the controller command set.</font> </p>
+</body>
+</html>

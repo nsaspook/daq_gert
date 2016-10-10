@@ -1,0 +1,78 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.5.4	//
+!_TAG_REVISION_NAME	MCHPTags	//
+!_TAG_REVISION_VERSION	6.0.1	//
+BLINK_RATE::35000	X:\vtouch18f8722\example2.c	138;"	d	line:138	file:
+BUF_SIZE::16	X:\vtouch18f8722\example2.c	129;"	d	line:129	file:
+CATCH	X:\vtouch18f8722\example2.c	153;"	v	line:153
+CMD_OVERFLOW::CMD_SIZE*2	X:\vtouch18f8722\example2.c	132;"	d	line:132	file:
+CMD_SIZE::4	X:\vtouch18f8722\example2.c	130;"	d	line:130	file:
+COMM_CHK_TIME::30	X:\vtouch18f8722\example2.c	148;"	d	line:148	file:
+DELL_E224864	X:\vtouch18f8722\example2.c	157;"	e	line:157	enum:screen_type_t	file:
+DELL_OTHER	X:\vtouch18f8722\example2.c	157;"	e	line:157	enum:screen_type_t	file:
+ELO_SEQ::10	X:\vtouch18f8722\example2.c	133;"	d	line:133	file:
+ELO_SIZE::14	X:\vtouch18f8722\example2.c	134;"	d	line:134	file:
+ELO_SIZE_I::10	X:\vtouch18f8722\example2.c	135;"	d	line:135	file:
+FALSE::0	X:\vtouch18f8722\example2.c	136;"	d	line:136	file:
+HOST_CMD_SIZE::6	X:\vtouch18f8722\example2.c	131;"	d	line:131	file:
+LCD_CHK_TIME::36	X:\vtouch18f8722\example2.c	149;"	d	line:149	file:
+LCD_OK	X:\vtouch18f8722\example2.c	153;"	v	line:153
+LED_UP	X:\vtouch18f8722\example2.c	153;"	v	line:153
+OTHER	X:\vtouch18f8722\example2.c	157;"	e	line:157	enum:screen_type_t	file:
+SCREEN_INIT	X:\vtouch18f8722\example2.c	154;"	v	line:154
+TIMERFAST::58974	X:\vtouch18f8722\example2.c	147;"	d	line:147	file:
+TIMEROFFSET::26474	X:\vtouch18f8722\example2.c	146;"	d	line:146	file:
+TOUCH	X:\vtouch18f8722\example2.c	153;"	v	line:153
+TOUCH_SKIP::0	X:\vtouch18f8722\example2.c	150;"	d	line:150	file:
+TRUE::1	X:\vtouch18f8722\example2.c	137;"	d	line:137	file:
+UNTOUCH	X:\vtouch18f8722\example2.c	153;"	v	line:153
+X_LOGICAL::119	X:\vtouch18f8722\example2.c	141;"	d	line:141	file:
+X_SCALE::1.90	X:\vtouch18f8722\example2.c	139;"	d	line:139	file:
+X_TOOL::202	X:\vtouch18f8722\example2.c	143;"	d	line:143	file:
+Y_LOGICAL::94	X:\vtouch18f8722\example2.c	142;"	d	line:142	file:
+Y_SCALE::1.75	X:\vtouch18f8722\example2.c	140;"	d	line:140	file:
+Y_TOOL::164	X:\vtouch18f8722\example2.c	144;"	d	line:144	file:
+alive_led	X:\vtouch18f8722\example2.c	160;"	v	line:160
+build_date	X:\vtouch18f8722\example2.c	181;"	v	line:181
+build_time	X:\vtouch18f8722\example2.c	181;"	v	line:181
+build_version	X:\vtouch18f8722\example2.c	181;"	v	line:181
+c	X:\vtouch18f8722\example2.c	196;"	l	line:196	file:
+c1	X:\vtouch18f8722\example2.c	196;"	l	line:196	file:
+c2	X:\vtouch18f8722\example2.c	196;"	l	line:196	file:
+comm_check	X:\vtouch18f8722\example2.c	153;"	v	line:153
+cylon	X:\vtouch18f8722\example2.c	379;"	l	line:379
+data_len	X:\vtouch18f8722\example2.c	197;"	l	line:197	file:
+data_pos	X:\vtouch18f8722\example2.c	197;"	l	line:197	file:
+data_ptr	X:\vtouch18f8722\example2.c	196;"	l	line:196	file:
+dcount	X:\vtouch18f8722\example2.c	355;"	l	line:355
+e	X:\vtouch18f8722\example2.c	363;"	l	line:363
+elo_char	X:\vtouch18f8722\example2.c	364;"	l	line:364
+elobuf_in	X:\vtouch18f8722\example2.c	166;"	v	line:166
+elobuf_out	X:\vtouch18f8722\example2.c	166;"	v	line:166
+elocmdout	X:\vtouch18f8722\example2.c	361;"	f	line:361	signature:(const rom unsigned char *elostr)
+elocodes	X:\vtouch18f8722\example2.c	172;"	v	line:172
+elocodes_s	X:\vtouch18f8722\example2.c	168;"	v	line:168
+i	X:\vtouch18f8722\example2.c	197;"	l	line:197	file:
+init_check	X:\vtouch18f8722\example2.c	153;"	v	line:153
+j	X:\vtouch18f8722\example2.c	161;"	v	line:161
+main	X:\vtouch18f8722\example2.c	377;"	f	line:377	signature:(void)
+rx_int	X:\vtouch18f8722\example2.c	186;"	f	line:186	signature:(void)
+rxtx_handler	X:\vtouch18f8722\example2.c	127;"	p	line:127	file:	signature:(void)
+rxtx_handler	X:\vtouch18f8722\example2.c	194;"	f	line:194	signature:(void)
+screen_type	X:\vtouch18f8722\example2.c	158;"	v	line:158
+screen_type_t	X:\vtouch18f8722\example2.c	156;"	g	line:156	file:
+tchar	X:\vtouch18f8722\example2.c	197;"	l	line:197	file:
+testing_data	X:\vtouch18f8722\example2.c	166;"	v	line:166
+timer0_off	X:\vtouch18f8722\example2.c	163;"	v	line:163
+uchar	X:\vtouch18f8722\example2.c	197;"	l	line:197	file:
+version	X:\vtouch18f8722\example2.c	152;"	v	line:152
+wdtdelay	X:\vtouch18f8722\example2.c	353;"	f	line:353	signature:(unsigned long delay)
+xl	X:\vtouch18f8722\example2.c	166;"	v	line:166
+xs	X:\vtouch18f8722\example2.c	162;"	v	line:162
+yl	X:\vtouch18f8722\example2.c	166;"	v	line:166
+ys	X:\vtouch18f8722\example2.c	162;"	v	line:162
+z	X:\vtouch18f8722\example2.c	379;"	l	line:379

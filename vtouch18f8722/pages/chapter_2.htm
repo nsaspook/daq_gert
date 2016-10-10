@@ -1,0 +1,1345 @@
+<html>
+<head>
+<title>Chapter 2</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<h3 align="left"><b><font face="Arial, Helvetica, sans-serif"><a name="Chp2"></a>Chapter 
+  2 </font></b></h3>
+<h3 align="left"><b><font face="Arial, Helvetica, sans-serif">Controller Jumper 
+  Settings </font></b></h3>
+<div align="left"> 
+  <h4><font face="Arial, Helvetica, sans-serif"><a href="#general_information">General 
+    Information</a></font></h4>
+</div>
+<blockquote> 
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#selecting_powr-on_set-w_jumpers">Selecting 
+      Power-On Settings with Jumpers</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#select_pwr-on_set_frm_nvram">Selecting 
+      Power-On Settings from NVRAM</a></font></h5>
+  </div>
+</blockquote>
+<div align="left"> 
+  <h4><font face="Arial, Helvetica, sans-serif"><a href="#e271-2210_serial_controller">E271-2210 
+    Serial Controller</a></font></h4>
+</div>
+<blockquote> 
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#sel_the_data_trans_rate">Selecting 
+      the Data Transmission Rate</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#sel_data_format">Selecting 
+      the Data Format</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#hardware_handshaking">Hardware 
+      Handshaking</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#choosing_single-point_or_stream_modes">Choosing 
+      Single-Point or Stream Modes</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#emulation_mode">Emulation 
+      Mode</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#reserved_jumpers">Reserved 
+      Jumpers</a></font></h5>
+  </div>
+</blockquote>
+<div align="left"> 
+  <h4><font face="Arial, Helvetica, sans-serif"><a href="#e271-2201_pc_bus_controller">E271-2201 
+    PC-Bus Controller </a></font></h4>
+</div>
+<blockquote>
+  <div align="left">
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#select_base_i/o_port">Selecting 
+      the Base I/O Port</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#sel_interrupt_irq">Selecting 
+      the Interrupt (IRQ)</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#choosing_single-point_or_stream_modes">Choosing 
+      Single-Point or Stream Modes</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#select_touchscreen_type">Selecting 
+      the Touchscreen Type</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#emulation_mode">Emulation 
+      Mode</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#8_and_12_bit_modes">8- 
+      and 12-Bit Modes</a></font></h5>
+  </div>
+  <div align="left"> 
+    <h5><font face="Arial, Helvetica, sans-serif"><a href="#reserved_jumpers">Reserved 
+      Jumpers</a></font></h5>
+  </div>
+</blockquote>
+<div align="left">
+  <h4><font face="Arial, Helvetica, sans-serif"><a href="#2500s_serial_controller">2500S 
+    Serial Controller</a></font></h4>
+  <h4><a href="#set_nvram_to_defaults_pwr_up">Set NVRAM to Defaults on Power Up</a></h4>
+  <h4><a href="#e281A-4002_emulation_mode">E281A-4002 Emulation Mode</a> </h4>
+</div>
+<div align="center"> 
+  <blockquote> 
+    <hr>
+    <h4 align="left"><b><a name="general_information"></a><font face="Arial, Helvetica, sans-serif">General 
+      Information</font></b></h4>
+    <p align="left"><font face="Arial, Helvetica, sans-serif" size="2">SmartSet 
+      controllers are shipped preconfigured for use with the Elo driver software. 
+      For most users, no changes are necessary. Required jumper settings and options 
+      available for your controller are listed on <a href="http://www.elotouch.com/">www.elotouch.com</a>. 
+      If your software does not use Elo drivers, check your third-party documentation 
+      for required jumper settings.</font></p>
+    <p align="left"><font face="Arial, Helvetica, sans-serif" size="2">The E271-2210, 
+      E271-2201, and 2500S controllers can also be jumpered to emulate other Elo 
+      controllers. See the corresponding sections in this chapter for details.</font></p>
+    <p align="left"><font face="Arial, Helvetica, sans-serif" size="2">If you 
+      are writing your own driver software, the information in this chapter will 
+      detail all options available through jumpers. The SmartSet controllers can 
+      also be configured through software setup. Jumpers can easily be used to 
+      select the power-on configuration, and then software used to adjust parameters 
+      at any time. A DOS software setup utility is included on the SmartSet Companion 
+      Disk for this purpose, or you can write your own code with the information 
+      provided in this manual. Options selected through software can be stored 
+      in the controllers' nonvolatile memory (NVRAM) as power-on defaults.</font></p>
+    <p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Software 
+      setup is more flexible as only a limited number of options are available 
+      through jumpers. The software setup utility can save all settings to a disk 
+      file, then program other controllers to the identical power-on settings 
+      with a single command.</font></p>
+    <h5 align="left"><font face="Arial, Helvetica, sans-serif"><b><a name="selecting_powr-on_set-w_jumpers"></a>Selecting 
+      Power-On Settings with Jumpers</b></font></h5>
+    <p align="left"><font face="Arial, Helvetica, sans-serif" size="2">Jumper 
+      blocks may have a horizontal or vertical orientation, as shown below in 
+      Figure 2-1. The figure shows jumpers installed normally for J3 and J7. Because 
+      some jumpers work in tandem with others, a cross-connection may also be 
+      significant depending on the controller. A valid cross-connection is shown 
+      between J0 and J1. Jumpers with an invalid cross-connection, as with J4 
+      and J5, have no effect and are available as extra jumpers.</font></p>
+    <p align="left"><font size="2"><img src="../images/fig_2-1.gif" width="395" height="296" border="1"></font></p>
+  </blockquote>
+</div>
+<blockquote> 
+  <p><font size="2" face="Arial, Helvetica, sans-serif"><i><a name="fig2_1"></a>Figure
+    2-1. Jumpering SmartSet Controllers</i></font></p>
+  <table width="550" border="1" align="left">
+    <tr> 
+      <td bgcolor="#CCCCCC"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif"><b>NOTE</b></font></p>
+        <p><font size="2" face="Arial, Helvetica, sans-serif">To enable use of 
+          the jumpers on AccuTouch controllers, J7 must be installed. If J7 is 
+          not installed, power-on settings are from NVRAM.</font></p>
+      </td>
+    </tr>
+  </table>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <h5><b><font face="Arial, Helvetica, sans-serif"><a name="select_pwr-on_set_frm_nvram"></a>Selecting 
+    Power-On Settings from NVRAM</font></b></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">With the AccuTouch controllers, 
+    jumper J7 must not be installed to enable power-on settings from NVRAM. For 
+    information on the software setup utility SMARTSET.EXE, see <a href="chapter_4.htm">Chapter 
+    4.</a></font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"> Proceed to the section 
+    shown for your controller:</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"><a href="#e271-2210_serial_controller">E271-2210 
+    Serial Controller </a></font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"><a href="#e271-2201_pc_bus_controller">E271-2201 
+    PC-Bus Controller </a></font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"><a href="#2500s_serial_controller">2500S 
+    Serial Controller </a> </font></p>
+  <h4><font face="Arial, Helvetica, sans-serif"><a name="e271-2210_serial_controller"></a>E271-2210 
+    Serial Controller</font></h4>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The following figure shows 
+    the mounting dimensions, jumper locations, connections, and pinouts for the 
+    E271-2210 controller. For detailed drawings, see www.elotouch.com. Mounting 
+    holes marked with an 'X' are non-plated through-holes (NPTH)</font><font size="2"> 
+    </font></p>
+  <p><img src="../images/fig_2-2.gif" width="395" height="296" border="1"></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"><i><a name="fig2_2"></a>Figure
+    2-2. E271-2210 Serial Controller</i></font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The following table lists 
+    the jumper settings for the E271-2210 controller.</font></p>
+  <table width="531" border="0">
+    <tr valign="top"> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Baud Rate</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif"><b>(From Left)</b></font></p>
+      </td>
+    </tr>
+    <tr valign="top"> 
+      <td width="151"> 
+        <div align="center"> 
+          <p><font size="2" face="Arial, Helvetica, sans-serif">9600</font></p>
+        </div>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J0-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p></td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J1-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">2400</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J0-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <div align="center"> 
+          <p>          
+        </div>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J1-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">1200</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J0-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <div align="center"> 
+          <p>          
+        </div>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J1-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">300</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J0-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <blockquote> 
+          <p>          
+        </blockquote>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J1-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">19200</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Cross connect (connect 
+          jumper horizontally so the top pins of J0 and J1 are jumpered).</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Output Format</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p></td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">Binary</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J2-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">ASCII</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J2-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Hardware Handshaking 
+          </font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p></td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">Enabled</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J3-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">Disabled</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J3-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Mode</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p></td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">Stream</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J4-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">Single-Point</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J4-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Reserved</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J5-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Reserved</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J6-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Power-On Settings</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p></td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">Jumpers</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J7-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">NVRAM</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J7-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Reserved</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J8-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Reserved</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J9-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Emulation Mode</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p></td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">None</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J10-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p></td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J11-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">E271-140</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J10-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p></td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J11-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">E261-280</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J10-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p></td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">Y11-Y</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p align="center"><font size="2" face="Arial, Helvetica, sans-serif">E281A-4002</font></p>
+      </td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J10-N</font></p>
+      </td>
+    </tr>
+    <tr> 
+      <td width="151"> 
+        <p></td>
+      <td width="370" valign="top"> 
+        <p><font size="2" face="Arial, Helvetica, sans-serif">J11-Y</font></p>
+      </td>
+    </tr>
+  </table>
+  <h5><b><font face="Arial, Helvetica, sans-serif"><a name="sel_the_data_trans_rate"></a>Selecting 
+    the Data Transmission Rate</font></b></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The E271-2210 communicates
+      with the host computer through a serial port. Set the data transmission
+      rate of the controller to match that of the computer's serial port. Jumpers
+    J0 and J1 control the baud rate as follows: </font></p>
+  <table width="501" border="0">
+    <tr> 
+      <td width="181"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif"><b>BAUD 
+          RATE</b></font></div>
+      </td>
+      <td width="133"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif"><b>J0</b></font></div>
+      </td>
+      <td width="173"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif"><b>J1</b></font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="181"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">9600</font></div>
+      </td>
+      <td width="133"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">none</font></div>
+      </td>
+      <td width="173"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">none 
+          (shipped setting)</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="181"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">2400</font></div>
+      </td>
+      <td width="133"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">installed</font></div>
+      </td>
+      <td width="173"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">none</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="181"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">1200</font></div>
+      </td>
+      <td width="133"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">none</font></div>
+      </td>
+      <td width="173"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">installed</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="181"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">300</font></div>
+      </td>
+      <td width="133"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">installed</font></div>
+      </td>
+      <td width="173"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">installed</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="181"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">19200</font></div>
+      </td>
+      <td width="133"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">cross-connected</font></div>
+      </td>
+      <td width="173"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">cross-connected</font></div>
+      </td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The defaults for the other 
+    communication parameters are 8 data bits, 1 stop bit, and no parity.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">A software command may 
+    also be used to select a wider range of data transmission rates and other 
+    communication parameters. All communication parameters can be saved in NVRAM 
+    as a power-on default. See the <a href="chapter_6.htm#parameter_p">Parameter 
+    command</a> for details.</font></p>
+  <h5><font face="Arial, Helvetica, sans-serif"><a name="sel_data_format"></a>Selecting 
+    the Data Format</font></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The E271-2210 controller 
+    touch coordinate output may be either ASCII characters or binary data. Jumper 
+    J2 controls the format, in combination with the emulation mode jumpers J10 
+    and J11 (<a href="#hardware_handshaking">click here</a>). For details of the 
+    standard Touch packet, see<b> </b><a href="chapter_6.htm#touch_t">Touch command</a>. 
+    For other formats, including emulation modes, see <a href="appendix_a.htm">Appendix 
+    A</a>.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">If you are using Elo driver 
+    software, J2 must not be installed.</font></p>
+  <table width="360" border="0">
+    <tr> 
+      <td width="122"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif"><b>Format</b></font></div>
+      </td>
+      <td width="228"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif"><b>J2</b></font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="122"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">Binary</font></div>
+      </td>
+      <td width="228"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">not 
+          installed (shipped setting)</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="122"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">ASCII</font></div>
+      </td>
+      <td width="228"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></div>
+      </td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">ASCII format is useful 
+    in troubleshooting installations with a dumb terminal or modem software in 
+    local mode. Binary mode is more efficient for communication with driver programs.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">A software command may 
+    also be used to select a wider range of data formats. The data format can 
+    be saved in NVRAM as a power-on default. See the <a href="chapter_6.htm#emulate_e">Emulate 
+    command</a> for details.</font></p>
+  <h5><font face="Arial, Helvetica, sans-serif"> <a name="hardware_handshaking"></a><b>Hardware 
+    Handshaking</b></font></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The E271-2210 controller 
+    supports hardware handshaking. Jumper J3 is used to enable or disable hardware 
+    handshaking. If disabled, the controller ignores the DTR and RTS lines.</font></p>
+  <table width="427" border="0">
+    <tr> 
+      <td width="200"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif"><b>Hardware 
+          Handshaking</b></font></div>
+      </td>
+      <td width="217"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif"><b>J3</b></font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="200"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">Enabled</font></div>
+      </td>
+      <td width="217"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">not 
+          installed (shipped setting)</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="200"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">Disabled</font></div>
+      </td>
+      <td width="217"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></div>
+      </td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">A software command may 
+    also be used to select a wider range of hand-shaking options. Handshaking 
+    options can be saved in NVRAM as a power-on default. See the <a href="chapter_6.htm#parameter_p">Parameter 
+    command</a>, for details.</font></p>
+  <h5><font face="Arial, Helvetica, sans-serif"><a name="choosing_single-point_or_stream_modes"></a><b>Choosing 
+    Single-Point or Stream Modes</b></font></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">Jumper J4 selects Single-Point 
+    or Stream Mode.</font></p>
+  <table width="427" border="0">
+    <tr> 
+      <td width="200"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif"><b>Mode</b></font></div>
+      </td>
+      <td width="217"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif"><b>J4</b></font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="200"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">Stream</font></div>
+      </td>
+      <td width="217"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">not 
+          installed (shipped setting)</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="200"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">Single-Point</font></div>
+      </td>
+      <td width="217"> 
+        <div align="left"> <font size="2" face="Arial, Helvetica, sans-serif">installed</font></div>
+      </td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">If Single-Point Mode is 
+    selected, a single coordinate pair is communicated for each touch. No further 
+    coordinates are communicated until the finger is lifted (untouch), and the 
+    touchscreen is retouched.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">If Stream Mode is selected, 
+    the controller sends coordinate pairs continuously until untouch.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">If you are using Elo driver 
+    programs, Stream Mode is required.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">A software command may 
+    also be used to select a wider range of modes. Modes can be saved in NVRAM 
+    as a power-on default. See the <a href="chapter_6.htm#mode_m">Mode command</a> 
+    for details.</font></p>
+  <h5><font face="Arial, Helvetica, sans-serif"><a name="emulation_mode"></a><b>Emulation 
+    Mode</b></font></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">If you are using driver 
+    software that does not directly support the SmartSet protocol, the E271-2210 
+    controller can be set up through jumpers for hardware compatibility with obsolete 
+    controllers including the AccuTouch E271-140 controller, IntelliTouch E281A-4002 
+    controller (2.0 or later firmware), or the DuraTouch E261-280 controller.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">When the controller is 
+    in an emulation mode, it will not respond to the SmartSet protocol. For descriptions 
+    of the protocols in the various emulation modes, see <a href="appendix_a.htm">Appendix 
+    A</a>.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">As an alternative to full 
+    emulation modes, a software command may be used to select a wide range of 
+    output data formats. The output data format can be saved in NVRAM as a power-on 
+    default. See the <a href="chapter_6.htm#emulate_e">Emulate command</a>, for 
+    details.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">To select an emulation 
+    mode, set the jumpers as follows:</font></p>
+  <table width="484" border="0">
+    <tr> 
+      <td width="236"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif"><b>Emulation 
+          Mode</b></font></div>
+      </td>
+      <td width="238"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif"><b>Jumpers</b></font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="236"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">None 
+          (SmartSet Mode)</font></div>
+      </td>
+      <td width="238"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J10-N 
+          (shipped setting)</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="236">&nbsp;</td>
+      <td width="238"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J11-N</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="236"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">AccuTouch 
+          E271-140</font></div>
+      </td>
+      <td width="238"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J10-Y</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="236">&nbsp;</td>
+      <td width="238"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J11-N</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="236"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">IntelliTouch 
+          E281A-4002</font></div>
+      </td>
+      <td width="238"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J10-N</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="236"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">(2.0 
+          or later firmware)</font></div>
+      </td>
+      <td width="238"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J11-Y</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="236"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">DuraTouch 
+          E261-280</font></div>
+      </td>
+      <td width="238"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J10-Y</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="236">&nbsp;</td>
+      <td width="238"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J11-Y</font></div>
+      </td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">When emulation mode is 
+    enabled, J2 selects ASCII or binary emulation in the protocol specified by 
+    J10 and J11</font><font size="2">.</font></p>
+  <h5><b><font face="Arial, Helvetica, sans-serif"><a name="reserved_jumpers"></a>Reserved 
+    Jumpers</font></b></h5>
+  <p><font face="Arial, Helvetica, sans-serif" size="2">Jumpers J6, J8, and J9 
+    on the E271-2210 controller are reserved. They should not be installed.</font></p>
+  <h4><font face="Arial, Helvetica, sans-serif"><a name="e271-2201_pc_bus_controller"></a><b>E271-2201 
+    PC-Bus Controller</b></font></h4>
+  <p><font face="Arial, Helvetica, sans-serif" size="2">The following figure shows 
+    the dimensions, jumper locations, connections, and pinouts for the E271-2201 
+    controller. For detailed drawings, see <a href="http://www.elotouch.com/">www.elotouch.com</a>.</font></p>
+  <p><img src="../images/fig_2-3.gif" width="395" height="296" border="1"></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"><i><a name="fig2_3"></a>Figure
+    2-3. E271-2201 PC-Bus Controller</i></font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The following lists the 
+    jumper settings for the E271-2201 controller.</font></p>
+  <table width="474" border="0">
+    <tr> 
+      <td width="220"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">Power-On 
+          Settings</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif"><b>(From 
+          Top)</b></font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">Jumpers</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J7-Y</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">NVRAM</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J7-N</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">Reserved</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J6-N</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">TouchScreen 
+          Type</font></div>
+      </td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">AccuTouch</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J5-Y</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">DuraTouch</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J5-N</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">Mode</font></div>
+      </td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">Stream</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J4-N</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">Single-Point</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J4-Y</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">Interrupt</font></div>
+      </td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">None 
+          (Polled)</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J3-N</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220">&nbsp;</td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J2-N</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">IRQ2</font></div>
+      </td>
+      <td width="244"> 
+        <div align="left"><font size="2" face="Arial, Helvetica, sans-serif">J3-Y</font></div>
+      </td>
+    </tr>
+    <tr> 
+      <td width="220">&nbsp;</td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J2-Y</font></td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">IRQ3</font></div>
+      </td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220">&nbsp;</td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">IRQ5</font></div>
+      </td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220">&nbsp;</td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220" valign="top"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">IRQ7</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">Cross-connect 
+        (connecy jumper vertically so the left pins of J2 and J3 are jumpered)</font></td>
+    </tr>
+    <tr> 
+      <td width="220"><font size="2" face="Arial, Helvetica, sans-serif">Base 
+        Port (in hex)</font></td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif"> 
+          280 (recommended)</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J1-N</font></td>
+    </tr>
+    <tr> 
+      <td width="220">&nbsp;</td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J0-N</font></td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">240</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J1-N</font></td>
+    </tr>
+    <tr> 
+      <td width="220">&nbsp;</td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J0-Y</font></td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">180</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J1-Y</font></td>
+    </tr>
+    <tr> 
+      <td width="220">&nbsp;</td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J0-N</font></td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">100</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J1-Y</font></td>
+    </tr>
+    <tr> 
+      <td width="220">&nbsp;</td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J0-Y</font></td>
+    </tr>
+    <tr> 
+      <td width="220" valign="top"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">2A0</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">Cross 
+        connect (connect jumper vertically so the left pins of J0 and J1 are jumpered)</font></td>
+    </tr>
+    <tr> 
+      <td width="220">&nbsp;</td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220"><font size="2" face="Arial, Helvetica, sans-serif">E271-141 
+        Emulation Mode</font></td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif"><b>(From 
+        Top)</b></font></td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">Enable</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J10-Y</font></td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">Disable</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J10-N</font></td>
+    </tr>
+    <tr> 
+      <td width="220"><font size="2" face="Arial, Helvetica, sans-serif">Resolution</font></td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220"><font size="2" face="Arial, Helvetica, sans-serif">(E271-141 
+        Emulation Mode Only)</font></td>
+      <td width="244">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">8-Bit</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J11-Y</font></td>
+    </tr>
+    <tr> 
+      <td width="220"> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif">12-Bit</font></div>
+      </td>
+      <td width="244"><font size="2" face="Arial, Helvetica, sans-serif">J11-N</font></td>
+    </tr>
+  </table>
+  <h5><font face="Arial, Helvetica, sans-serif"><a name="select_base_i/o_port"></a><b>Selecting 
+    the Base I/O Port</b></font></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The E271-2201 uses eight 
+    consecutive I/O ports. The Base I/O Port is specified by jumpers J0 and J1. 
+    The values of the settings are as follows:</font></p>
+  <table width="448" border="0">
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif"><b>Base 
+        I/O Port (Hex)</b></font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif"><b>J0</b></font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif"><b>J1</b></font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">280</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">none</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">none 
+        (shipped setting)</font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">240</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">none</font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">180</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">none</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">100</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">2a0</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">cross 
+        connected</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">cross 
+        connected</font></td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">A software command may 
+    also be used to select a wider range of Base I/O Ports. Any base address that 
+    is a multiple of 8 can be used. The Base I/O Port can be saved in NVRAM as 
+    a power-on default. See the <a href="chapter_6.htm#parameter_p">Parameter 
+    command</a> for details.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">Choose an I/O address 
+    block carefully so it will not contend with another device.</font></p>
+  <h5><b><font face="Arial, Helvetica, sans-serif"><a name="sel_interrupt_irq"></a>Selecting 
+    the Interrupt (IRQ)</font></b></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The E271-2201 may be operated 
+    in either Polled or Interrupt Mode. In Interrupt Mode, the controller signals 
+    the host that data is available. In Polled Mode, the host software must poll 
+    the controller for information.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">To use Interrupt Mode, 
+    you may install jumpers at J2 and/or J3 to select the Interrupt (IRQ). For 
+    Polled Mode, neither jumper should be installed.</font></p>
+  <table width="448" border="0">
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif"><b>Interrupt</b></font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif"><b>J2</b></font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif"><b>J3</b></font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">None 
+        (polled)</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">none</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">none 
+        (shipped setting)</font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">IRQ5</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">none</font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">IRQ3</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">none</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">IRQ2</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+    </tr>
+    <tr> 
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">IRQ7</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">cross 
+        connected</font></td>
+      <td width="139"><font size="2" face="Arial, Helvetica, sans-serif">cross 
+        connected</font></td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">A software command may 
+    also be used to select a wider range of interrupt values. Any interrupt from 
+    IRQ2 to IRQ7 can be used. The interrupt can be saved in NVRAM as a power-on 
+    default. See the<b> </b><a href="chapter_6.htm#parameter_p">Parameter command</a> 
+    for details. If you are using Elo driver programs, jumper the controller for 
+    Polled Mode as the IRQ is selected by software setup (unless E271-141 emulation 
+    mode is selected with J10).</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">Choose the interrupt carefully 
+    so it is not the same as another device.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The following table lists 
+    the devices assigned to each interrupt in a PC/XT and a PC AT:</font></p>
+  <table width="448" border="0">
+    <tr> 
+      <td width="80"><font size="2" face="Arial, Helvetica, sans-serif"><b>IRQ</b></font></td>
+      <td width="196"><font size="2" face="Arial, Helvetica, sans-serif"><b>XT</b></font></td>
+      <td width="158"><font size="2" face="Arial, Helvetica, sans-serif"><b>AT/386/486</b></font></td>
+    </tr>
+    <tr> 
+      <td width="80"><font size="2" face="Arial, Helvetica, sans-serif">2</font></td>
+      <td width="196"><font size="2" face="Arial, Helvetica, sans-serif">IBM EGA, 
+        IBM network</font></td>
+      <td width="158"><font size="2" face="Arial, Helvetica, sans-serif">Mapped 
+        to IRQ9</font></td>
+    </tr>
+    <tr> 
+      <td width="80"><font size="2" face="Arial, Helvetica, sans-serif">3</font></td>
+      <td width="158"><font size="2" face="Arial, Helvetica, sans-serif">COM2</font></td>
+      <td width="158"><font size="2" face="Arial, Helvetica, sans-serif">COM2</font></td>
+    </tr>
+    <tr> 
+      <td width="80"><font size="2" face="Arial, Helvetica, sans-serif">4</font></td>
+      <td width="158"><font size="2" face="Arial, Helvetica, sans-serif">COM1</font></td>
+      <td width="158"><font size="2" face="Arial, Helvetica, sans-serif">COM1</font></td>
+    </tr>
+    <tr> 
+      <td width="80"><font size="2" face="Arial, Helvetica, sans-serif">5</font></td>
+      <td width="196"><font size="2" face="Arial, Helvetica, sans-serif">Hard 
+        disk controller</font></td>
+      <td width="158"><font size="2" face="Arial, Helvetica, sans-serif">LPT2</font></td>
+    </tr>
+    <tr> 
+      <td width="80"><font size="2" face="Arial, Helvetica, sans-serif">6</font></td>
+      <td width="196"><font size="2" face="Arial, Helvetica, sans-serif">Floppy 
+        disk controller</font></td>
+      <td width="158"><font size="2" face="Arial, Helvetica, sans-serif">Floppy 
+        disk controller</font></td>
+    </tr>
+    <tr> 
+      <td width="80"><font size="2" face="Arial, Helvetica, sans-serif">7</font></td>
+      <td width="196"><font size="2" face="Arial, Helvetica, sans-serif">LPT1</font></td>
+      <td width="158"><font size="2" face="Arial, Helvetica, sans-serif">LPT1</font></td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">Elo's recommendations 
+    for choosing an interrupt, in order of preference, are listed below. Compare 
+    these interrupts with the tables above, skipping the interrupt if a conflict 
+    exists.</font></p>
+  <table width="399" border="0">
+    <tr> 
+      <td> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif"><b>XT:</b> 
+          7,3,4,2,6,5</font></div>
+      </td>
+      <td> 
+        <div align="center"><font size="2" face="Arial, Helvetica, sans-serif"><b>AT/386/486</b>: 
+          5,7,2,3,4,6</font></div>
+      </td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">To avoid any chance of 
+    interrupt contention, you should design the driver software to disable the 
+    interrupt line drivers of contending devices where possible, such as serial 
+    and parallel controllers.</font></p>
+  <h5><b><font face="Arial, Helvetica, sans-serif"><a name="choosing_single-point_or_stream_modes"></a>Choosing 
+    Single-Point or Stream Modes</font></b></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">Jumper J4 selects Single-Point 
+    or Stream Mode.</font></p>
+  <table width="384" border="0">
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>Mode</b></font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>J4</b></font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">Stream</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">not installed (shipped 
+        setting)</font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">Single-Point</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"> If Single-Point Mode
+      is selected, a single coordinate pair is communicated for each touch. No
+      further coordinates are communicated until the finger is lifted (untouch),
+    and the touchscreen is retouched.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">If Stream Mode is selected,
+    the controller sends coordinate pairs continuously until untouch.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">If you are using Elo
+    driver programs, Stream Mode is required.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">A software command may
+      also be used to select a wider range of modes. Modes can be saved in NVRAM
+      as a power-on default. See the <a href="chapter_6.htm#mode_m">Mode command</a> for
+    details.</font></p>
+  <h5><b><font face="Arial, Helvetica, sans-serif"><a name="select_touchscreen_type"></a>Selecting 
+    the Touchscreen Type</font></b></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The E271-2201 controller 
+    is shipped with jumper J5 installed for E274 AccuTouch 5-wire touchscreens. 
+    If you are using a 4-wire DuraTouch touchscreen (no longer manufactured by 
+    Elo), remove the jumper at J5.</font></p>
+  <table width="384" border="0">
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>Touchscreen Type</b></font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>J5</b></font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">AccuTouch </font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">installed (shipped 
+        setting)</font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">DuraTouch</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">not installed</font></td>
+    </tr>
+  </table>
+  <h5><b><font face="Arial, Helvetica, sans-serif" size="2"><a name="emulation_mode"></a>Emulation 
+    Mode</font></b></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">If you are using driver
+      software that does not directly support the SmartSet protocol, the E271-2201
+      controller can be set up through jumpers for hardware compatibility with
+    the AccuTouch E271-141 controller or the DuraTouch E271-142 controller.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">When the controller is
+      in an emulation mode, it will not respond to the SmartSet protocol. For
+      descriptions of the protocols in the various emulation modes, see <a href="appendix_a.htm">Appendix
+    A</a>.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">To select emulation mode,
+    set the J10 jumper as follows:</font></p>
+  <table width="384" border="0">
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>Emulation Mode</b></font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>J10</b></font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">None (SmartSet Mode)</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">not installed (shipped 
+        setting)</font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">E271-141</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+    </tr>
+  </table>
+  <h5><font size="2" face="Arial, Helvetica, sans-serif"><b><a name="8_and_12_bit_modes"></a>8- 
+    and 12-Bit Modes</b></font></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">When E271-141 emulation 
+    mode is enabled, J11 selects whether 8-Bit or 12-Bit Mode is emulated.</font></p>
+  <table width="384" border="0">
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>Mode</b></font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>J11</b></font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">8-Bit</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">installed</font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">12-Bit </font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">not installed</font></td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"> The 12-Bit Mode offers 
+    greater resolution. 8-bit coordinates are simply 12-bit coordinates shifted 
+    right four bits. Elo driver software internally shifts 8-bit coordinates left 
+    four bits. This way, new calibration points are not required when switching 
+    between 8- and 12-Bit Modes. Calibration is discussed in <a href="chapter_4.htm">Chapter 
+    4</a>.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">In 8-Bit Mode, a single 
+    two-byte transfer is required to read both the X and Y coordinates. In Interrupt 
+    Mode, a single interrupt must be serviced for each coordinate pair.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">In 12-Bit Mode, two separate 
+    two-byte transfers are required to read the X and Y coordinates. In Polled 
+    Mode, each polling results in one two-byte transfer. Two pollings are required 
+    for each coordinate pair, one for X and one for Y. In Interrupt Mode, two 
+    interrupts must be serviced for each coordinate pair.</font></p>
+  <h5><b><font face="Arial, Helvetica, sans-serif"><a name="reserved_jumpers"></a>Reserved 
+    Jumpers</font></b></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">Jumper J6 on the E271-2201
+    controller is reserved. It should not be installed.</font></p>
+  <h4><font face="Arial, Helvetica, sans-serif"><b><a name="2500s_serial_controller"></a>2500S 
+    Serial Controller</b></font></h4>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The following figure
+      shows the mounting dimensions, jumper locations, and connections for the
+      IntelliTouch 2500S serial controller (P/N 351077-000). For detailed drawings,
+    see <a href="http://www.elotouch.com/">www.elotouch.com</a>.</font></p>
+  <p><img src="../images/fig_2-4.gif" width="395" height="296" border="1"></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"><i><a name="fig2_4"></a>Figure
+    2-4. 2500S Serial Controller</i></font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The 2500S controller
+      is shipped with a spare jumper fitted vertically on the right side of the
+    jumper block. To enable J1 or J2, install the jumper horizontally.</font></p>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">The following table lists
+    the jumper settings for the 2500S controller:</font></p>
+  <table width="460" border="0">
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>(From Top)*</b></font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>Function</b></font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif"><b>Default</b></font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">J2</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">E281A-4002 Emulation 
+        Mode</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">Not installed</font></td>
+    </tr>
+    <tr> 
+      <td><font size="2" face="Arial, Helvetica, sans-serif">J1</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">Set NVRAM to defaults 
+        on power up</font></td>
+      <td><font size="2" face="Arial, Helvetica, sans-serif">Not installed</font></td>
+    </tr>
+  </table>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"><i>*From Top refers to 
+    board when the connector pins are pointed down</i></font></p>
+  <h5><font size="2" face="Arial, Helvetica, sans-serif"><a name="set_nvram_to_defaults_pwr_up"></a><b>Set 
+    NVRAM to Defaults on Power Up</b></font></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif"> Install this jumper
+      only if the controller configuration has been incorrectly programmed through
+    software to recover the standard settings.</font></p>
+  <h5><font size="2" face="Arial, Helvetica, sans-serif"><a name="e281A-4002_emulation_mode"></a><b>E281A-4002
+    Emulation Mode</b></font></h5>
+  <p><font size="2" face="Arial, Helvetica, sans-serif">If you are using driver
+      software that does not directly support the SmartSet serial protocol, the
+      controller can be set up through jumper J2 for hardware compatibility with
+      the <a href="appendix_a.htm#e281a4002_emulation">IntelliTouch E281A-4002
+    controller</a>. </font></p>
+</blockquote>
+</body>
+</html>
