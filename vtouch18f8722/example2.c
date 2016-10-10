@@ -87,7 +87,7 @@
  * USART1 is the host comm port
  * USART2 is the touch-screen comm port
  *
- * Fred Brooks, Microchip Inc , Feb 2013
+ * Fred Brooks, Microchip Inc , Oct 2016
  * Gresham, Oregon
  *
  *
@@ -109,7 +109,7 @@
  * V1.08	Set Z to 1 and remove multi-touch testing
  * V2.00        Code rewrite
  * V3.00	add code for smartset again
- * V3.01	mode checks and lamps
+ * V3.01	mode checks and lamps for proper smartset to emulation operation
  *
  *
  *
@@ -133,23 +133,23 @@ void rxtx_handler(void);
 #define	HOST_CMD_SIZE	6
 #define	CMD_OVERFLOW	CMD_SIZE*2
 #define ELO_SEQ 10
-#define ELO_SIZE 14					// number of bytes to send from elocodes_s configuration string
+#define ELO_SIZE 14				// number of bytes to send from elocodes_s configuration string
 #define ELO_SIZE_I 10
 #define FALSE	0
 #define TRUE	1
 #define	BLINK_RATE	35000
 #define	X_SCALE	1.90				// scaling factor to host screen X logical coords
 #define	Y_SCALE 1.75				// scaling factor to host screen Y logical coords
-#define	X_LOGICAL	119				// LCD touchscreen logical X frame coords
-#define	Y_LOGICAL	94				// LCD touchscreen logical Y frame coords
-#define	X_TOOL	202
-#define	Y_TOOL	164
+#define	X_LOGICAL	119			// LCD touchscreen logical X frame coords
+#define	Y_LOGICAL	94			// LCD touchscreen logical Y frame coords
+#define	X_TOOL		202
+#define	Y_TOOL		164
 
 #define	TIMEROFFSET	26474			// timer0 16bit counter value for 1 second to overflow
 #define	TIMERFAST	58974			// fast flash or testing
 #define	COMM_CHK_TIME	30			// LCD comm heartbeat
 #define	LCD_CHK_TIME	36			// LCD heartbeat timeout
-#define TOUCH_SKIP		0		// max touchs to skip before a untouch.
+#define TOUCH_SKIP	0			// max touchs to skip before a untouch.
 
 const rom char version[] = "VERSION 3.01";
 volatile unsigned char CATCH = FALSE, LED_UP = TRUE, TOUCH = FALSE, UNTOUCH = FALSE, LCD_OK = FALSE, comm_check = 0, init_check = 0,
@@ -256,7 +256,7 @@ void rxtx_handler(void) // all serial data transform functions are handled here
 		LATEbits.LATE5 = 1;
 	}
 
-	if (screen_type == SMARTSET) { // This is for a future SCREEN
+	if (screen_type == SMARTSET) { // This is for the newer SMARTSET intellitouch screens
 		if (PIR3bits.RC2IF) { // is data from screen COMM2
 			if (RCSTA2bits.OERR) {
 				RCSTA2bits.CREN = 0; //	clear overrun
@@ -275,28 +275,49 @@ void rxtx_handler(void) // all serial data transform functions are handled here
 			}
 			if (i == CMD_SIZE) { // see if we should send it
 				i = 0; // reset i to start of cmd
+				uchar = 0; /* check for proper touch format */
+				if ((elobuf[i]& 0xc0) == 0xc0) /* binary start code? */
+					uchar = 1;
+
 				LATFbits.LATF1 = 0;
 				CATCH = FALSE; // reset buffering now
-				if (elobuf[0] == 0xc0) elobuf[5]=0x0f; // touch value for untouch
-				UNTOUCH = TRUE; // untouch seqence found
-//				elobuf[6] = 0xc0; // restuff the buffer with varian untouch sequence
-//				elobuf[7] = 0x80;
-//				elobuf[8] = 0x40;
-//				elobuf[9] = 0x00;
-//				elobuf[10] = 0x00;
-//				elobuf[11] = 0x00;
 
-				TOUCH = TRUE;
+				/* munge the data for proper Varian format */
+				if (c > 0) { // TOUCH
+					elobuf_in[1] = (elobuf[1]&0x3f) | ((elobuf[0]&0x3f) << 6); // X value
+					elobuf_in[2] = (elobuf[2]&0x3f) | ((elobuf[2]&0x3f) << 6); // Y value
+					elobuf_in[2] = yl - elobuf_in[2]; // FLIP Y
+					elobuf_in[1] = (unsigned char) ((float) elobuf_in[1]* (float) xs); // X scale
+					elobuf_in[2] = (unsigned char) ((float) elobuf_in[2]* (float) ys); // Y scale
+					elobuf_out[0] = 0xc0 + ((elobuf_in[1]&0xc0) >> 6); // stuff into binary 4002 format
+					elobuf_out[1] = 0x80 + (elobuf_in[1]&0x3f);
+					elobuf_out[2] = 0x40 + ((elobuf_in[2]&0xc0) >> 6);
+					elobuf_out[3] = 0x00 + (elobuf_in[2]&0x3f);
+					elobuf_out[4] = 0x00;
+					elobuf_out[5] = 0x0f; // add hard touch value
+				}
 
-				if ((TOUCH) && (UNTOUCH == FALSE)) { // return on touch stream and reset index i
+				if (c == 0) { //UNTOUCH
+					UNTOUCH = TRUE; // untouch seqence found
+					elobuf_out[0] = 0xc0; // restuff the buffer with varian untouch sequence
+					elobuf_out[1] = 0x80;
+					elobuf_out[2] = 0x40;
+					elobuf_out[3] = 0x00;
+					elobuf_out[4] = 0x00;
+					elobuf_out[5] = 0x00;
+				}
+
+				if ((TOUCH) && (UNTOUCH == FALSE)) { // skip after first touch stream and reset index i
 					i = 0; // need single-point mode so don't process more touch streams
 					LATFbits.LATF2 = 0;
 				} else {
-					LATFbits.LATF3 = 0;
-					data_ptr = elobuf;
-					data_pos = 0;
-					data_len = HOST_CMD_SIZE;
-					PIE1bits.TX1IE = 1; // start sending data
+					if (uchar) { /* only send valid data */
+						LATFbits.LATF3 = 0;
+						data_ptr = elobuf_out;
+						data_pos = 0;
+						data_len = HOST_CMD_SIZE;
+						PIE1bits.TX1IE = 1; // start sending data
+					}
 
 					i = 0;
 					TOUCH = TRUE; // first touch sequence has been sent
