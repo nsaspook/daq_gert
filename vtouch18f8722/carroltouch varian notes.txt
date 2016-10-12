@@ -42,6 +42,7 @@ FF = End of report.
 data to host port
 
 Z-Data Enabled (E281A-4002 Mode) J2-N, J10-N, J11-Y; 0/1,6
+or software emulation
 
 Byte
  MSB
