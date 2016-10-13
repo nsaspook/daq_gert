@@ -196,7 +196,6 @@
 #include <timers.h>
 #include <stdlib.h>
 #include <EEP.h>
-
 #include <GenericTypeDefs.h>
 
 #ifdef INTTYPES
@@ -231,7 +230,6 @@ void rxtx_handler(void);
 #define ELO_SS_H_SCALE	0.483
 #define ELO_SS_V_SCALE	0.370
 #define	BLINK_RATE_E220	20000
-#define JB	FALSE
 #define AUTO_RESTART	FALSE
 #define SINGLE_TOUCH	FALSE
 #define GOOD_MAX	128		// max number of chars from TS without expected frames seen
@@ -392,11 +390,11 @@ void touch_int(void)
 
 void rxtx_handler(void) // all timer & serial data transform functions are handled here
 {
-	static union Timers timer, timer0;
-	static uint8_t c1 = 0, c2 = 0, c = 0, *data_ptr,
+	static union Timers timer0;
+	static uint8_t junk = 0, c = 0, *data_ptr,
 		i = 0, data_pos, data_len, tchar, uchar;
 	uint16_t x_tmp, y_tmp, uvalx, lvalx, uvaly, lvaly;
-	static uint16_t scrn_ptr = 0, host_ptr = 0, junk;
+	static uint16_t scrn_ptr = 0, host_ptr = 0;
 	static uint8_t sum = 0xAA + 'U', idx = 0;
 
 	if (INTCONbits.RBIF) {
@@ -423,10 +421,6 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 	}
 
 	if (PIR1bits.RCIF) { // is data from host COMM1
-		if (RCSTA1bits.OERR) {
-			RCSTA1bits.CREN = 0; //	clear overrun
-			RCSTA1bits.CREN = 1; // re-enable
-		}
 		if (RCSTA1bits.OERR) {
 			RCSTA1bits.CREN = 0; //	clear overrun
 			RCSTA1bits.CREN = 1; // re-enable
@@ -496,7 +490,6 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 	}
 
 	if (emulat_type == E220) {
-
 		if (PIR3bits.RC2IF) { // is data from touchscreen
 			timer0.lt = TIMERPACKET; // set timer to charge rate time
 			TMR0H = timer0.bt[1]; // Write high byte to Timer0
@@ -620,9 +613,8 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 
 			/* Get the character received from the USART */
 			c = RCREG2;
-			tchar = c;
 
-			if (((tchar & 0xc0) == 0xc0) || CATCH) { // start of touch sequence
+			if (((c & 0xc0) == 0xc0) || CATCH) { // start of touch sequence
 				LATFbits.LATF0 = 0;
 				CATCH = TRUE; // found elo touch command start of sequence
 				j = 0; // reset led timer
@@ -630,10 +622,10 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 			}
 			if (i == CMD_SIZE_SS_V80) { // see if we should send it
 				LATFbits.LATF5 = !LATFbits.LATF5;
-				i = 0; // reset i to start of cmd
+				i = FALSE; // reset i to start of cmd
 				uchar = 0; /* check for proper touch format */
 				if ((elobuf[0]& 0xc0) == 0xc0) /* binary start code? */
-					uchar = 1;
+					uchar = TRUE;
 
 				LATFbits.LATF1 = 0;
 				CATCH = FALSE; // reset buffering now
@@ -722,8 +714,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 				RCSTA2bits.CREN = 1; // re-enable
 			}
 			/* Get the character received from the USART */
-			c2 = RCREG2;
-			tchar = c2;
+			c = RCREG2;
 
 			LATEbits.LATE0 = !LATEbits.LATE0; // flash external led
 			LATEbits.LATE5 = !LATEbits.LATE5; // flash external led
@@ -731,10 +722,10 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 
 			// touch 'FE X Y FF',    untouch 'FD X Y FF' from screen,    'F4 X Y FF' frame size report
 
-			if (CATCH || (tchar == 0xFE) || (tchar == 0xFD) || (tchar == 0xF4)) { // in frame or start of touch or untouch sequence or frame size report
+			if (CATCH || (c == 0xFE) || (c == 0xFD) || (c == 0xF4)) { // in frame or start of touch or untouch sequence or frame size report
 				LATFbits.LATF0 = 0;
 				CATCH = TRUE; // found elo CT touch command start of sequence, we hope
-				elobuf_in[i++] = tchar; // start stuffing the command buffer
+				elobuf_in[i++] = c; // start stuffing the command buffer
 				j = 0; // reset led timer
 			}
 
@@ -803,6 +794,10 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 				UNTOUCH = FALSE;
 				LATF = 0xff;
 			}
+
+			LATEbits.LATE0 = !LATEbits.LATE0; // flash external led
+			LATEbits.LATE6 = !LATEbits.LATE6; // flash external led
+			LATEbits.LATE7 = LATEbits.LATE0; // flash external led
 		}
 	}
 }
@@ -991,6 +986,9 @@ void main(void)
 	TRISB = 0xff; // inputs
 	LATB = 0xff;
 	z = PORTB;
+	wdtdelay(7000);
+	if (z != PORTB) // glitch check
+		z=0xff;
 	TRISB = 0; // outputs
 
 	Busy_eep();
@@ -1100,9 +1098,6 @@ void main(void)
 			wdtdelay(700000); // wait for LCD touch controller reset
 			/* program the display */
 			elocmdout_v80(&elocodes[0][0]);
-			//elocmdout(&elocodes[1][0]);
-			//elocmdout(&elocodes[2][0]);
-			//elocmdout(&elocodes[3][0]);
 			elocmdout_v80(&elocodes[4][0]);
 			elocmdout_v80(&elocodes[5][0]);
 			elocmdout_v80(&elocodes[6][0]);
@@ -1382,7 +1377,6 @@ void main(void)
 					}
 				}
 				j = 0;
-				ClrWdt(); // reset the WDT timer
 				if ((screen_type == DELL_E224864) && SCREEN_INIT && !PIE1bits.TX1IE) { // if this flag is set send elo commands
 					INTCONbits.GIEH = 0;
 					elocmdout_v80(elocodes_s_v); // send touchscreen setup data, causes a frame size report to be send from screen
