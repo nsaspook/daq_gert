@@ -31,7 +31,7 @@
 
 // CONFIG4L
 #pragma config STVREN = ON      // Stack Full/Underflow Reset Enable bit (Stack full/underflow will cause Reset)
-#pragma config LVP = ON         // Single-Supply ICSP Enable bit (Single-Supply ICSP enabled)
+#pragma config LVP = OFF         // Single-Supply ICSP Enable bit (Single-Supply ICSP enabled)
 #pragma config BBSIZ = BB2K     // Boot Block Size Select bits (1K word (2 Kbytes) Boot Block size)
 #pragma config XINST = ON   // Extended Instruction Set Enable bit (Instruction set extension and Indexed Addressing mode disabled (Legacy mode))
 
@@ -479,6 +479,8 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 			}
 		}
 	}
+	c1 = PORTB;
+	INTCONbits.RBIF = 0;
 }
 
 void wdtdelay(uint32_t delay)
@@ -508,22 +510,54 @@ void elocmdout(const rom unsigned char *elostr)
 
 void main(void)
 {
-	uint8_t cylon = 0xfe, z;
+	uint8_t cylon = 0xfe, z, check_byte;
 
+	INTCON = 0;
+	INTCON3bits.INT1IE = 0;
+	INTCON3bits.INT2IE = 0;
+	INTCON3bits.INT3IE = 0;
 	screen_type = SMARTSET;
 
 	/* Configure  PORT pins for output */
 	TRISA = 0;
 	LATA = 0;
 
-	TRISB = 0;
-	LATB = 0;
+	/* check for touchscreen configuration data and setup switch on port B */
+	INTCON2bits.RBPU = 0;
+	TRISB = 0xff; // inputs
+	LATB = 0xff;
+	z = PORTB;
+	TRISB = 0; // outputs
+
+	Busy_eep();
+	check_byte = Read_b_eep(0);
+
+	if (z != 0xff) {
+		Busy_eep();
+		Write_b_eep(0, 0x57);
+		Busy_eep();
+		Write_b_eep(1, z);
+
+	}
+
+	Busy_eep();
+	check_byte = Read_b_eep(0);
+	if (check_byte == 0x57) {
+		Busy_eep();
+		z = Read_b_eep(1);
+		if (z == 0b00000001)
+			screen_type = SMARTSET;
+		if (z == 0b00000010)
+			screen_type = DELL_E224864;
+	}
+
+	TRISB = 0; // outputs
 
 	TRISC = 0;
 	LATC = 0;
 
 	TRISD = 0;
-	LATD = 0;
+	LATD = z; // show EEPROM configuration data here
 
 	TRISE = 0;
 	LATE = 0xFF;
@@ -603,9 +637,7 @@ void main(void)
 	INTCONbits.TMR0IE = 1;
 	INTCONbits.RBIE = 0; // disable B int
 	INTCONbits.INT0IE = 0; // clear external ints
-	INTCON3bits.INT1IE = 0;
-	INTCON3bits.INT2IE = 0;
-	INTCON3bits.INT3IE = 0;
+
 	PIR1bits.RCIF = 0;
 	PIR3bits.RC2IF = 0;
 	INTCONbits.GIEL = 0; // disable low ints
