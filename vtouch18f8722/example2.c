@@ -272,8 +272,6 @@ void rxtx_handler(void);
 const rom int8_t *build_date = __DATE__, *build_time = __TIME__,
 	build_version[] = " V3.31 8722 Varian VE touch-screen converter. Fred Brooks, Microchip Inc.";
 
-typedef uint8_t packettype[8];
-
 typedef struct reporttype {
 	uint8_t headder, status;
 	uint16_t x_cord, y_cord, z_cord;
@@ -283,11 +281,16 @@ typedef struct reporttype {
 
 typedef struct statustype {
 	int32_t alive_led, touch_count, resync_count, rawint_count, status_count;
+	uint8_t host_write : 1;
+	uint8_t scrn_write : 1;
+	uint8_t do_cap : 1;
+	uint8_t comm_check, init_check, touch_good, cam_time;
+	uint16_t restart_delay;
 } volatile statustype;
 
 volatile uint16_t c_idx = 0, speedup = 0;
 
-volatile uint8_t CATCH = FALSE, TOUCH = FALSE, UNTOUCH = FALSE, LCD_OK = FALSE, comm_check = 0, init_check = 0,
+volatile uint8_t CATCH = FALSE, TOUCH = FALSE, UNTOUCH = FALSE, LCD_OK = FALSE,
 	SCREEN_INIT = FALSE,
 	CATCH46 = FALSE, CATCH37 = FALSE, TSTATUS = FALSE, NEEDSETUP = FALSE,
 	DATA1 = FALSE, DATA2 = FALSE, LEARN1 = FALSE,
@@ -301,14 +304,12 @@ enum emulat_type_t {
 	VIISION, E220, OTHER
 } emulat_type;
 
-volatile uint8_t touch_good = 0, cam_time = 0, do_cap = DO_CAP;
-volatile int32_t touch_count = 0, resync_count = 0, rawint_count = 0, status_count = 0;
 volatile int32_t j = 0;
 volatile float xs = X_SCALE, ys = Y_SCALE, xs_ss = X_SCALE_SS, ys_ss = Y_SCALE_SS; // defaults
 volatile uint16_t timer0_off = TIMEROFFSET;
 
 #pragma idata bigdata
-volatile uint8_t elobuf[BUF_SIZE], elobuf_out[BUF_SIZE_V80], elobuf_in[BUF_SIZE_V80], testing_data, xl = X_LOGICAL, yl = Y_LOGICAL;
+volatile uint8_t elobuf[BUF_SIZE], elobuf_out[BUF_SIZE_V80], elobuf_in[BUF_SIZE_V80], xl = X_LOGICAL, yl = Y_LOGICAL;
 volatile uint8_t ssbuf[BUF_SIZE];
 
 volatile struct reporttype ssreport;
@@ -363,20 +364,13 @@ uint8_t elocodes_e7[] = {// dummy packet
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-volatile uint16_t tchar, uchar, debug_port = 0, restart_delay = 0, touch_saved = 0, touch_sent = 0, touch_corner1 = 0,
-	touch_corner_timed = 0, corner_skip = 0;
-
+uint16_t touch_corner1 = 0, touch_corner_timed = 0;
 #pragma idata
 
 #pragma idata sddata
 volatile uint8_t host_rec[CAP_SIZE] = "H";
 volatile uint8_t scrn_rec[CAP_SIZE] = "S";
 #pragma idata 
-
-volatile uint8_t host_write = FALSE, scrn_write = FALSE;
-
-
-#pragma idata
 
 #pragma code touch_int = 0x8
 
@@ -396,6 +390,8 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 	uint16_t x_tmp, y_tmp, uvalx, lvalx, uvaly, lvaly;
 	static uint16_t scrn_ptr = 0, host_ptr = 0;
 	static uint8_t sum = 0xAA + 'U', idx = 0;
+
+	status.rawint_count++;
 
 	if (INTCONbits.RBIF) {
 		junk = PORTB;
@@ -425,7 +421,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 			RCSTA1bits.CREN = 0; //	clear overrun
 			RCSTA1bits.CREN = 1; // re-enable
 		}
-		if (do_cap) {
+		if (status.do_cap) {
 			if (host_ptr < CAP_SIZE) {
 				host_rec[host_ptr] = RCREG1; // read data from touchscreen
 				while (!TXSTA2bits.TRMT) {
@@ -435,7 +431,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 				LATJbits.LATJ1 = !LATJbits.LATJ1; // flash  led
 			} else {
 				tchar = RCREG1; // read from host
-				host_write = TRUE;
+				status.host_write = TRUE;
 				LATJbits.LATJ3 = !LATJbits.LATJ3; // flash  led
 			}
 		} else {
@@ -443,11 +439,11 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 			DATA1 = TRUE; // usart is connected to data
 			if ((tchar == (uint8_t) 0x46)) { // send one report to host
 				CATCH46 = TRUE;
-				touch_good = 0;
+				status.touch_good = 0;
 			}
 			if ((tchar == (uint8_t) 0x37)) { // start of touch scan read
 				CATCH37 = TRUE;
-				touch_good = 0;
+				status.touch_good = 0;
 			}
 			if ((tchar == (uint8_t) 0x3C)) { // touch reset from host
 				NEEDSETUP = FALSE;
@@ -465,14 +461,14 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 		if (LCD_OK)
 			LATF = 0xff;
 
-		if (!LCD_OK && (init_check++ >LCD_CHK_TIME)) {
-			init_check = 0; // reset screen init code counter
+		if (!LCD_OK && (status.init_check++ >LCD_CHK_TIME)) {
+			status.init_check = 0; // reset screen init code counter
 			SCREEN_INIT = TRUE; // set init code flag so it can be sent in main loop
 			LATEbits.LATE3 = 0; // init  led ON
 		}
 
-		if ((comm_check++ >COMM_CHK_TIME) && !CATCH) { // check for LCD screen connection
-			comm_check = 0; // reset connect heartbeat counter
+		if ((status.comm_check++ >COMM_CHK_TIME) && !CATCH) { // check for LCD screen connection
+			status.comm_check = 0; // reset connect heartbeat counter
 			LCD_OK = FALSE; // reset the connect flag while waiting for response from controller.
 			while (!TXSTA2bits.TRMT) {
 			}; // wait until the usart is clear
@@ -496,7 +492,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 			TMR0L = timer0.bt[0]; // Write low byte to Timer0
 			// clear  TMR0  flag
 			INTCONbits.TMR0IF = 0; //clear interrupt flag
-			if (CAM && (cam_time > MAX_CAM_TIME)) {
+			if (CAM && (status.cam_time > MAX_CAM_TIME)) {
 				CAM_RELAY_TIME = 0;
 				CAM_RELAY_AUX = 0; // clear video switch
 				CAM_RELAY = 0; // clear video switch
@@ -504,7 +500,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 			}
 
 			c = RCREG2; // read data from touchscreen
-			if (do_cap) {
+			if (status.do_cap) {
 				if (scrn_ptr < CAP_SIZE) {
 					scrn_rec[scrn_ptr] = RCREG2; // read data from touchscreen
 					while (!TXSTA1bits.TRMT) {
@@ -513,7 +509,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 					scrn_ptr++;
 					LATJbits.LATJ2 = !LATJbits.LATJ2; // flash  led
 				} else {
-					scrn_write = TRUE;
+					status.scrn_write = TRUE;
 					LATJbits.LATJ4 = !LATJbits.LATJ4; // flash  led
 				}
 			} else {
@@ -537,7 +533,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 						}
 						if (ssbuf[1] == 'T') {
 							LATEbits.LATE4 = !LATEbits.LATE4;
-							restart_delay = 0;
+							status.restart_delay = 0;
 							CATCH = TRUE;
 							if (!ssreport.tohost) {
 								ssreport.x_cord = (ELO_REV_H - (((uint16_t) ssbuf[3])+(((uint16_t) ssbuf[4]) << 8))) >> 4;
@@ -545,7 +541,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 							}
 							LATF = ssreport.y_cord;
 						} else if (ssbuf[1] == 'A') {
-							restart_delay = 0;
+							status.restart_delay = 0;
 							LATJbits.LATJ6 = 0; // led 6 touch-screen connected
 							speedup = -10000;
 						}
@@ -556,7 +552,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 
 				}
 				if (screen_type == DELL_E224864) {
-					touch_good++; // chars received before a status report
+					status.touch_good++; // chars received before a status report
 					LATEbits.LATE0 = 1; // flash external led
 					LATEbits.LATE7 = LATEbits.LATE0; // flash external led
 					DATA2 = TRUE; // usart is connected to data
@@ -566,14 +562,14 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 						LATEbits.LATE7 = LATEbits.LATE0; // flash external led
 						if (c == 0xFF && TOUCH) { // end of report
 							CATCH = TRUE;
-							restart_delay = 0;
+							status.restart_delay = 0;
 							TOUCH = FALSE; // stop buffering touchscreen data.
 						};
 					};
 					if (c == 0xFE && (!CATCH)) { // looks like a touch report
 						TOUCH = TRUE;
 						TSTATUS = TRUE;
-						restart_delay = 0;
+						status.restart_delay = 0;
 						CATCH = FALSE;
 						c_idx = 0;
 						LATEbits.LATE0 = 1; // flash external led
@@ -581,7 +577,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 					};
 					if (c == 0xF5) { // looks like a status report
 						TSTATUS = TRUE;
-						restart_delay = 0;
+						status.restart_delay = 0;
 						LATJbits.LATJ6 = 0; // led 6 touch-screen connected
 						speedup = -10000;
 						LATEbits.LATE0 = 1; // flash external led
@@ -592,11 +588,11 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 						TOUCH = FALSE;
 						CATCH = FALSE;
 					};
-					if (touch_good > GOOD_MAX) { // check for max count and no host to get touch data
+					if (status.touch_good > GOOD_MAX) { // check for max count and no host to get touch data
 						LATEbits.LATE0 = 1; // LED off
 						LATEbits.LATE7 = LATEbits.LATE0;
 						while (TRUE) { // lockup for reboot
-							touch_good++;
+							status.touch_good++;
 						};
 					}
 				}
@@ -679,7 +675,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 					LCD_OK = TRUE; // looks like a screen controller is connected
 					SCREEN_INIT = FALSE; // command code has been received by lcd controller
 					LATEbits.LATE3 = 1; // init  led OFF
-					init_check = 0; // reset init code timer
+					status.init_check = 0; // reset init code timer
 					LATEbits.LATE2 = 0; // connect  led ON
 
 					if (UNTOUCH) { // After untouch is sent dump buffer and clear all.
@@ -765,7 +761,7 @@ void rxtx_handler(void) // all timer & serial data transform functions are handl
 						LCD_OK = TRUE; // looks like a screen controller is connected
 						SCREEN_INIT = FALSE; // command code has been received by lcd controller
 						LATEbits.LATE3 = 1; // init  led OFF
-						init_check = 0; // reset init code timer
+						status.init_check = 0; // reset init code timer
 						LATEbits.LATE2 = 0; // connect  led ON
 					}
 				}
@@ -836,7 +832,7 @@ void touch_cam(void)
 
 	if (touch_corner1 >= MAX_CAM_TOUCH) { // we have several corner presses 
 		CAM = TRUE;
-		cam_time = 0;
+		status.cam_time = 0;
 		CAM_RELAY_TIME = 1;
 		touch_corner1 = 0;
 		CAM_RELAY_AUX = 1; // set secondary VGA/CAM switch
@@ -1015,6 +1011,8 @@ void main(void)
 	float rez_scale_h = 1.0, rez_parm_h, rez_scale_v = 1.0, rez_parm_v;
 	float rez_scale_h_ss = ELO_SS_H_SCALE, rez_scale_v_ss = ELO_SS_V_SCALE;
 
+	status.do_cap = DO_CAP;
+
 	INTCON = 0;
 	INTCON3bits.INT1IE = 0;
 	INTCON3bits.INT2IE = 0;
@@ -1093,7 +1091,7 @@ void main(void)
 
 	CAM_RELAY_TIME = 0;
 	CAM_RELAY = 0;
-	touch_count = 0;
+	status.touch_count = 0;
 	CAM = 0;
 	ssreport.tohost = TRUE;
 
@@ -1187,7 +1185,7 @@ void main(void)
 		OpenTimer0(TIMER_INT_ON & T0_16BIT & T0_SOURCE_INT & T0_PS_1_1);
 		WriteTimer0(TIMERPACKET); //	start timer0 
 
-		if (!do_cap) {
+		if (!status.do_cap) {
 			setup_lcd(); // send lcd touch controller setup codes
 		}
 	}
@@ -1216,10 +1214,10 @@ void main(void)
 		DATA1 = FALSE; // reset COMM flags.
 		DATA2 = FALSE; // reset touch COMM flag
 		// leds from outputs to ground via resistor.
-		while (do_cap) {
+		while (status.do_cap) {
 			ClrWdt();
 			LATJbits.LATJ6 = !LATJbits.LATJ6; // flash  led
-			if (host_write || scrn_write) {
+			if (status.host_write || status.scrn_write) {
 				eep_ptr = 0;
 				while (eep_ptr <= 255) {
 					LATJbits.LATJ0 = !LATJbits.LATJ0; // flash  led
@@ -1238,7 +1236,7 @@ void main(void)
 				}
 				INTCONbits.GIE = 0; // global int enable
 				INTCONbits.PEIE = 0; // enable all unmasked int
-				while (do_cap) {
+				while (status.do_cap) {
 					LATJ = 0x00; // all on
 					ClrWdt(); // reset the WDT timer
 				}
@@ -1254,7 +1252,7 @@ void main(void)
 				LATEbits.LATE0 = !LATEbits.LATE0; // flash external led
 				LATEbits.LATE7 = LATEbits.LATE0; // flash external led
 				Cylon_Eye(LCD_OK);
-				if (cam_time > MAX_CAM_TIMEOUT) {
+				if (status.cam_time > MAX_CAM_TIMEOUT) {
 					CAM_RELAY_TIME = 0;
 					if (touch_corner_timed) {
 						touch_corner_timed = FALSE;
@@ -1264,21 +1262,21 @@ void main(void)
 						CAM = FALSE;
 					}
 				}
-				cam_time++;
+				status.cam_time++;
 				LATEbits.LATE0 = !LATEbits.LATE0; // flash external led
 				LATEbits.LATE7 = LATEbits.LATE0; // flash external led
 				/*		For the auto-restart switch						*/
 				if (AUTO_RESTART) { // enable auto-restarts
-					if ((restart_delay++ >= (uint16_t) 60) && (!TSTATUS)) { // try and reinit lcd after delay
+					if ((status.restart_delay++ >= (uint16_t) 60) && (!TSTATUS)) { // try and reinit lcd after delay
 						start_delay();
 						setup_lcd(); // send lcd touch controller setup codes
 						start_delay();
 						while (TRUE) {
 						}; // lockup WDT counter to restart
 					} else {
-						if ((restart_delay >= (uint16_t) 150) && (TSTATUS)) { // after delay restart TS status.
+						if ((status.restart_delay >= (uint16_t) 150) && (TSTATUS)) { // after delay restart TS status.
 							TSTATUS = FALSE; // lost comms while connected
-							restart_delay = 0;
+							status.restart_delay = 0;
 						};
 					};
 				}
@@ -1314,14 +1312,14 @@ void main(void)
 						c_idx = 0;
 					}
 					putc1(0xFF); // send end of report to host
-					touch_count++;
+					status.touch_count++;
 					CATCH = FALSE;
 					CATCH46 = FALSE;
 				} else { // just send status
 					Delay10KTCYx(65); // 65 ms
 					putc1(0xF5); // send status report
 					putc1(0xFF); // end of report
-					status_count++;
+					status.status_count++;
 					CATCH46 = FALSE;
 				};
 			};
@@ -1344,7 +1342,7 @@ void main(void)
 					putc1(0x59); // touch parm 89
 				}
 				putc1(0xFF); // end of report
-				resync_count++;
+				status.resync_count++;
 				CATCH37 = FALSE;
 			};
 
