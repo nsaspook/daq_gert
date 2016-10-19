@@ -40,44 +40,46 @@
 
 extern APP_DATA appData;
 
-void RTCC_Init(void) {
-    __builtin_disi(0x3FFF);     //disable interrupts
+void RTCC_Init(void)
+{
+	__builtin_disi(0x3FFF); //disable interrupts
 
-    // Set the RTCWREN bit
-    __builtin_write_RTCWEN();
-   
-    RCFGCALbits.RTCEN = 0;  //disable RTCC
+	// Set the RTCWREN bit
+	__builtin_write_RTCWEN();
 
-    // set date Mon Jun 29 17:18:47 MST 2015
-    RCFGCALbits.RTCPTR = 3; // start the sequence
-    RTCVAL = 0x15; // YEAR
-    RTCVAL = 0x629; // MONTH-1/DAY-1
-    RTCVAL = 0x117; // WEEKDAY/HOURS
-    RTCVAL = 0x1847; // MINUTES/SECONDS
+	RCFGCALbits.RTCEN = 0; //disable RTCC
 
-    // set alarm Mon Jan 01 23:59:00 MST 2001
-    ALCFGRPTbits.ALRMPTR = 2;       //sart write sequence
-    ALRMVAL = 0x101;
-    ALRMVAL = 0x123;
-    ALRMVAL = 0x5900;
-    
-    ALCFGRPTbits.ALRMEN = 1;        //enable alarm and chime for every second
-    ALCFGRPTbits.ARPT = 0xFF;
-    ALCFGRPTbits.CHIME = 1;
-    ALCFGRPTbits.AMASK = 0x2;
-    
-    // PWCPOL disabled; PWCEN disabled; RTCLK LPRC; PWCPRE disabled; RTCOUT alarm pulse; PWSPRE disabled; 
-    RTCPWCbits.RTCLK = 0b01;
+	// set date Mon Jun 29 17:18:47 MST 2015
+	RCFGCALbits.RTCPTR = 3; // start the sequence
+	RTCVAL = 0x15; // YEAR
+	RTCVAL = 0x629; // MONTH-1/DAY-1
+	RTCVAL = 0x117; // WEEKDAY/HOURS
+	RTCVAL = 0x1847; // MINUTES/SECONDS
 
-    //clear RTCWREN
-    RCFGCALbits.RTCWREN = 0;
+	// set alarm Mon Jan 01 23:59:00 MST 2001
+	ALCFGRPTbits.ALRMPTR = 2; //sart write sequence
+	ALRMVAL = 0x101;
+	ALRMVAL = 0x123;
+	ALRMVAL = 0x5900;
 
-    __builtin_disi(0);    //enable interrupts    
+	ALCFGRPTbits.ALRMEN = 1; //enable alarm and chime for every second
+	ALCFGRPTbits.ARPT = 0xFF;
+	ALCFGRPTbits.CHIME = 1;
+	ALCFGRPTbits.AMASK = 0x2;
+
+	// PWCPOL disabled; PWCEN disabled; RTCLK LPRC; PWCPRE disabled; RTCOUT alarm pulse; PWSPRE disabled; 
+	RTCPWCbits.RTCLK = 0b01;
+
+	//clear RTCWREN
+	RCFGCALbits.RTCWREN = 0;
+
+	__builtin_disi(0); //enable interrupts    
 }
 
-void _ISR_NO_AUTO_PSV _RTCCInterrupt(void) {
-    IFS3bits.RTCIF = 0;
-    appData.RTCCalarm = true;
+void _ISR_NO_AUTO_PSV _RTCCInterrupt(void)
+{
+	IFS3bits.RTCIF = 0;
+	appData.RTCCalarm = true;
 }
 
 

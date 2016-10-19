@@ -40,59 +40,63 @@
 
 //State machine for comparator
 //Returns next timer value
-uint16_t CMP_Tasks(void) {
-    if(CM2CONbits.CON == 0) {       //Modules are off - turn them on
-        CVRCONbits.CVREN = 1;       //Enable CVref
-        CM2CONbits.CON = 1;         //Enable CMP1
-        return BAT_CHK_WAIT_MS;     //Return module stabilization timer value
-    }
-    else {      //Modules are on and stable - time to turn off
-        LED7 = CMSTATbits.C2OUT;        //Update LED status first
-        CM2CONbits.CON = 0;
-        CVRCONbits.CVREN = 0;
-        return BAT_CHK_DELAY_MS;        //return next reading delay timer value
-    }
+
+uint16_t CMP_Tasks(void)
+{
+	if (CM2CONbits.CON == 0) { //Modules are off - turn them on
+		CVRCONbits.CVREN = 1; //Enable CVref
+		CM2CONbits.CON = 1; //Enable CMP1
+		return BAT_CHK_WAIT_MS; //Return module stabilization timer value
+	} else { //Modules are on and stable - time to turn off
+		LED7 = CMSTATbits.C2OUT; //Update LED status first
+		CM2CONbits.CON = 0;
+		CVRCONbits.CVREN = 0;
+		return BAT_CHK_DELAY_MS; //return next reading delay timer value
+	}
 }
 
 //Initialize CMP2 for low input voltage detection
-void CMP_Init(void) {
-    //CVref config
-    ANCFGbits.VBG2EN = 0;       //Vbg2 disabled
 
-    CVRCONbits.CVREFP = 0;      //CVR is Vref
-    CVRCONbits.CVREFM = 0b00;   //Vbg to comparators
-    CVRCONbits.CVROE = 0;       //CVref not output to pin
-    CVRCONbits.CVRSS = 0;       //CVrsrc is Vdd-Vss
-    CVRCONbits.CVR = CVR_BITS;  //CVR<4:0>
-    CVRCONbits.CVREN = 1;       //Enable module
+void CMP_Init(void)
+{
+	//CVref config
+	ANCFGbits.VBG2EN = 0; //Vbg2 disabled
 
-    //Comparator 2 config
-    CMSTATbits.CMIDL = 0;       //Continue operation in idle mode
-    
-    CM2CONbits.COE = 0;         //Not output on C2OUT pin
-    CM2CONbits.CPOL = 0;        //Non-inverted output
-    CM2CONbits.EVPOL = 0b11;    //Trigger on either edge
-    CM2CONbits.CREF = 1;        //Non-inverting input is CVref
-    CM2CONbits.CCH = V_SENSE_CMP_CHAN;      //Inverting input is input voltage sense
-    CM2CONbits.CEVT = 0;        //Clear event bit
-    
-    WaitMs(200);               //Wait for CVref and input voltage cap to stabilize
-    
-    CM2CONbits.CON = 1;         //Enable module
-    
-    IFS1bits.CMIF = 0;          //Clear IF
-    IEC1bits.CMIE = 1;          //Enable comparator interrupt
+	CVRCONbits.CVREFP = 0; //CVR is Vref
+	CVRCONbits.CVREFM = 0b00; //Vbg to comparators
+	CVRCONbits.CVROE = 0; //CVref not output to pin
+	CVRCONbits.CVRSS = 0; //CVrsrc is Vdd-Vss
+	CVRCONbits.CVR = CVR_BITS; //CVR<4:0>
+	CVRCONbits.CVREN = 1; //Enable module
+
+	//Comparator 2 config
+	CMSTATbits.CMIDL = 0; //Continue operation in idle mode
+
+	CM2CONbits.COE = 0; //Not output on C2OUT pin
+	CM2CONbits.CPOL = 0; //Non-inverted output
+	CM2CONbits.EVPOL = 0b11; //Trigger on either edge
+	CM2CONbits.CREF = 1; //Non-inverting input is CVref
+	CM2CONbits.CCH = V_SENSE_CMP_CHAN; //Inverting input is input voltage sense
+	CM2CONbits.CEVT = 0; //Clear event bit
+
+	WaitMs(200); //Wait for CVref and input voltage cap to stabilize
+
+	CM2CONbits.CON = 1; //Enable module
+
+	IFS1bits.CMIF = 0; //Clear IF
+	IEC1bits.CMIE = 1; //Enable comparator interrupt
 }
 
 //Comparator interrupt
-void _ISR_NO_AUTO_PSV _CompInterrupt(void) {
-    IFS1bits.CMIF = 0;              //clear flags
-    CM2CONbits.CEVT = 0;
-    //Create hysteresis by adjusting CVref voltage output
-    if(CM2CONbits.CON && CMSTATbits.C2OUT) {
-        CVRCONbits.CVR = CVR_BITS + 1;      //detected low voltage - increase CVref
-    }
-    else if(CM2CONbits.CON) {
-        CVRCONbits.CVR = CVR_BITS;          //voltage above threshold - reset CVref
-    }
+
+void _ISR_NO_AUTO_PSV _CompInterrupt(void)
+{
+	IFS1bits.CMIF = 0; //clear flags
+	CM2CONbits.CEVT = 0;
+	//Create hysteresis by adjusting CVref voltage output
+	if (CM2CONbits.CON && CMSTATbits.C2OUT) {
+		CVRCONbits.CVR = CVR_BITS + 1; //detected low voltage - increase CVref
+	} else if (CM2CONbits.CON) {
+		CVRCONbits.CVR = CVR_BITS; //voltage above threshold - reset CVref
+	}
 }

@@ -45,7 +45,9 @@
 #define ERR "ERR\r\n"
 #define CMD "CMD\r\n"
 
-enum BluetoothDecodeState {WaitForCR, WaitForLF};
+enum BluetoothDecodeState {
+	WaitForCR, WaitForLF
+};
 
 
 bool BT_ReceivePacket(char *message);
@@ -59,7 +61,7 @@ bool BT_SetupModule(void);
 bool BT_RebootEnFlow(void);
 
 #ifdef VERIFY_RN_FW_VER
-    bool BT_CheckFwVer(void);
+bool BT_CheckFwVer(void);
 #endif
 
 #endif //BLUETOOTH_H

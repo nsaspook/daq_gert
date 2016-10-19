@@ -28,6 +28,7 @@
  * File:        leds.c
  * Date:        January 20, 2015
  * Compiler:    XC16 v1.23
+ * add relay outputs
  *
  * LED functions
  *
@@ -67,7 +68,9 @@ void LED_Tasks()
 
 	case LED_BTLE_PAIRED:
 		LED1 = appData.led1;
+		RELAY1 = appData.led1;
 		LED2 = appData.led2;
+		RELAY2 = appData.led2;
 		LED3 = appData.led3;
 		LED4 = appData.led4;
 		LED5 = 1;

@@ -211,6 +211,10 @@
 #define SWITCH_S3_CNIE  CNEN4bits.CN58IE
 #define SWITCH_S4_CNIE  CNEN1bits.CN14IE
 
+// RELAY outputs
+#define RELAY1	LATDbits.LATD3
+#define RELAY2	LATGbits.LATG9
+
 // LED outputs
 #define LED1 LATBbits.LATB13
 #define LED2 LATBbits.LATB12
