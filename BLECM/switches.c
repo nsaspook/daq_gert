@@ -40,28 +40,30 @@
 extern APP_DATA appData;
 
 //Switches state machine
-void Switch_Tasks(void) {
-    //Check if switches have changed and debounce timers are expired
-    if(appData.sw1Changed && TimerDone(TMR_SW1_DEBOUNCE)) {
-        appData.sw1 = !SWITCH_S1;                           //latch new switch position
-        appData.sw1Changed = false;                         //clear individual flag
-        appData.sendSwitches = true;                        //set group flag to request TX
-    }
-    if(appData.sw2Changed && TimerDone(TMR_SW2_DEBOUNCE)) {
-        appData.sw2 = !SWITCH_S2;
-        appData.sw2Changed = false;
-        appData.sendSwitches = true;
-    }
-    if(appData.sw3Changed && TimerDone(TMR_SW3_DEBOUNCE)) {
-        appData.sw3 = !SWITCH_S3;
-        appData.sw3Changed = false;
-        appData.sendSwitches = true;
-    }
-    if(appData.sw4Changed && TimerDone(TMR_SW4_DEBOUNCE)) {
-        appData.sw4 = !SWITCH_S4;
-        appData.sw4Changed = false;
-        appData.sendSwitches = true;
-    }
+
+void Switch_Tasks(void)
+{
+	//Check if switches have changed and debounce timers are expired
+	if (appData.sw1Changed && TimerDone(TMR_SW1_DEBOUNCE)) {
+		appData.sw1 = !SWITCH_S1; //latch new switch position
+		appData.sw1Changed = false; //clear individual flag
+		appData.sendSwitches = true; //set group flag to request TX
+	}
+	if (appData.sw2Changed && TimerDone(TMR_SW2_DEBOUNCE)) {
+		appData.sw2 = !SWITCH_S2;
+		appData.sw2Changed = false;
+		appData.sendSwitches = true;
+	}
+	if (appData.sw3Changed && TimerDone(TMR_SW3_DEBOUNCE)) {
+		appData.sw3 = !SWITCH_S3;
+		appData.sw3Changed = false;
+		appData.sendSwitches = true;
+	}
+	if (appData.sw4Changed && TimerDone(TMR_SW4_DEBOUNCE)) {
+		appData.sw4 = !SWITCH_S4;
+		appData.sw4Changed = false;
+		appData.sendSwitches = true;
+	}
 }
 
 //Change notification interrupt
@@ -69,36 +71,42 @@ void Switch_Tasks(void) {
 //The switches are well debounced in hardware
 //Adding the software debounce limits unneeded switch update messages
 //and groups together multiple switch presses that occur within the debounce period
-void _ISR_NO_AUTO_PSV _CNInterrupt(void) {
-    IFS1bits.CNIF = 0;          //Clear IF
-    
+
+void _ISR_NO_AUTO_PSV _CNInterrupt(void)
+{
+	IFS1bits.CNIF = 0; //Clear IF
+
 #ifdef USE_SLEEP                //see config.h, Application setting section
-    appData.CNint = true;       
-    SleepTimerReset();          //Reset the inactivity sleep timer
+	appData.CNint = true;
+	SleepTimerReset(); //Reset the inactivity sleep timer
 #endif
-    
-    //(Re)Start debounce timers for changed switches (pins are active low; vars are active high)
-    if(SWITCH_S1 == appData.sw1) {
-        StartTimer(TMR_SW1_DEBOUNCE, DEBOUNCE_MS);
-        appData.sw1Changed = true;
-    }
-    else {appData.sw1Changed = false;}
 
-    if(SWITCH_S2 == appData.sw2) {
-        StartTimer(TMR_SW2_DEBOUNCE, DEBOUNCE_MS);
-        appData.sw2Changed = true;
-    }
-    else {appData.sw2Changed = false;}
+	//(Re)Start debounce timers for changed switches (pins are active low; vars are active high)
+	if (SWITCH_S1 == appData.sw1) {
+		StartTimer(TMR_SW1_DEBOUNCE, DEBOUNCE_MS);
+		appData.sw1Changed = true;
+	} else {
+		appData.sw1Changed = false;
+	}
 
-    if(SWITCH_S3 == appData.sw3) {
-        StartTimer(TMR_SW3_DEBOUNCE, DEBOUNCE_MS);
-        appData.sw3Changed = true;
-    }
-    else {appData.sw3Changed = false;}
+	if (SWITCH_S2 == appData.sw2) {
+		StartTimer(TMR_SW2_DEBOUNCE, DEBOUNCE_MS);
+		appData.sw2Changed = true;
+	} else {
+		appData.sw2Changed = false;
+	}
 
-    if(SWITCH_S4 == appData.sw4) {
-        StartTimer(TMR_SW4_DEBOUNCE, DEBOUNCE_MS);
-        appData.sw4Changed = true;
-    }
-    else {appData.sw4Changed = false;}
+	if (SWITCH_S3 == appData.sw3) {
+		StartTimer(TMR_SW3_DEBOUNCE, DEBOUNCE_MS);
+		appData.sw3Changed = true;
+	} else {
+		appData.sw3Changed = false;
+	}
+
+	if (SWITCH_S4 == appData.sw4) {
+		StartTimer(TMR_SW4_DEBOUNCE, DEBOUNCE_MS);
+		appData.sw4Changed = true;
+	} else {
+		appData.sw4Changed = false;
+	}
 }
