@@ -43,61 +43,91 @@ static LED_LIGHTSHOW_T lightShow = LED_IDLE;
 
 void LED_Tasks()
 {
-    switch(lightShow)
-    {
-        case LED_IDLE:
-            LED1 = 0; LED2 = 0; LED3 = 0; LED4 = 0; LED5 = 1; LED6 = 0;
-        break;
+	switch (lightShow) {
+	case LED_IDLE:
+		LED1 = 0;
+		LED2 = 0;
+		LED3 = 0;
+		LED4 = 0;
+		LED5 = 1;
+		LED6 = 0;
+		break;
 
-        case LED_BTLE_ADVERTISING:
-            LED1 = 0; LED2 = 0; LED3 = 0; LED4 = 0; LED6 = 0;
-            if(TimerDone(TMR_LEDS)) {
-                LED5 ^= 1;
-                StartTimer(TMR_LEDS, LED_BLINK_MS);
-            }
-        break;
+	case LED_BTLE_ADVERTISING:
+		LED1 = 0;
+		LED2 = 0;
+		LED3 = 0;
+		LED4 = 0;
+		LED6 = 0;
+		if (TimerDone(TMR_LEDS)) {
+			LED5 ^= 1;
+			StartTimer(TMR_LEDS, LED_BLINK_MS);
+		}
+		break;
 
-        case LED_BTLE_PAIRED:
-            LED1 = appData.led1;
-            LED2 = appData.led2;
-            LED3 = appData.led3;
-            LED4 = appData.led4;
-            LED5 = 1;
-            LED6 = 0;
-        break;
+	case LED_BTLE_PAIRED:
+		LED1 = appData.led1;
+		LED2 = appData.led2;
+		LED3 = appData.led3;
+		LED4 = appData.led4;
+		LED5 = 1;
+		LED6 = 0;
+		break;
 
-        case LED_ERROR:
-            switch(appData.error_code) {
-                case ERROR_INITIALIZATION:
-                    LED1 = 1; LED2 = 0; LED3 = 0; LED4 = 0; LED5 = 1; LED6 = 1;
-                    break;
-                case ERROR_RN_FW:
-                    LED1 = 1; LED2 = 1; LED3 = 0; LED4 = 0; LED5 = 1; LED6 = 1;
-                    break;
-                default:
-                    LED1 = 1; LED2 = 1; LED3 = 1; LED4 = 1; LED5 = 1; LED6 = 1;
-                    break;
-            }
-        break;
-        
-        case LED_SLEEP:
-            LED1 = 0; LED2 = 0; LED3 = 0; LED4 = 0; LED5 = 0; LED6 = 1;
-        break;
+	case LED_ERROR:
+		switch (appData.error_code) {
+		case ERROR_INITIALIZATION:
+			LED1 = 1;
+			LED2 = 0;
+			LED3 = 0;
+			LED4 = 0;
+			LED5 = 1;
+			LED6 = 1;
+			break;
+		case ERROR_RN_FW:
+			LED1 = 1;
+			LED2 = 1;
+			LED3 = 0;
+			LED4 = 0;
+			LED5 = 1;
+			LED6 = 1;
+			break;
+		default:
+			LED1 = 1;
+			LED2 = 1;
+			LED3 = 1;
+			LED4 = 1;
+			LED5 = 1;
+			LED6 = 1;
+			break;
+		}
+		break;
 
-        default:
-        break;
-    }
+	case LED_SLEEP:
+		LED1 = 0;
+		LED2 = 0;
+		LED3 = 0;
+		LED4 = 0;
+		LED5 = 0;
+		LED6 = 1;
+		break;
+
+	default:
+		break;
+	}
 }
 
 inline void LED_SET_LightShow(LED_LIGHTSHOW_T setting)
 {
-    lightShow = setting;
+	lightShow = setting;
 }
 
 //Update LEDs with status from LED update message
-void GetNewLEDs(void) {
-    appData.led1 = appData.receive_packet[9] == '1' ? 1 : 0;
-    appData.led2 = appData.receive_packet[11] == '1' ? 1 : 0;
-    appData.led3 = appData.receive_packet[13] == '1' ? 1 : 0;
-    appData.led4 = appData.receive_packet[15] == '1' ? 1 : 0;
+
+void GetNewLEDs(void)
+{
+	appData.led1 = appData.receive_packet[9] == '1' ? 1 : 0;
+	appData.led2 = appData.receive_packet[11] == '1' ? 1 : 0;
+	appData.led3 = appData.receive_packet[13] == '1' ? 1 : 0;
+	appData.led4 = appData.receive_packet[15] == '1' ? 1 : 0;
 }
