@@ -28,6 +28,16 @@
  * File:        main.c
  * Date:        July 24, 2014
  * Compiler:    XC16 v1.23
+ * 
+ * Remote Relay mods Oct 2016 FGB@MCHP
+ * 
+ * 	// RELAYs are outputs and open-drain
+	// to drive ILQ2 opto
+	// setup in Mikrobus header
+	ODCDbits.ODD3 = 1; // pin 16
+	ODCDbits.ODD9 = 1; // pin 11
+	ODCDbits.ODD10 = 1; // pin 12
+	ODCDbits.ODD4 = 1; // pin 2
  *
  */
 
@@ -87,7 +97,6 @@ void initBoard(void);
 
 int main(void)
 {
-
 	initBoard(); //Initialize the pins and peripherals
 
 	while (1) {
@@ -209,8 +218,13 @@ void initBoard(void)
 	SWITCH_S4_CNIE = 1;
 	IEC1bits.CNIE = 1;
 
-	// RELAYs are outputs and off
+	// RELAYs are outputs and open-drain
+	// to drive ILQ2 opto
 	// setup in Mikrobus header
+	ODCDbits.ODD3 = 1; // pin 16
+	ODCDbits.ODD9 = 1; // pin 11
+	ODCDbits.ODD10 = 1; // pin 12
+	ODCDbits.ODD4 = 1; // pin 2
 
 	// LEDs are outputs and off
 	LED1 = 0;
@@ -247,11 +261,6 @@ void initBoard(void)
 	U1RTS_LAT = 0;
 	U1RTS_TRIS = 0;
 	U1TX_TRIS = 0;
-
-	//5V power supply for 5V Click Boards
-	PS_5V_EN = MCP1642B_EN; //Enable or Disable power supply - see config.h
-	PS_5V_EN_TRIS = 0; //enable is output
-	PS_5V_PG_TRIS = 1; //Power good is input
 
 	//USB (not implemented in this firmware but may be used for power)
 	TRISGbits.TRISG2 = 1; //D+
@@ -317,6 +326,11 @@ void initBoard(void)
 	//CS (SPI)
 	LATGbits.LATG9 = 0;
 	TRISGbits.TRISG9 = 0;
+
+	//5V power supply for 5V Click Boards
+	PS_5V_EN = MCP1642B_EN; //Enable or Disable power supply - see config.h
+	PS_5V_EN_TRIS = 0; //enable is output
+	PS_5V_PG_TRIS = 1; //Power good is input
 
 	/****************************************************************************
 	 * PPS Init - Peripheral Pin Select
