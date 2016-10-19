@@ -209,6 +209,9 @@ void initBoard(void)
 	SWITCH_S4_CNIE = 1;
 	IEC1bits.CNIE = 1;
 
+	// RELAYs are outputs and off
+	// setup in Mikrobus header
+
 	// LEDs are outputs and off
 	LED1 = 0;
 	LED2 = 0;
@@ -265,7 +268,7 @@ void initBoard(void)
 	LATFbits.LATF3 = 0;
 	TRISFbits.TRISF3 = 0;
 
-	//Mikrobus header - unused; output low
+	//Mikrobus header - used to drive relay board; output low
 	//Modify as needed to use Click Boards
 	//AN
 	LATBbits.LATB3 = 0;

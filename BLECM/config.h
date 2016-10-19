@@ -38,7 +38,7 @@
 
 #include <xc.h>
 
-#define APP_VERSION_STR "1.1"       //This firmware version
+#define APP_VERSION_STR "1.2"       //This firmware version
 
 /*******************************************************************************
  * Application settings - these will change application behavior
@@ -212,7 +212,7 @@
 #define SWITCH_S4_CNIE  CNEN1bits.CN14IE
 
 // RELAY outputs
-#define RELAY1	LATDbits.LATD3
+#define RELAY1	LATDbits.LATD3 // output 1 (high) turns on relay
 #define RELAY2	LATGbits.LATG9
 
 // LED outputs
