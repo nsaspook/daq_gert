@@ -60,7 +60,7 @@
 //Reduces power consumption but might not be wanted, depending on use case
 //Sleep mode will be enabled when this is defined
 //Inactivity time-out is set below in Application timers section
-#define USE_SLEEP
+//#define USE_SLEEP
 
 //Determines mode of sleep operation, to illustrate different possible methods.
 //When defined, sleep mode will clock switch to the LPRC for the system clock
@@ -83,8 +83,8 @@
 //*!*!*!*!*!*!*!*!*!*!*!*!*   NOTE   *!*!*!*!*!*!*!*!*!*!*!*!*
 //If using a 5V Click Board with analog output, also set S7 on the PCB to the "5V"
 //setting to enable the analog voltage divider which will scale the output to 0 - 3.3V
-#define MCP1642B_EN    0
-//#define MCP1642B_EN    1
+//#define MCP1642B_EN    0
+#define MCP1642B_EN    1
 
 // UART baud rate - RN module defaults to 115200
 #define BRG_115200 (FCY/(4*115200) - 1)        //BRG value for 115,200 baud with BRGH = 1 (with rounding)
