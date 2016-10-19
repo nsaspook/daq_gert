@@ -209,7 +209,7 @@ void _ISR_NO_AUTO_PSV _ISR _ADC1Interrupt(void)
 		ADSTATLbits.ACCIF = 0; // Reset accumulator interrupt flag
 		ADSTATLbits.SL0IF = 0; // Reset sample list interrupt flag
 		IEC0bits.AD1IE = 0; //Disable ADC interrupts
-	}		//Conversion complete but accumulation incomplete - trigger another sample for oversampling
+	}//Conversion complete but accumulation incomplete - trigger another sample for oversampling
 	else if (ADSTATLbits.SL0IF) {
 		ADSTATLbits.SL0IF = 0;
 		ADL0CONLbits.SAMP = 1; //enable sampling

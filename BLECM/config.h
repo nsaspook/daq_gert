@@ -213,7 +213,9 @@
 
 // RELAY outputs
 #define RELAY1	LATDbits.LATD3 // output 1 (high) turns on relay
-#define RELAY2	LATGbits.LATG9
+#define RELAY2	LATDbits.LATD9
+#define RELAY3	LATDbits.LATD10
+#define RELAY4	LATDbits.LATD4
 
 // LED outputs
 #define LED1 LATBbits.LATB13
