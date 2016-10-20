@@ -212,7 +212,7 @@
 #define SWITCH_S4_CNIE  CNEN1bits.CN14IE
 
 // RELAY outputs
-#define RELAY1	LATDbits.LATD3 // output 1 (high) turns on relay
+#define RELAY1	LATDbits.LATD3 // output 0 (low) turns on relay
 #define RELAY2	LATDbits.LATD9
 #define RELAY3	LATDbits.LATD10
 #define RELAY4	LATDbits.LATD4

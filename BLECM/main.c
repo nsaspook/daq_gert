@@ -284,11 +284,11 @@ void initBoard(void)
 	TRISBbits.TRISB3 = 0;
 
 	//PWM
-	LATDbits.LATD3 = 0;
+	LATDbits.LATD3 = 1;
 	TRISDbits.TRISD3 = 0;
 
 	//RST
-	LATDbits.LATD4 = 0;
+	LATDbits.LATD4 = 1;
 	TRISDbits.TRISD4 = 0;
 
 	//INT
@@ -296,11 +296,11 @@ void initBoard(void)
 	TRISDbits.TRISD8 = 0;
 
 	//SDA (I2C)
-	LATDbits.LATD9 = 0;
+	LATDbits.LATD9 = 1;
 	TRISDbits.TRISD9 = 0;
 
 	//SCL (I2C)
-	LATDbits.LATD10 = 0;
+	LATDbits.LATD10 = 1;
 	TRISDbits.TRISD10 = 0;
 
 	//RX (UART)
