@@ -307,6 +307,12 @@ bool BT_SetupModule(void)
 		return false;
 	}
 
+	// Custom RELAY characteristic with generated UUID
+	BT_SendCommand("pc,"PRIVATE_CHAR_RELAYS",0A,04\r", false); //Write w/ACK, Read
+	if (!BT_CheckResponse(AOK)) {
+		return false;
+	}
+
 	BT_SendCommand("wc\r", false); //Command to clear script, just in case there is a script
 	if (!BT_CheckResponse(AOK)) {
 		return false;
