@@ -34,10 +34,10 @@
  * 	// RELAYs are outputs and open-drain
 	// to drive ILQ2 opto
 	// setup in Mikrobus header
-	ODCDbits.ODD3 = 1; // pin 16
-	ODCDbits.ODD9 = 1; // pin 11
-	ODCDbits.ODD10 = 1; // pin 12
-	ODCDbits.ODD4 = 1; // pin 2
+	ODCDbits.ODD3 = 1; // pin 16 PWM
+	ODCDbits.ODD9 = 1; // pin 11 SDA
+	ODCDbits.ODD10 = 1; // pin 12 SCL
+	ODCDbits.ODD4 = 1; // pin 2 RST
  *
  */
 
