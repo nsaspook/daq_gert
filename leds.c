@@ -71,6 +71,7 @@ void LED_Tasks()
 		RELAY1 = !appData.led1; // logic low turns on relay
 		LED2 = appData.led2;
 		RELAY2 = !appData.led2;
+		RELAY2C = appData.led2;
 		LED3 = appData.led3;
 		RELAY3 = !appData.led3;
 		LED4 = appData.led4;

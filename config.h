@@ -38,7 +38,8 @@
 
 #include <xc.h>
 
-#define APP_VERSION_STR "1.2"       //This firmware version
+#define APP_VERSION_STR "1.3"       //This firmware version
+/* for relay click board */
 
 /*******************************************************************************
  * Application settings - these will change application behavior
@@ -215,6 +216,7 @@
 // RELAY outputs
 #define RELAY1	LATDbits.LATD3 // output 0 (low) turns on relay
 #define RELAY2	LATDbits.LATD9
+#define RELAY2C	LATGbits.LATG9
 #define RELAY3	LATDbits.LATD10
 #define RELAY4	LATDbits.LATD4
 
