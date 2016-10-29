@@ -361,6 +361,98 @@ bool BT_RebootEnFlow(void)
 		}
 	}
 
+	/* switch #1 pressed at boot for DFU OTA UPDATE */
+	WaitMs(2);
+	if (SWITCH_S1 == 0) {
+		BT_WAKE_SW = 1;
+		BT_WAKE_HW = 1;
+		BT_CMD = 0;
+
+		WaitMs(100);
+		BT_SendCommand("SF,2\r", false); // perform complete factory reset
+		WaitMs(100);
+		BT_CheckResponse(AOK);
+
+		BT_SendCommand("SF,2\r", false); // perform complete factory reset again
+		WaitMs(100);
+		if (!BT_CheckResponse(AOK)) {
+			return false;
+		}
+
+		BT_SendCommand("SDH,4.1\r", false); // defaults
+		WaitMs(100);
+		if (!BT_CheckResponse(AOK)) {
+			return false;
+		}
+		BT_SendCommand("SDM,RN4020\r", false); // defaults
+		WaitMs(100);
+		if (!BT_CheckResponse(AOK)) {
+			return false;
+		}
+
+		BT_SendCommand("SDN,Microchip\r", false); // defaults
+		WaitMs(100);
+		if (!BT_CheckResponse(AOK)) {
+			return false;
+		}
+
+		BT_SendCommand("SP,7\r", false); // defaults
+		WaitMs(100);
+		if (!BT_CheckResponse(AOK)) {
+			return false;
+		}
+
+		BT_SendCommand("SS,C0000000\r", false); // add service
+		WaitMs(100);
+		if (!BT_CheckResponse(AOK)) {
+			return false;
+		}
+
+		BT_SendCommand("SR,32008000\r", false); // support MLDP, enable OTA (peripheral mode is enabled by default)
+		WaitMs(100);
+		if (!BT_CheckResponse(AOK)) {
+			return false;
+		}
+		BT_SendCommand("R,1\r", false); //Force reboot
+
+		//Wait for WS status high
+		StartTimer(TMR_RN_COMMS, 4000); //Start 4s timeout
+		while (BT_WS == 0) {
+			if (TimerDone(TMR_RN_COMMS)) //Check if timed out
+			{
+				return false;
+			}
+		}
+
+		//Wait for end of "CMD\r\n" - we don't check for full "CMD\r\n" string because we may 
+		//miss some bits or bytes at the beginning while the UART starts up
+		StartTimer(TMR_RN_COMMS, 4000); //Start 4s timeout
+		while (UART_ReadRxBuffer() != '\n') {
+			if (TimerDone(TMR_RN_COMMS)) //Check if timed out
+			{
+				return false;
+			}
+		}
+
+		BT_SendCommand("I\r", false); // MLDP mode
+		BT_SendCommand("A\r", false); // start advertising
+
+		/* wait controller for power cycle/reset */
+		while (true) {
+			while (true) { // fast flash waiting for OTA
+				ClrWdt();
+				while (UART_IsNewRxData()) { //While buffer contains old data
+					UART_ReadRxBuffer(); //Keep reading until empty
+					if (!UART_IsNewRxData()) {
+						WaitMs(200);
+					}
+				}
+				WaitMs(200);
+				LED1 = !LED1;
+			}
+		}
+	}
+
 	return BT_CheckResponse("MD\r\n"); //Check that we received CMD indicating reboot is done
 }
 
@@ -408,13 +500,13 @@ bool BT_CheckFwVer(void)
 	sscanf(fpVer, "%u.%u.%u", &verMajor, &verMinor, &verPatch);
 
 	//Verify version number
-	if (verMajor != RN_FW_VER_MAJOR) {
+	if ((verMajor != RN_FW_VER_MAJOR133) && (verMajor != RN_FW_VER_MAJOR)) {
 		return false;
 	}
-	if (verMinor != RN_FW_VER_MINOR) {
+	if ((verMinor != RN_FW_VER_MINOR133) && (verMinor != RN_FW_VER_MINOR)) {
 		return false;
 	}
-	if (verPatch != RN_FW_VER_PATCH) {
+	if ((verPatch != RN_FW_VER_PATCH) && (verMinor == RN_FW_VER_MINOR)) {
 		return false;
 	}
 

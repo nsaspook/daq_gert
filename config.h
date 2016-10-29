@@ -38,7 +38,7 @@
 
 #include <xc.h>
 
-#define APP_VERSION_STR "1.3"       //This firmware version
+#define APP_VERSION_STR "1.4"       //This firmware version
 /* for relay click board */
 
 /*******************************************************************************
@@ -103,6 +103,10 @@
 #define RN_FW_VER_MAJOR     1           //Require 1.23.5
 #define RN_FW_VER_MINOR     23          //These values can be changed as needed
 #define RN_FW_VER_PATCH     5
+
+#define RN_FW_VER_MAJOR133     1 
+#define RN_FW_VER_MINOR133     33 
+#define RN_FW_VER_PATCH133     0
 
 //Application timers
 #define SLEEP_TIME          TIMER_5MIN_PERIOD_PS256     //inactivity timer for sleep - applies only when USE_SLEEP is defined

@@ -30,6 +30,8 @@
  * Compiler:    XC16 v1.23
  * 
  * Remote Relay mods Oct 2016 FGB@MCHP
+ * * V1.4 DFU OTA mode added, press switch 1 on restart/mclr
+ * LED1 blinks when read for OTA update
  * 
  * 	// RELAYs are outputs and open-drain
 	// to drive ILQ2 opto
