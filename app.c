@@ -170,6 +170,22 @@ void APP_Tasks(void)
 			//Other message handling can be added here
 			//
 		}
+		if (appData.got_packet == true) { //true if new packet received
+			if (strstr(appData.receive_packet, "WV,0021,")) { //Check for LED update message
+				GetNewLEDs(); //Latch new LED values
+			}
+			//
+			//Other message handling can be added here
+			//
+		}
+		if (appData.got_packet == true) { //true if new packet received
+			if (strstr(appData.receive_packet, "WV,0023,")) { //Check for LED update message
+				GetNewLEDs(); //Latch new LED values
+			}
+			//
+			//Other message handling can be added here
+			//
+		}
 		break;
 
 #ifdef USE_SLEEP                //see config.h, Application setting section        

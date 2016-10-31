@@ -506,7 +506,7 @@ bool BT_CheckFwVer(void)
 	if ((verMinor != RN_FW_VER_MINOR133) && (verMinor != RN_FW_VER_MINOR)) {
 		return false;
 	}
-	if ((verPatch != RN_FW_VER_PATCH) && (verMinor == RN_FW_VER_MINOR)) {
+	if ((verPatch != RN_FW_VER_PATCH133) && (verPatch != RN_FW_VER_PATCH)) {
 		return false;
 	}
 

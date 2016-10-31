@@ -39,11 +39,11 @@
 //LED display states
 
 typedef enum {
-	LED_IDLE,
-	LED_BTLE_ADVERTISING,
-	LED_BTLE_PAIRED,
-	LED_ERROR,
-	LED_SLEEP
+    LED_IDLE,
+    LED_BTLE_ADVERTISING,
+    LED_BTLE_PAIRED,
+    LED_ERROR,
+    LED_SLEEP
 } LED_LIGHTSHOW_T;
 
 void LED_Tasks(void);

@@ -32,6 +32,7 @@
  * Remote Relay mods Oct 2016 FGB@MCHP
  * * V1.4 DFU OTA mode added, press switch 1 on restart/mclr
  * LED1 blinks when read for OTA update
+ * V1.5 check for 1.33 firmware
  * 
  * 	// RELAYs are outputs and open-drain
 	// to drive ILQ2 opto
@@ -220,6 +221,7 @@ void initBoard(void)
 	SWITCH_S4_CNIE = 1;
 	IEC1bits.CNIE = 1;
 
+#ifdef RELAY_LOW_LOGIC
 	// RELAYs are outputs and open-drain
 	// to drive ILQ2 opto
 	// setup in Mikrobus header
@@ -227,6 +229,7 @@ void initBoard(void)
 	ODCDbits.ODD9 = 1; // pin 11
 	ODCDbits.ODD10 = 1; // pin 12
 	ODCDbits.ODD4 = 1; // pin 2
+#endif
 
 	// LEDs are outputs and off
 	LED1 = 0;
@@ -286,7 +289,7 @@ void initBoard(void)
 	TRISBbits.TRISB3 = 0;
 
 	//PWM
-	LATDbits.LATD3 = 1;
+	LATDbits.LATD3 = 0;
 	TRISDbits.TRISD3 = 0;
 
 	//RST

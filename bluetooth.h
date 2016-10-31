@@ -46,7 +46,7 @@
 #define CMD "CMD\r\n"
 
 enum BluetoothDecodeState {
-	WaitForCR, WaitForLF
+    WaitForCR, WaitForLF
 };
 
 

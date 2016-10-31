@@ -38,7 +38,7 @@
 
 #include <xc.h>
 
-#define APP_VERSION_STR "1.4"       //This firmware version
+#define APP_VERSION_STR "1.5"       //This firmware version
 /* for relay click board */
 
 /*******************************************************************************
@@ -106,7 +106,7 @@
 
 #define RN_FW_VER_MAJOR133     1 
 #define RN_FW_VER_MINOR133     33 
-#define RN_FW_VER_PATCH133     0
+#define RN_FW_VER_PATCH133     4
 
 //Application timers
 #define SLEEP_TIME          TIMER_5MIN_PERIOD_PS256     //inactivity timer for sleep - applies only when USE_SLEEP is defined
@@ -218,11 +218,13 @@
 #define SWITCH_S4_CNIE  CNEN1bits.CN14IE
 
 // RELAY outputs
-#define RELAY1	LATDbits.LATD3 // output 0 (low) turns on relay
+#define RELAY1	LATDbits.LATD3
 #define RELAY2	LATDbits.LATD9
 #define RELAY2C	LATGbits.LATG9
-#define RELAY3	LATDbits.LATD10
+#define RELAY3	LATDbits.LATD10 // output 0 (low) turns on relay
 #define RELAY4	LATDbits.LATD4
+//#define RELAY_LOW_LOGIC
+
 
 // LED outputs
 #define LED1 LATBbits.LATB13
