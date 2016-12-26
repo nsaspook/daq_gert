@@ -15,6 +15,8 @@
  *	2 5.0VDC digital supply for optical interconnects for 5VDC or 3.3VDC SPI interfaces
  *	3 Enable 5VDC power
  * 
+ * ADS8330 SD chip driver
+ *
  * DIP8 Pins for MCP3002 header
  * 25K22	RPi DIP8 header		IDC 10 pin connector header	ADS1220
  * Pin 21   RB0	SPI Chip-Select	Pin 1		8	CS		2
@@ -184,7 +186,13 @@ by the module option variable daqgert_conf in the /etc/modprobe.d directory
 #include <linux/timer.h> 
 #include <linux/list.h>  
 #include "comedi_8254.h"  
-#include <mach/platform.h> /* for GPIO_BASE and ST_BASE */
+//#include <mach/platform.h> /* for GPIO_BASE and ST_BASE */
+//#define BCM2708_PERI_BASE        0x20000000
+#define BCM2708_PERI_BASE        0x3F000000
+
+#define ST_BASE                  (BCM2708_PERI_BASE + 0x3000) 
+#define GPIO_BASE                (BCM2708_PERI_BASE + 0x200000) /* GPIO */
+
 
 /* Command Definitions */
 #define ADS8330_CMR_DEFAULT 0x0f
@@ -1585,7 +1593,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 	struct comedi_spigert *pdata = spi->dev.platform_data;
 	struct spi_message m;
 	uint32_t chan, sync;
-	int32_t val;
+	int32_t val=0;
 
 	mutex_lock(&devpriv->drvdata_lock);
 	chan = devpriv->ai_chan;
