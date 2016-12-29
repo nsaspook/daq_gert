@@ -1,0 +1,87 @@
+diff --git a/arch/arm/boot/dts/overlays/Makefile b/arch/arm/boot/dts/overlays/Makefile
+index 11dba31..d2e937c 100644
+--- a/arch/arm/boot/dts/overlays/Makefile
++++ b/arch/arm/boot/dts/overlays/Makefile
+@@ -96,6 +96,7 @@ dtbo-$(CONFIG_ARCH_BCM2835) += \
+ 	vga666.dtbo \
+ 	w1-gpio.dtbo \
+ 	w1-gpio-pullup.dtbo \
++ 	rpi-spigert.dtbo \
+ 	wittypi.dtbo
+ 
+ targets += dtbs dtbs_install
+diff --git a/drivers/spi/Kconfig b/drivers/spi/Kconfig
+index b799547..426f258 100644
+--- a/drivers/spi/Kconfig
++++ b/drivers/spi/Kconfig
+@@ -746,6 +746,14 @@ config SPI_LOOPBACK_TEST
+ 	  primarily used for development of spi_master drivers
+ 	  and to detect regressions
+ 
++config SPI_COMEDI
++        tristate "Comedi mode SPI device driver support for daq_gert"
++        help
++          This supports the daq_gert Comedi mode SPI protocol driver.
++
++          Note that this application programming interface is EXPERIMENTAL
++          and hence SUBJECT TO CHANGE WITHOUT NOTICE while it stabilizes.
++
+ config SPI_TLE62X0
+ 	tristate "Infineon TLE62X0 (for power switching)"
+ 	depends on SYSFS
+diff --git a/drivers/spi/spi.c b/drivers/spi/spi.c
+index 838783c..be94277 100644
+--- a/drivers/spi/spi.c
++++ b/drivers/spi/spi.c
+@@ -1043,7 +1043,7 @@ static int spi_transfer_one_message(struct spi_master *master,
+ 				keep_cs = true;
+ 			} else {
+ 				spi_set_cs(msg->spi, false);
+-				udelay(10);
++				udelay(xfer->cs_change_usecs ? xfer->cs_change_usecs : 10);
+ 				spi_set_cs(msg->spi, true);
+ 			}
+ 		}
+diff --git a/drivers/staging/comedi/Kconfig b/drivers/staging/comedi/Kconfig
+index e7255f8..15ad17a 100644
+--- a/drivers/staging/comedi/Kconfig
++++ b/drivers/staging/comedi/Kconfig
+@@ -84,6 +84,14 @@ config COMEDI_SERIAL2002
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called serial2002.
+ 
++config COMEDI_DAQ_GERT
++        tristate "Driver for RPi GPIO and SPI connected hardware"
++        ---help---
++          Enable support for RPi GPIO and SPI connected hardware
++
++          To compile this driver as a module, choose M here: the module will be
++          called daq_gert.
++
+ config COMEDI_SSV_DNP
+ 	tristate "SSV Embedded Systems DIL/Net-PC support"
+ 	depends on X86_32 || COMPILE_TEST
+diff --git a/drivers/staging/comedi/drivers/Makefile b/drivers/staging/comedi/drivers/Makefile
+index 0c8cfa7..5c632eb 100644
+--- a/drivers/staging/comedi/drivers/Makefile
++++ b/drivers/staging/comedi/drivers/Makefile
+@@ -11,6 +11,7 @@ obj-$(CONFIG_COMEDI_BOND)		+= comedi_bond.o
+ obj-$(CONFIG_COMEDI_TEST)		+= comedi_test.o
+ obj-$(CONFIG_COMEDI_PARPORT)		+= comedi_parport.o
+ obj-$(CONFIG_COMEDI_SERIAL2002)		+= serial2002.o
++obj-$(CONFIG_COMEDI_DAQ_GERT)           += daq_gert.o
+ 
+ # Comedi ISA drivers
+ obj-$(CONFIG_COMEDI_AMPLC_DIO200_ISA)	+= amplc_dio200.o
+diff --git a/include/linux/spi/spi.h b/include/linux/spi/spi.h
+index 4b743ac..89d211d 100644
+--- a/include/linux/spi/spi.h
++++ b/include/linux/spi/spi.h
+@@ -763,6 +763,7 @@ struct spi_transfer {
+ 	u32		speed_hz;
+ 
+ 	struct list_head transfer_list;
++        u8              cs_change_usecs;
+ };
+ 
+ /**
