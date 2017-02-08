@@ -45,7 +45,7 @@ extern "C" {
     comedi_range *ad_range;
     int8_t ADC_OPEN, DIO_OPEN, ADC_ERROR, DEV_OPEN, DIO_ERROR;
 
-    extern struct bmcdata bmc;
+    extern volatile struct bmcdata bmc;
     extern struct didata datain;
     extern struct dodata dataout;
 

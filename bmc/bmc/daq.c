@@ -66,7 +66,7 @@ int init_daq(double min_range, double max_range, int range_update)
 		ad_range->max = max_range;
 	}
 	printf(": ad_range .min = %.3f, max = %.3f\r\n", ad_range->min,
-	       ad_range->max);
+		ad_range->max);
 
 	if (HAS_AO) {
 		printf("Subdev AO  %i ", subdev_ao);
@@ -78,7 +78,7 @@ int init_daq(double min_range, double max_range, int range_update)
 		printf("Ranges %i ", ranges_ao);
 		da_range = comedi_get_range(it, subdev_ao, i, range_ao);
 		printf(": da_range .min = %.3f, max = %.3f\r\n", da_range->min,
-		       da_range->max);
+			da_range->max);
 	}
 
 	ADC_OPEN = TRUE;
@@ -118,7 +118,7 @@ int init_dac(double min_range, double max_range, int range_update)
 		printf("Ranges %i ", ranges_ao);
 		da_range = comedi_get_range(it, subdev_ao, i, range_ao);
 		printf(": da_range .min = %.3f, max = %.3f\r\n", da_range->min,
-		       da_range->max);
+			da_range->max);
 	}
 
 	comedi_set_global_oor_behavior(COMEDI_OOR_NUMBER);
@@ -176,33 +176,33 @@ int set_dac_raw(int chan, lsampl_t voltage)
 
 double get_adc_volts(int chan)
 {
-	lsampl_t data;
+	lsampl_t data[16];
 	int retval;
 
-	retval = comedi_data_read(it, subdev_ai, chan, range_ai, aref_ai, &data);
+	retval = comedi_data_read_n(it, subdev_ai, chan, range_ai, aref_ai, &data[0], 8);
 	if (retval < 0) {
 		comedi_perror("comedi_data_read in get_adc_volts");
 		ADC_ERROR = TRUE;
 		return 0.0;
 	}
-	bmc.adc_sample[chan] = data;
-	return comedi_to_phys(data, ad_range, maxdata_ai);
+	bmc.adc_sample[chan] = data[0];
+	return comedi_to_phys(data[0], ad_range, maxdata_ai);
 }
 
 int set_dio_output(int chan)
 {
 	return comedi_dio_config(it,
-				 subdev_dio,
-				 chan,
-				 COMEDI_OUTPUT);
+		subdev_dio,
+		chan,
+		COMEDI_OUTPUT);
 }
 
 int set_dio_input(int chan)
 {
 	return comedi_dio_config(it,
-				 subdev_dio,
-				 chan,
-				 COMEDI_INPUT);
+		subdev_dio,
+		chan,
+		COMEDI_INPUT);
 }
 
 int get_dio_bit(int chan)
