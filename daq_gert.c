@@ -187,8 +187,9 @@ by the module option variable daqgert_conf in the /etc/modprobe.d directory
 #include <linux/list.h>  
 #include "comedi_8254.h"  
 //#include <mach/platform.h> /* for GPIO_BASE and ST_BASE */
-//#define BCM2708_PERI_BASE        0x20000000
-#define BCM2708_PERI_BASE        0x3F000000
+//#define PERI_BASE   0x20000000
+#define PERI_BASE   0x3F000000
+#define BCM2708_PERI_BASE        PERI_BASE
 
 #define ST_BASE                  (BCM2708_PERI_BASE + 0x3000) 
 #define GPIO_BASE                (BCM2708_PERI_BASE + 0x200000) /* GPIO */
@@ -1186,6 +1187,8 @@ static int32_t piBoardRev(struct comedi_device *dev)
 	}
 
 	if (nscheme) {
+		if (PERI_BASE == 0x20000000)
+			r = -1;
 		switch (r) {
 		case 1:
 			boardRev = 3;
@@ -1197,6 +1200,8 @@ static int32_t piBoardRev(struct comedi_device *dev)
 			boardRev = -1;
 		}
 	} else {
+		if (PERI_BASE == 0x3F000000)
+			r = 1;
 		switch (r) {
 		case 2:
 		case 3:
@@ -1964,7 +1969,7 @@ static void daqgert_handle_ai_hunk(struct comedi_device *dev,
 	 * debug comment
 	if (cmd->stop_src == TRIG_COUNT)
 	dev_info(dev->class_dev, "From hunk %i %i\n",
-s->async->scans_done, cmd->stop_arg);
+	s->async->scans_done, cmd->stop_arg);
 	 */
 }
 
@@ -3253,24 +3258,6 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		return -EINVAL;
 	}
 
-	dev->iobase = GPIO_BASE; /* bcm iobase */
-	/* 
-	 * dev->mmio is a void pointer with 8bit pointer indexing, 
-	 * we need 32bit indexing so mmio is casted to a (__iomem uint32_t*) 
-	 * pointer for GPIO R/W operations 
-	 */
-	dev->mmio = ioremap(dev->iobase, SZ_16K);
-	if (!dev->mmio) {
-		dev_err(dev->class_dev, "invalid gpio io base address!\n");
-		return -EINVAL;
-	}
-
-	devpriv->timer_1mhz = ioremap(ST_BASE, 8);
-	if (!devpriv->timer_1mhz) {
-		dev_err(dev->class_dev, "invalid 1mhz timer base address!\n");
-		return -EINVAL;
-	}
-
 	/* 
 	 * setup the pins in a static matter for now
 	 * PIN mode for all 
@@ -3292,6 +3279,25 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			return -EINVAL;
 		}
 	}
+
+	dev->iobase = GPIO_BASE; /* bcm iobase */
+	/* 
+	 * dev->mmio is a void pointer with 8bit pointer indexing, 
+	 * we need 32bit indexing so mmio is casted to a (__iomem uint32_t*) 
+	 * pointer for GPIO R/W operations 
+	 */
+	dev->mmio = ioremap(dev->iobase, SZ_16K);
+	if (!dev->mmio) {
+		dev_err(dev->class_dev, "invalid gpio io base address!\n");
+		return -EINVAL;
+	}
+
+	devpriv->timer_1mhz = ioremap(ST_BASE, 8);
+	if (!devpriv->timer_1mhz) {
+		dev_err(dev->class_dev, "invalid 1mhz timer base address!\n");
+		return -EINVAL;
+	}
+
 
 	devpriv->board_rev = piBoardRev(dev);
 	switch (devpriv->board_rev) {
@@ -3531,7 +3537,7 @@ static struct comedi_driver daqgert_driver = {
 };
 
 /* 
- * called for each listed spigert device in the overlay file 
+ * called for each listed spigert device 
  * SO THIS RUNS FIRST, setup basic spi comm parameters here
  * so default to slow speed
  */
