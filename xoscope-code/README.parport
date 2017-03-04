@@ -1,0 +1,125 @@
+
+xoscope 1.10 now supports using the parallel port as a digital input
+device, via COMEDI and RTAI.  COMEDI (www.comedi.org), the Linux
+Control and Measurement Device Interface is "a collection of drivers
+for data acquisition hardware".  RTAI, the Realtime Application
+Interface (www.rtai.org), one of two major Linux realtime extensions
+(the other is RTLinux), has been tested and is known to work (RTLinux
+status is unknown).
+
+For devices that doesn't natively support timed acquisition (like the
+parallel port), COMEDI includes a generic module (comedi_rt_timer)
+that, when used in conjunction with a real-time kernel extension,
+allows timed acquisition at sampling rates up to 10 kHz (by default).
+Higher sampling rates are possible, but the exact limit depends
+heavily on the particular machine.
+
+At the very least, xoscope 1.10 with a patched comedi 0.7.66 and rtai
+24.1.11 on Linux 2.4.20 is known to work on the PowerPC (and Intel?)
+architecture.
+
+WARNING: Installing RTAI requires recompiling the kernel and all its
+modules.
+
+0. Check to see if RTAI and/or COMEDI are already available on your
+   system - "modprobe rtai" and "modprobe comedi" should suffice.
+
+   Note that if you have COMEDI but not RTAI, you will still need to
+   recompile COMEDI before it will work with RTAI.  Although both use
+   kernel modules, COMEDI can be built without any kernel patches,
+   while RTAI requires a patched (and thus recompiled) Linux kernel.
+
+1. Download (if needed) RTAI, and follow its instructions to patch,
+   compile, test and install a modified Linux kernel.
+
+   I had little difficulty with this step, as the kernel patches are
+   fairly small.  However, in addition to the base kernel being
+   recompiled, I also needed to recompile all the kernel modules, so
+   this can be the most involved (or at least time-consuming) step.
+   If you're running a GRUB-based system like Redhat 8, you'll also
+   need to create a new initial disk image (using mkinitrd).  If you
+   have problems with modules not loading due to symbol problems, the
+   obvious solution is to simply "make clean" in the kernel tree and
+   recompile everything there.  Difficulties here are best resolved
+   via the RTAI documentation and mailing lists.
+
+2. Configure and compile the RTAI modules and user-space utilities.
+   You don't need LXRT, NEWLXRT, or the LXRT COMEDI wrapper; they are
+   used for running real-time COMEDI programs in user space, which we
+   won't be doing.
+
+   The configuration scripts check the kernel Makefile for "rthal" in
+   its EXTRAVERSION variable to confirm that you have an RTAI-patched
+   kernel.  If you didn't apply the part of the patch that put "rthal"
+   in your kernel Makefile, you can comment out the check at the
+   beginning of scripts/config.in.  Also, ignore the repeated error
+   messages during the build for rtai_lxrt.o and rtai_sched.o.
+
+   You will have to at least install the RTAI modules.  For testing, I
+   suggest "msg_clock" as one of the simplest RTAI example programs.
+   You may be tempted to try the "sw" example, as it produces output
+   on the parallel port, but note that it uses the "rtai_leds" module,
+   which defaults to use the _second_ parallel port and needs to be
+   patched and re-compiled to use the first (or to work at all on
+   PowerPC).
+
+3. Download (if needed) COMEDI, as well as its associated comedilib.
+   If it is version 0.7.66, install comedi-parport.patch (distributed
+   with xoscope).  Later versions (hopefully) will integrate this
+   patch into the COMEDI distribution.
+
+4. Configure, compile, and install COMEDI.  If you have installed
+   RTAI, be sure to do a completely clean COMEDI re-build.  In its
+   configuration dialog, select "Real-time support", and as modules,
+   "Kernel Comedilib", "Generic parallel port support", and "Real-time
+   command emulator (timer)".  "make install" to install into
+   /lib/modules.
+
+5. If needed, compile and install comedilib.  I don't think you need
+   to do this again if you already had comedilib and only had to
+   recompile COMEDI for real-time support.  "make install" to install
+   the user libraries, include files, and the "comedi_config" command.
+
+6. Configure and compile xoscope.  comedilib's presence should be
+   detected by the configure script, causing COMEDI support to be
+   built in.
+
+7. "modprobe comedi_parport" to load COMEDI modules and parallel port
+   support
+
+8. "modprobe comedi_rt_timer" to load COMEDI real-time command
+   emulator
+
+9. "comedi_config /dev/comedi0 comedi_parport 0x3bc" to attach
+   COMEDI's parallel port driver to the first parallel port and bind
+   it to /dev/comedi0.  Second and third parallel ports are at 0x378
+   and 0x278.
+
+a. "comedi_config /dev/comedi1 comedi_rt_timer 0 0" to bind the
+   real-time command emulator to /dev/comedi1 and attach it to COMEDI
+   device 0 (/dev/comedi0 - the parallel port), subdevice 0 (the 8
+   main I/O pins)
+
+b. Start xoscope as follows: "xoscope -D comedi -o device=/dev/comedi1"
+
+
+
+Mini-troubleshooting guide
+
+- xoscope says "Command not supported"
+
+  You're trying to collect data from the parallel port itself, which
+  does not support timed data acquisitions, thus the error message
+  indicating that the xoscope's command (to COMEDI) is not supported.
+  Make sure you've got comedi_rt_timer installed, loaded, and bound
+  to one of the comedi devices in /dev, then use xoscope's "Device
+  Options..." dialog to switch to that device.
+
+- xoscope says "Couldn't find data source comedi" and COMEDI doesn't
+  appear in xoscope's "Device" list
+
+  xoscope wasn't compiled with COMEDI support, probably because it
+  didn't auto-detect the presence of comedilib.  Make sure comedilib
+  is built and installed, then re-run xoscope's configure script,
+  verifying that it reports success after "checking for comedi_open
+  in -lcomedi".

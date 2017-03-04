@@ -1,0 +1,187 @@
+
+xoscope/oscope is a Digital Storage Oscilloscope (DSO) for Linux.
+
+xoscope comes in basically three pieces.  One piece is the data source
+interface, of which several can be linked into a single executable,
+which acquires data samples and puts them into Signal structures.
+Another piece is the display driver, only one of which can be linked
+into a single executable.  Working display drivers exist for X Windows
+and SVGAlib (Linux text mode).  Finally, the main body of the program
+sits between the selected data source interface and the compiled-in
+display driver, reading the data, formating and displaying it.
+
+Data source interface is via a structure of mainly function pointers,
+one for each available data source.  "DataSrc" is the type of this
+structure, defined in oscope.h, along with documentation of its fields.
+A list of available DataSrc's is maintained near the top of oscope.c
+
+The primary job of a data source is to dump samples into Signal
+structures, also defined in oscope.h, which contains a large array of
+samples, plus sampling rate, voltage reference, text name of signal,
+and other info.  Data sources create as many Signal's as they need
+internally and pass pointers to them back to the main code.  The main
+code also maintains its own array of Signal structures for storing
+signals (the mem[] array).
+
+One of the most important elements in the Signal structure is the
+'listeners' field, which is a count of how many things are "listening"
+to the Signal.  Data sources are only required to capture samples for
+Signal's with non-zero 'listeners' fields.
+
+Three other important Signal fields are 'frame' (the frame number),
+'width' (the frame size in samples), and 'num' (number of valid
+samples in the current frame).  The display code is only required to
+redraw samples if one of 'frame' or 'num' has advanced.  If only 'num'
+advanced, then only samples from the old num to the new num need be
+displayed.  If 'frame' advanced by 1, then the samples from the old
+num to 'width', as well as the samples from 0 to 'num' are displayed.
+If 'frame' advanced by more than 1, then all the samples need to be
+redisplayed.  Note that get_data() is required to return at the end of
+each frame, so the later case can (and should) always be avoided.
+Judicious use of these fields both avoids needless flickering and
+presents the expected user interface of a signal that "sweeps" across
+the display.
+
+There is also a set of functions (in func.c) which create their own
+Signal's and write into them the results of various calculations
+they can perform on display channels 1 and 2.
+
+The data sources do not define open or close functions.  Instead,
+nchans() indicates how many channels are presently available, which is
+zero if the device is unavailable and may change depending on things
+like the current options, or perhaps PCMCIA cards being added or
+removed.  If nchans() is zero, it is recommended that status_str()
+display some kind of reason why.  The primary reason for this design
+is to avoid issues of the this-option-must-be-set-before-open kind.
+
+Basic data source usage sequence:
+
+	nchans()		returns zero if device not available
+	set_option()
+	set_option()
+	set_option()
+	nchans()		returns zero if device still not available
+	chan()			called only if nchans returned > 0
+	chan()			listeners field must be incremented for use
+	reset()			start a new capture sweep
+	fd()			get a file descriptor to poll() on
+	get_data()		called whenever file descriptor is ready
+	get_data()
+	get_data()
+	reset()
+	fd()			might return -1 if nothing to do
+	reset()
+	fd()
+	get_data()
+	get_data()
+	get_data()
+
+Several problems exist in this design.  First, the Signal structure
+assumes that sweeps are written into the array starting at offset
+zero.  This implies that the data source knows when a sweep begins,
+and therefore precludes more sophisticated triggering options in the
+main body of the code.  A low-pass filter to cut out noise before
+triggering would be useful.  For some devices, such as BitScope, this
+is unavoidable, since the data link to the device (a serial line)
+isn't fast enough to continuously relay sample data to the computer,
+and therefore the device has to do the triggering itself.
+
+Also, the only way to call get_data() is via a read event on a file
+descriptor returned from fd().  This precludes sampling sources such
+as reading from a file at a fixed rate, where the file would always be
+ready to read, but timing must be used to slow the data down, or data
+sources that required more than one file descriptor.  Another design I
+considered was to use multi-threading.  The data source would free-run
+as a seperate thread, and notify the main code when data was ready via
+a POSIX thread condition variable in the Signal structure.  There
+still might be a lot to be said for this approach.
+
+
+Performance.
+
+For a real-time application such as xoscope, and especially for a
+Digital Storage Oscilloscope, performance is key.  xoscope's primary
+display environment is X Windows, therefore some pains have been taken
+to make it perform well under X, including examining and tuning the
+critical path protocol operations using xmon.  An important principle
+I've kept in mind is that most display hardware updates at around 70
+Hz, and the human eye can't perceive changes even that fast, so no
+matter how fast the data is coming in, our target display update rate
+is right around 20 Hz.
+
+First, though an off-screen pixmap is present, very careful use is
+made of it.  The pixmap is needed because in accumulate modes, the
+screen is used as a memory for old signal traces, and the program can
+not easily reconstruct these old traces.  In non-accumulate modes, the
+program could conceivably operate without a pixmap at all, but this
+optimization has not yet been implemented.  During normal operations,
+there are no pixmap-to-screen copies.  Only when an expose event is
+received from X is the pixmap copied to the screen.  To achieve this,
+key drawing operations are performed twice - to both the screen and
+the pixmap.  Drawing operations that are easily reconstructed are not
+performed on the pixmap at all; this include all the text, everything
+outside the scope window, as well as the border and the graticule.
+Only the actual signal trace drawing and erasing operations are
+performed twice - once on the display and once on the pixmap.  After
+an expose event, the relevent part of the pixmap is copied to the
+screen, then the text, border, and graticule are reconstructed.
+
+Next, a limit is placed on how often screen updates occur.  The
+min_interval parameter specifies the minimum interval (in
+milliseconds) that must pass between screen updates.  As explained in
+the display.c:show_data() function, updates at the end of the trace
+will be performed more frequently to insure that partial traces are
+not drawn on the screen.  The default min_interval is 50 milliseconds,
+corresponding to a 20 Hz update rate, and can be adjusted using the
+command line switch '-i'.  A good way to both test this code and see
+its effects is to specify '-i 1000' which decreases the update rate to
+a clearly visible 1 Hz.  If this code isn't working right, the net
+result is the X server consuming all the CPU's available time.
+
+Finally, the individual data acquisition functions do their part.  If
+they returned a partial trace to the main body of xoscope, then they
+must complete that trace, and their get_data() functions must return
+at the end of the trace, because we don't want the visible trace to
+jump from one to another halfway across the screen.  However, the
+get_data() functions are free to discard traces, so long as they
+discard complete traces.  And that is how they are constructed.  If
+they are called in the middle of a trace, they always return at its
+end.  But if they are called at the beginning of a trace, and are able
+to read a complete trace with more data to spare, then they just keep
+going.  If another trace now begins, the net effect is to have
+discarded the earlier trace.  This lets the program keep up with
+sources producing data faster than can be processed and displayed.  If
+this code isn't working right, you eventually get buffer overflows, as
+well as the program spending all the CPU time reading data, which
+causes bizarre artifacts such as the menubar text not being drawn as
+you operate the menus, since this seems to be a lower priority to GTK
+than handling program-supplied file descriptors.  I should note that
+if the program is in accumulate mode, the effects of dropping traces
+might actually be visible, and if the device is buffered, might even
+be unnecessary - we're dropping traces because there's a lot of data
+in the buffer, not because we can't keep up.  "For future study"
+
+Currently, some things can clearly still be done to improve
+performance.  The pixmap isn't needed at all unless we're in
+accumulate mode.  The graticule, especially if it is displayed in
+front, could be masked off (using a bitmask) during signal
+drawing/clearing operations, precluding the need to draw the graticule
+after every signal update operation.  If the graticule is in back, no
+such clear win presents itself, since the signal gets drawn over the
+graticule.  If we're operating in a PseudoColor visual, we could
+install our own colormap and use a different bitplane for each signal,
+precluding the need to redraw all the other signals whenever we erase
+part of one (since the erased part could overlap with the other
+signals).  Some attempt could be made to determine if the X server has
+backing store, which would preclude the need for the pixmap.  The use
+of X's double buffering extension has not been investigated.  Very
+little effort has been made to tune VGA operation.
+
+
+Sampling artifacts
+
+When triggering is set, the code uses linear interpolation to shift
+the displayed traces to the right in an attempt to correct for
+the delay in sampling the trigger point.  COMEDI can use
+'instructions' to record a timestamp close to or right on when
+a sample was taken, possibly making this better.

@@ -1,0 +1,15 @@
+# xoscope, version 2.1
+#
+# -D COMEDI
+# -o rate=20000
+# -o device=/dev/comedi0
+# -o subdevice=1
+# -a 1
+# -s 5/1
+# -t -128:0:0
+# -l 1:1:0
+# -p 10
+# -g 2
+# -v
+# -1 0.0:0.051400:a
+# -2 0.0:0.025700:b
