@@ -280,8 +280,6 @@ int get_data_sample(void)
 	int i;
 
 	bmc.pv_voltage = get_adc_volts(PVV_C);
-	bmc.pv_voltage = get_adc_volts(PVV_C);
-	bmc.cc_voltage = get_adc_volts(CCV_C);
 	bmc.cc_voltage = get_adc_volts(CCV_C);
 	//        bmc.input_voltage = lp_filter(get_adc_volts(INV_C), INV_C, TRUE);
 	//        bmc.b1_voltage = lp_filter(get_adc_volts(B1V_C), B1V_C, TRUE);
