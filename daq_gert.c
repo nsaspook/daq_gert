@@ -1340,11 +1340,10 @@ static int32_t daqgert_ai_thread_function(void *data)
 
 	if (!devpriv)
 		return -EFAULT;
-	dev_info(dev->class_dev, "mcp3202 data device thread start\n");
+	dev_info(dev->class_dev, "ai device thread start\n");
 
 	while (!kthread_should_stop()) {
 		while (unlikely(!devpriv->run)) {
-			//			dev_info(dev->class_dev, "mcp3202 data device thread loop\n");
 			if (devpriv->timer)
 				schedule();
 			else
@@ -1376,7 +1375,6 @@ static int32_t daqgert_ai_thread_function(void *data)
 		}
 	}
 
-	dev_info(dev->class_dev, "mcp3202 data device thread stop\n");
 	return 0;
 }
 
@@ -1396,6 +1394,7 @@ static int32_t daqgert_ao_thread_function(void *data)
 
 	if (!devpriv)
 		return -EFAULT;
+	dev_info(dev->class_dev, "ao device thread start\n");
 
 	while (!kthread_should_stop()) {
 		if (likely(test_bit(AO_CMD_RUNNING, &devpriv->state_bits))) {
@@ -1427,9 +1426,9 @@ static void daqgert_ai_start_pacer(struct comedi_device *dev,
 	struct daqgert_private *devpriv = dev->private;
 
 	if (load_timers)
-		/* setup timer interval to msecs */
+		/* setup timer interval to 100 msecs */
 		mod_timer(&devpriv->ai_spi->my_timer, jiffies
-			+ msecs_to_jiffies(10));
+			+ msecs_to_jiffies(100));
 }
 
 static void daqgert_ai_set_chan_range_ads1220(struct comedi_device *dev,
@@ -1708,7 +1707,6 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			} else {
 				val = pdata->rx_buff[2];
 				val += (pdata->rx_buff[1]&0x1f) << 8;
-				//				dev_info(dev->class_dev, "mcp3202 data device SPI, %d, %d\n", chan, val);
 			}
 			devpriv->ai_count++;
 		}
@@ -2409,6 +2407,7 @@ static int32_t daqgert_ao_cmdtest(struct comedi_device *dev,
 								speed_test);
 		err |= comedi_check_trigger_arg_max(&cmd->scan_begin_arg,
 						devpriv->ao_rate_max);
+		pdata->delay_nsecs = pdata->delay_usecs_calc * NSEC_PER_USEC;
 	} else {
 		pdata->delay_usecs_calc = 0;
 	}
@@ -2645,6 +2644,9 @@ static int32_t daqgert_ai_cmdtest(struct comedi_device *dev,
 								speed_test);
 		/* double delay with zero for the first scan chan */
 		pdata->mix_delay_usecs_calc = pdata->delay_usecs_calc * 2;
+
+		pdata->delay_nsecs = pdata->delay_usecs_calc * NSEC_PER_USEC;
+
 		/*
 		 * dev_info(dev->class_dev, "ai cmd spacing usecs %i, mix %i\n", pdata->delay_usecs, pdata->mix_delay_usecs);
 		 */
@@ -2690,6 +2692,8 @@ static int32_t daqgert_ai_cmdtest(struct comedi_device *dev,
 								speed_test);
 		/* double delay with zero for the first scan chan */
 		pdata->mix_delay_usecs_calc = pdata->delay_usecs_calc * 2;
+
+		pdata->delay_nsecs = pdata->delay_usecs_calc * NSEC_PER_USEC;
 		/*
 		 * dev_info(dev->class_dev, "ai cmd spacing usecs %i, mix %i\n", pdata->delay_usecs, pdata->mix_delay_usecs);
 		 */
@@ -2717,11 +2721,11 @@ static void my_timer_ai_callback(unsigned long data)
 	}
 	daqgert_ai_start_pacer(dev, true);
 	if (speed_test) {
-		if (!(time_marks++ % 1000))
+		if (!(time_marks++ % 100))
 			dev_info(dev->class_dev,
-				"speed testing %i: count %i, hunk %i, "
+				"speed testing %i: ao count %i, ai count %i, hunk %i, "
 				"length %i 1Mhz timer value 0x%x:0x%x\n",
-				time_marks, ai_count, hunk_count, hunk_len,
+				time_marks, ao_count, ai_count, hunk_count, hunk_len,
 				(uint32_t) ioread32(devpriv->timer_1mhz + 2),
 				(uint32_t) ioread32(devpriv->timer_1mhz + 1));
 	}
@@ -3881,7 +3885,7 @@ module_exit(daqgert_exit);
 
 MODULE_AUTHOR("Fred Brooks <spam@sma2.rain.com>");
 MODULE_DESCRIPTION("RPi DIO/AI/AO Driver");
-MODULE_VERSION("4.7.6");
+MODULE_VERSION("4.10.0");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("spi:spigert");
 
