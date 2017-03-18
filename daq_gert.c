@@ -519,6 +519,9 @@ module_param(use_hunking, int, S_IRUGO);
 struct daqgert_device {
 	uint8_t id;
 	const char *name;
+	int32_t ai_subdev_flags;
+	int32_t ao_subdev_flags;
+	uint32_t min_acq_ns;
 	uint32_t max_speed_hz;
 	uint8_t spi_mode;
 	uint8_t spi_bpw;
@@ -529,12 +532,14 @@ struct daqgert_device {
 static const struct daqgert_device daqgert_devices[] = {
 	{
 		.name = "defdev0",
+		.ai_subdev_flags = SDF_READABLE | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
 		.max_speed_hz = 500000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
 	},
 	{
 		.name = "mcp3002",
+		.ai_subdev_flags = SDF_READABLE | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
 		.max_speed_hz = 1000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
@@ -542,6 +547,7 @@ static const struct daqgert_device daqgert_devices[] = {
 	},
 	{
 		.name = "mcp3202",
+		.ai_subdev_flags = SDF_READABLE | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
 		.max_speed_hz = 1000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
@@ -549,6 +555,7 @@ static const struct daqgert_device daqgert_devices[] = {
 	},
 	{
 		.name = "mcp4802",
+		.ao_subdev_flags = SDF_WRITABLE | SDF_GROUND | SDF_CMD_WRITE,
 		.max_speed_hz = 16000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
@@ -556,6 +563,7 @@ static const struct daqgert_device daqgert_devices[] = {
 	},
 	{
 		.name = "mcp4812",
+		.ao_subdev_flags = SDF_WRITABLE | SDF_GROUND | SDF_CMD_WRITE,
 		.max_speed_hz = 16000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
@@ -563,6 +571,7 @@ static const struct daqgert_device daqgert_devices[] = {
 	},
 	{
 		.name = "mcp4822",
+		.ao_subdev_flags = SDF_WRITABLE | SDF_GROUND | SDF_CMD_WRITE,
 		.max_speed_hz = 16000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
@@ -570,6 +579,7 @@ static const struct daqgert_device daqgert_devices[] = {
 	},
 	{
 		.name = "picsl10",
+		.ai_subdev_flags = SDF_READABLE | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
 		.max_speed_hz = 4000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
@@ -577,6 +587,7 @@ static const struct daqgert_device daqgert_devices[] = {
 	},
 	{
 		.name = "picsl12",
+		.ai_subdev_flags = SDF_READABLE | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
 		.max_speed_hz = 4000000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
@@ -584,6 +595,7 @@ static const struct daqgert_device daqgert_devices[] = {
 	},
 	{
 		.name = "ads1220",
+		.ai_subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND | SDF_CMD_READ | SDF_COMMON | SDF_LSAMPL,
 		.max_speed_hz = 500000,
 		.spi_mode = 1,
 		.spi_bpw = 8,
@@ -592,6 +604,7 @@ static const struct daqgert_device daqgert_devices[] = {
 	},
 	{
 		.name = "ads8330",
+		.ai_subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
 		.max_speed_hz = 16000000,
 		.spi_mode = 1,
 		.spi_bpw = 8,
@@ -658,17 +671,17 @@ static const struct daqgert_board daqgert_boards[] = {
 
 static const struct comedi_lrange daqgert_ai_range3_300 = {1,
 	{
-		RANGE(0, 3.300),
+		UNI_RANGE(3.300),
 	}};
 static const struct comedi_lrange daqgert_ai_range2_048 = {1,
 	{
-		RANGE(0, 2.048),
+		UNI_RANGE(2.048),
 	}};
 
 static const struct comedi_lrange daqgert_ao_range = {2,
 	{/* gains 1,2 */
-		RANGE(0, 2.048),
-		RANGE(0, 4.096)
+		UNI_RANGE(2.048),
+		UNI_RANGE(4.096)
 	}};
 
 static const struct comedi_lrange range_ads1220_ai = {
@@ -3377,7 +3390,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		s->private = devpriv->ai_spi;
 		num_ai_chan = daqgert_ai_config(dev, s);
 		s->type = COMEDI_SUBD_AI;
-		/* we support single-ended (ground)  */
+		/* default setups, we support single-ended (ground)  */
 		s->n_chan = num_ai_chan;
 		s->len_chanlist = num_ai_chan;
 		s->maxdata = (1 << (thisboard->n_aichan_bits - devpriv->ai_spi->device_spi->n_chan_bits)) - 1;
@@ -3387,14 +3400,13 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			s->range_table = &daqgert_ai_range3_300;
 		s->insn_read = daqgert_ai_rinsn;
 		if (devpriv->smp) {
-			s->subdev_flags = SDF_READABLE | SDF_GROUND
-				| SDF_CMD_READ | SDF_COMMON;
+			s->subdev_flags = devpriv->ai_spi->device_spi->ai_subdev_flags;
 			s->do_cmdtest = daqgert_ai_cmdtest;
 			s->do_cmd = daqgert_ai_cmd;
 			s->poll = daqgert_ai_poll;
 			s->cancel = daqgert_ai_cancel;
 		} else {
-			s->subdev_flags = SDF_READABLE | SDF_GROUND | SDF_COMMON;
+			s->subdev_flags = devpriv->ai_spi->device_spi->ai_subdev_flags - SDF_CMD_READ;
 		}
 		if (devpriv->ai_spi->device_type == ads1220) {
 			/* we support single-ended (ground) & diff bipolar  24-bit samples */
@@ -3406,15 +3418,13 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			s->len_chanlist = 1;
 			s->insn_config = daqgert_ai_insn_config;
 			if (devpriv->smp) {
-				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_CMD_READ | SDF_COMMON | SDF_LSAMPL;
+				s->subdev_flags = devpriv->ai_spi->device_spi->ai_subdev_flags;
 				s->do_cmdtest = daqgert_ai_cmdtest;
 				s->do_cmd = daqgert_ai_cmd;
 				s->poll = daqgert_ai_poll;
 				s->cancel = daqgert_ai_cancel;
 			} else {
-				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_COMMON | SDF_LSAMPL;
+				s->subdev_flags = devpriv->ai_spi->device_spi->ai_subdev_flags - SDF_CMD_READ;
 			}
 		}
 		if (devpriv->ai_spi->device_type == ads8330) {
@@ -3425,15 +3435,13 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			s->len_chanlist = 1;
 			s->insn_config = daqgert_ai_insn_config;
 			if (devpriv->smp) {
-				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_CMD_READ | SDF_COMMON;
+				s->subdev_flags = devpriv->ai_spi->device_spi->ai_subdev_flags;
 				s->do_cmdtest = daqgert_ai_cmdtest;
 				s->do_cmd = daqgert_ai_cmd;
 				s->poll = daqgert_ai_poll;
 				s->cancel = daqgert_ai_cancel;
 			} else {
-				s->subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND
-					| SDF_COMMON;
+				s->subdev_flags = devpriv->ai_spi->device_spi->ai_subdev_flags - SDF_CMD_READ;
 			}
 		}
 
@@ -3457,13 +3465,12 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		s->insn_write = daqgert_ao_winsn;
 		s->insn_read = comedi_readback_insn_read;
 		if (devpriv->smp) {
-			s->subdev_flags = SDF_WRITABLE | SDF_GROUND
-				| SDF_CMD_WRITE;
+			s->subdev_flags = devpriv->ao_spi->device_spi->ao_subdev_flags;
 			s->do_cmdtest = daqgert_ao_cmdtest;
 			s->do_cmd = daqgert_ao_cmd;
 			s->cancel = daqgert_ao_cancel;
 		} else {
-			s->subdev_flags = SDF_WRITABLE | SDF_GROUND;
+			s->subdev_flags = devpriv->ao_spi->device_spi->ao_subdev_flags - SDF_CMD_WRITE;
 		}
 		ret = comedi_alloc_subdev_readback(s);
 		if (ret) {
@@ -3751,7 +3758,7 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 	spi_adc->pic18 = 0;
 	spi_adc->chan = 2;
 
-	if (spi_adc->device_type != ads1220 && spi_adc->device_type != ads8330) {
+	if ((spi_adc->device_type != ads1220) && (spi_adc->device_type != ads8330)) {
 		/* 
 		 * SPI data transfers, send a few dummies for config info 
 		 * probes
@@ -3843,16 +3850,18 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 
 	dev_info(dev->class_dev,
 		"board setup: spi cd %d: %d Hz: mode 0x%x: "
-		"assigned to adc devices\n",
+		"assigned to adc device %s\n",
 		spi_adc->spi->chip_select,
 		spi_adc->spi->max_speed_hz,
-		spi_adc->spi->mode);
+		spi_adc->spi->mode,
+		spi_adc->device_spi->name);
 	dev_info(dev->class_dev,
 		"board setup: spi cd %d: %d Hz: mode 0x%x: "
-		"assigned to dac devices\n",
+		"assigned to dac device %s\n",
 		spi_dac->spi->chip_select,
 		spi_dac->spi->max_speed_hz,
-		spi_dac->spi->mode);
+		spi_dac->spi->mode,
+		spi_dac->device_spi->name);
 
 	return spi_adc->chan;
 }
