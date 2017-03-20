@@ -417,7 +417,7 @@ static const uint32_t CONV_SPEED = 5000; /* 10s of nsecs: the true rate is ~3000
 static const uint32_t CONV_SPEED_FIX = 19; /* usecs: round it up to ~50usecs total with this */
 static const uint32_t CONV_SPEED_FIX_FREERUN = 1; /* usecs: round it up to ~30usecs total with this */
 static const uint32_t CONV_SPEED_FIX_FAST = 9; /* used for the MCP3002 ADC */
-static const uint32_t CONV_ADS8330 = 50; /* used for the ADS8330 ADC */
+static const uint32_t CONV_ADS8330 = 0; /* used for the ADS8330 ADC */
 static const uint32_t MAX_BOARD_RATE = 1000000000;
 static const uint8_t CS_CHANGE_DELAY_USECS = 1;
 static const uint8_t CSnA = 0; /* GPIO 8  Gertboard ADC */
@@ -625,7 +625,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.name = "ads8330",
 		.ai_subdev_flags = SDF_READABLE | SDF_DIFF | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
 		.max_speed_hz = 16000000,
-		.min_acq_ns = 20000,
+		.min_acq_ns = 22000,
 		.rate_min = 20000,
 		.spi_mode = 1,
 		.spi_bpw = 8,
@@ -2511,7 +2511,7 @@ static int32_t daqgert_ai_delay_rate(struct comedi_device *dev,
 	if (device_type == mcp3002)
 		spacing_usecs += CONV_SPEED_FIX_FAST;
 	if (device_type == ads8330)
-		spacing_usecs = CONV_ADS8330;
+		spacing_usecs += CONV_ADS8330;
 	dev_info(dev->class_dev, "ai rate %i, spacing usecs %i\n", rate, spacing_usecs);
 	return spacing_usecs;
 }
@@ -3423,7 +3423,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			s->maxdata = (1 << devpriv->ai_spi->device_spi->n_chan_bits) - 1;
 			s->range_table = &range_ads1220_ai;
 			s->n_chan = devpriv->ai_spi->device_spi->n_chan;
-			s->len_chanlist = 1;
+			s->len_chanlist = devpriv->ai_spi->device_spi->n_chan;
 			s->insn_config = daqgert_ai_insn_config;
 			if (devpriv->smp) {
 				s->subdev_flags = devpriv->ai_spi->device_spi->ai_subdev_flags;
@@ -3440,7 +3440,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			s->maxdata = (1 << devpriv->ai_spi->device_spi->n_chan_bits) - 1;
 			s->range_table = &daqgert_ai_range3_300;
 			s->n_chan = devpriv->ai_spi->device_spi->n_chan;
-			s->len_chanlist = 1;
+			s->len_chanlist = devpriv->ai_spi->device_spi->n_chan;
 			s->insn_config = daqgert_ai_insn_config;
 			if (devpriv->smp) {
 				s->subdev_flags = devpriv->ai_spi->device_spi->ai_subdev_flags;
