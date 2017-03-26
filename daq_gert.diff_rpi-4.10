@@ -38,7 +38,7 @@ index 656dd3e..747ce52 100644
  			} else {
  				spi_set_cs(msg->spi, false);
 -				udelay(10);
-+				udelay(xfer->cs_change_usecs ? xfer->cs_change_usecs : 10);
++				udelay(xfer->cs_change_usecs ? xfer->cs_change_usecs-1 : 10);
  				spi_set_cs(msg->spi, true);
  			}
  		}
