@@ -559,7 +559,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.name = "mcp3202",
 		.ai_subdev_flags = SDF_READABLE | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
 		.max_speed_hz = 1000000,
-		.min_acq_ns = 29680,
+		.min_acq_ns = 28800,
 		.rate_min = 30000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
@@ -1308,9 +1308,9 @@ static int32_t wiringPiSetupGpio(struct comedi_device *dev)
 	return 0;
 }
 
-static void ADS1220WriteRegister(int StartAddress, int NumRegs, unsigned * pData, struct comedi_subdevice *s)
+static void ADS1220WriteRegister(int32_t StartAddress, int32_t NumRegs, uint32_t * pData, struct comedi_subdevice *s)
 {
-	int i;
+	int32_t i;
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
 	struct comedi_spigert *pdata = spi->dev.platform_data;
@@ -1614,13 +1614,11 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 	chan = devpriv->ao_chan;
 	range = devpriv->ao_range;
 	pdata->tx_buff[1] = val & 0xff;
-	//	if (devpriv->ao_spi->device_type == mcp4802)
 	pdata->tx_buff[0] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val >> 8)& 0x0f));
 	spi_write(spi, pdata->tx_buff, 2);
 	s->readback[chan] = val;
 	devpriv->ao_count++;
 	mutex_unlock(&devpriv->drvdata_lock);
-	//	clear_bit(SPI_AO_RUN, &devpriv->state_bits);
 	smp_mb__after_atomic();
 }
 
@@ -1851,18 +1849,19 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 static void transfer_from_hunk_buf_8330(struct comedi_device *dev,
 					struct comedi_subdevice *s,
 					uint8_t *bufptr,
-					uint32_t bufpos,
 					uint32_t len)
 {
 	struct comedi_cmd *cmd = &s->async->cmd;
-	uint32_t i, val;
+	uint32_t i; //, val;
+	uint16_t *val_ptr = (uint16_t*) bufptr;
 
 	s->async->cur_chan = 0; /* reset the hunk start chan */
 	for (i = 0; i < len; i++) {
-		val = bufptr[1 + bufpos];
-		val += (bufptr[0 + bufpos] << 8);
-		comedi_buf_write_samples(s, &val, 1);
-		bufpos += 2;
+		//		val = bufptr[1 + bufpos];
+		//		val += (bufptr[0 + bufpos] << 8);
+		//		val = &val_ptr;
+		comedi_buf_write_samples(s, val_ptr++, 1);
+		//		bufpos += 2;
 
 		if (unlikely(cmd->stop_src == TRIG_COUNT &&
 			s->async->scans_done >= cmd->stop_arg)) {
@@ -1916,8 +1915,8 @@ static void transfer_from_hunk_buf_3202(struct comedi_device *dev,
 
 	s->async->cur_chan = 0; /* reset the hunk start chan */
 	for (i = 0; i < len; i++) {
-		val = bufptr[2 + bufpos];
-		val += (bufptr[1 + bufpos] &0x1f) << 8;
+		val = bufptr[2 + bufpos] | ((bufptr[1 + bufpos] &0x1f) << 8);
+		//		val += (bufptr[1 + bufpos] &0x1f) << 8;
 
 		comedi_buf_write_samples(s, &val, 1);
 		bufpos += 3;
@@ -2051,14 +2050,22 @@ static void daqgert_handle_ai_hunk(struct comedi_device *dev,
 
 	devpriv->ai_count += len;
 	/*
-	 * routines to optimize speed in each
+	 * routines to optimize speed in each device transfer
 	 */
-	if (spi_data->device_type == mcp3202)
+	switch (spi_data->device_type) {
+	case mcp3202:
 		transfer_from_hunk_buf_3202(dev, s, bufptr, bufpos, len);
-	if (spi_data->device_type == mcp3002)
+		break;
+	case mcp3002:
 		transfer_from_hunk_buf_3002(dev, s, bufptr, bufpos, len);
-	if (spi_data->device_type == ads8330)
-		transfer_from_hunk_buf_8330(dev, s, bufptr, bufpos, len);
+		break;
+	case ads8330:
+		transfer_from_hunk_buf_8330(dev, s, bufptr, len);
+		break;
+	default:
+		dev_info(dev->class_dev, "unknown ai hunk device\n");
+	}
+
 	/* 
 	 * debug comment
 	if (cmd->stop_src == TRIG_COUNT)
