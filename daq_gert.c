@@ -367,8 +367,9 @@ by the module option variable daqgert_conf in the /etc/modprobe.d directory
 /* 
  * SPI transfer buffer size 
  * must be a define to init buffer sizes
+ * normally 1024
  */
-#define HUNK_LEN 1024
+#define HUNK_LEN 20000
 
 /* 
  * branch macros for ARM7 
@@ -413,11 +414,12 @@ static const uint8_t ads1220_r3 = ADS1220_IDAC_OFF | ADS1220_DRDY_MODE;
 #define picsl12  7
 #define ads1220  8
 #define ads8330  9
+#define special  10
 
 static const uint32_t PIC18_CONVD_25K22 = 24;
 static const uint32_t PIC18_CMDD_25K22 = 4;
-static const uint32_t SPI_BUFF_SIZE = 5000;
-static const uint32_t SPI_BUFF_SIZE_NOHUNK = 64;
+static const uint32_t SPI_BUFF_SIZE = 128000; // normally 5000
+static const uint32_t SPI_BUFF_SIZE_NOHUNK = 32000; // normally 64
 static const uint32_t MAX_CHANLIST_LEN = 256;
 static const uint32_t CONV_SPEED = 5000; /* 10s of nsecs: the true rate is ~3000/5000 so we need a fixup,  two conversions per mix scan */
 static const uint32_t CONV_SPEED_FIX = 19; /* usecs: round it up to ~50usecs total with this */
@@ -513,7 +515,10 @@ module_param(gert_type, int, S_IRUGO);
 MODULE_PARM_DESC(gert_type, "i/o board type: default 0=gertboard");
 static int32_t speed_test = 0;
 module_param(speed_test, int, S_IRUGO);
-MODULE_PARM_DESC(speed_test, "sample timing test: 1=enable");
+MODULE_PARM_DESC(special_test, "sample timing test: 1=enable");
+static int32_t special_test = 0;
+module_param(special_test, int, S_IRUGO);
+MODULE_PARM_DESC(special_test, "special timing test: 1=enable");
 static int32_t lsamp_size = 0;
 module_param(lsamp_size, int, S_IRUGO);
 MODULE_PARM_DESC(lsamp_size, "16 or 32 bit lsampl size: 0=16 bit");
@@ -533,6 +538,7 @@ struct daqgert_device {
 	uint32_t spi_bpw;
 	uint32_t n_chan_bits;
 	uint32_t n_chan;
+	uint32_t n_transfers;
 };
 
 static const struct daqgert_device daqgert_devices[] = {
@@ -544,6 +550,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.rate_min = 20000,
 		.spi_mode = 3,
 		.spi_bpw = 8,
+		.n_transfers = 3,
 	},
 	{
 		.name = "mcp3002",
@@ -554,6 +561,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 2,
+		.n_transfers = 2,
 	},
 	{
 		.name = "mcp3202",
@@ -564,6 +572,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 0,
+		.n_transfers = 3,
 	},
 	{
 		.name = "mcp4802",
@@ -574,6 +583,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 4,
+		.n_transfers = 2,
 	},
 	{
 		.name = "mcp4812",
@@ -584,6 +594,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 2,
+		.n_transfers = 2,
 	},
 	{
 		.name = "mcp4822",
@@ -594,6 +605,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 0,
+		.n_transfers = 2,
 	},
 	{
 		.name = "picsl10",
@@ -604,6 +616,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 2,
+		.n_transfers = 3,
 	},
 	{
 		.name = "picsl12",
@@ -614,6 +627,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.spi_mode = 3,
 		.spi_bpw = 8,
 		.n_chan_bits = 0,
+		.n_transfers = 3,
 	},
 	{
 		.name = "ads1220",
@@ -625,6 +639,7 @@ static const struct daqgert_device daqgert_devices[] = {
 		.spi_bpw = 8,
 		.n_chan_bits = 24,
 		.n_chan = 5,
+		.n_transfers = 3,
 	},
 	{
 		.name = "ads8330",
@@ -636,6 +651,19 @@ static const struct daqgert_device daqgert_devices[] = {
 		.spi_bpw = 8,
 		.n_chan_bits = 16,
 		.n_chan = 2,
+		.n_transfers = 2,
+	},
+	{
+		.name = "special",
+		.ai_subdev_flags = SDF_READABLE | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
+		.max_speed_hz = 32000000,
+		.min_acq_ns = 30000,
+		.rate_min = 30000,
+		.spi_mode = 1,
+		.spi_bpw = 8,
+		.n_chan_bits = 16,
+		.n_chan = 2,
+		.n_transfers = 20000,
 	},
 };
 
@@ -1334,7 +1362,7 @@ static void ADS1220WriteRegister(int32_t StartAddress, int32_t NumRegs, uint32_t
 }
 
 /* 
- * chip byte offsets for arrays for 10 or 12 bit devices 
+ * chip byte offsets for arrays for spi device transfers 
  */
 static int32_t daqgert_device_offset(int32_t device_type)
 {
@@ -1347,6 +1375,9 @@ static int32_t daqgert_device_offset(int32_t device_type)
 		break;
 	case mcp3202:
 		len = 3;
+		break;
+	case special:
+		len = 20000;
 		break;
 	default:
 		len = 3;
@@ -1633,7 +1664,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 	struct spi_device *spi = spi_data->spi;
 	struct comedi_spigert *pdata = spi->dev.platform_data;
 	struct spi_message m;
-	uint32_t chan, sync;
+	uint32_t chan, sync, i;
 	int32_t val = 0;
 
 	mutex_lock(&devpriv->drvdata_lock);
@@ -1761,6 +1792,19 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			devpriv->ai_count++;
 		}
 		break;
+	case special: // dummy device transfer spped testing
+		pdata->one_t.len = devpriv->ai_spi->device_spi->n_transfers;
+		for (i = 0; i < 256; i++)
+			pdata->tx_buff[i] = 0xff;
+
+		spi_message_init_with_transfers(&m,
+						&pdata->one_t, 1);
+		spi_bus_lock(spi->master);
+		spi_sync_locked(spi, &m);
+		spi_bus_unlock(spi->master);
+		val = 99;
+		devpriv->ai_count++;
+		break;
 	default:
 		devpriv->ai_count++;
 		dev_info(dev->class_dev, "unknown ai device\n");
@@ -1849,19 +1893,22 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 static void transfer_from_hunk_buf_8330(struct comedi_device *dev,
 					struct comedi_subdevice *s,
 					uint8_t *bufptr,
+					uint32_t bufpos,
 					uint32_t len)
 {
 	struct comedi_cmd *cmd = &s->async->cmd;
-	uint32_t i; //, val;
-	uint16_t *val_ptr = (uint16_t*) bufptr;
+	uint32_t i, val;
 
 	s->async->cur_chan = 0; /* reset the hunk start chan */
 	for (i = 0; i < len; i++) {
-		//		val = bufptr[1 + bufpos];
-		//		val += (bufptr[0 + bufpos] << 8);
-		//		val = &val_ptr;
-		comedi_buf_write_samples(s, val_ptr++, 1);
-		//		bufpos += 2;
+		//		val = (*bufptr++ << 8);
+		//		val += *bufptr++;
+
+		val = bufptr[1 + bufpos];
+		val += (bufptr[0 + bufpos] << 8);
+
+		comedi_buf_write_samples(s, &val, 1);
+		bufpos += 2;
 
 		if (unlikely(cmd->stop_src == TRIG_COUNT &&
 			s->async->scans_done >= cmd->stop_arg)) {
@@ -1947,7 +1994,7 @@ static int32_t transfer_to_hunk_buf(struct comedi_device *dev,
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
 	struct comedi_spigert *pdata = spi->dev.platform_data;
-	uint32_t i, len, delay_usecs = pdata->delay_usecs;
+	uint32_t i, len;
 	uint32_t chan;
 	uint8_t *tx_buff, *rx_buff;
 	int32_t ret = 0;
@@ -1969,10 +2016,8 @@ static int32_t transfer_to_hunk_buf(struct comedi_device *dev,
 		if (mix_mode) {
 			if (i % 2) { /* use an even/odd mix of adc devices */
 				chan = devpriv->mix_chan;
-				delay_usecs = pdata->mix_delay_usecs;
 			} else {
 				chan = devpriv->ai_chan;
-				delay_usecs = 0;
 			}
 		} else {
 
@@ -1988,7 +2033,6 @@ static int32_t transfer_to_hunk_buf(struct comedi_device *dev,
 		if (devpriv->ai_spi->device_type == ads8330) {
 			bufptr[bufpos] = (ADS8330_CMR_RDATA) >> 8;
 			bufptr[bufpos + 1] = 0;
-			delay_usecs = pdata->delay_usecs; //FIXME delay 8330 testing
 		}
 
 		bufpos += offset;
@@ -2060,7 +2104,7 @@ static void daqgert_handle_ai_hunk(struct comedi_device *dev,
 		transfer_from_hunk_buf_3002(dev, s, bufptr, bufpos, len);
 		break;
 	case ads8330:
-		transfer_from_hunk_buf_8330(dev, s, bufptr, len);
+		transfer_from_hunk_buf_8330(dev, s, bufptr, bufpos, len);
 		break;
 	default:
 		dev_info(dev->class_dev, "unknown ai hunk device\n");
@@ -2825,6 +2869,7 @@ static void daqgert_ai_clear_eoc(struct comedi_device * dev)
 	do { /* wait if needed to SPI to clear or timeout */
 		schedule(); /* force a context switch */
 		usleep_range(750, 1000);
+		if (special_test) usleep_range(13000, 15000);
 	} while (test_bit(SPI_AI_RUN, &devpriv->state_bits) && (count--));
 
 	devpriv->run = false;
@@ -3154,7 +3199,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	} else {
 		use_hunking = false;
 	}
-	if (daqgert_conf == 4 || daqgert_conf == 14) /* single transfers, ADC is in continuous conversion mode */
+	if (daqgert_conf == 4 || daqgert_conf == 14 || daqgert_conf == 99) /* single transfers, ADC is in continuous conversion mode */
 		use_hunking = false;
 	devpriv->use_hunking = use_hunking; /* defaults to true */
 
@@ -3807,6 +3852,11 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 	case 17:
 		spi_adc->device_type = ads8330;
 		spi_dac->device_type = mcp4802;
+		break;
+	case 99:
+		spi_adc->device_type = special;
+		spi_dac->device_type = mcp4822;
+		special_test = true;
 		break;
 	default:
 		spi_adc->device_type = mcp3002;
