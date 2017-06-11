@@ -419,7 +419,7 @@ static const uint8_t ads1220_r3 = ADS1220_IDAC_OFF | ADS1220_DRDY_MODE;
 static const uint32_t PIC18_CONVD_25K22 = 24;
 static const uint32_t PIC18_CMDD_25K22 = 4;
 static const uint32_t SPI_BUFF_SIZE = 128000; // normally 5000
-static const uint32_t SPI_BUFF_SIZE_NOHUNK = 32000; // normally 64
+static const uint32_t SPI_BUFF_SIZE_NOHUNK = 20000; // normally 64
 static const uint32_t MAX_CHANLIST_LEN = 256;
 static const uint32_t CONV_SPEED = 5000; /* 10s of nsecs: the true rate is ~3000/5000 so we need a fixup,  two conversions per mix scan */
 static const uint32_t CONV_SPEED_FIX = 19; /* usecs: round it up to ~50usecs total with this */
@@ -3229,13 +3229,13 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			if (pdata->tx_buff)
 				kfree(pdata->tx_buff);
 			pdata->tx_buff = kzalloc(SPI_BUFF_SIZE_NOHUNK,
-						GFP_KERNEL | GFP_DMA);
+						GFP_DMA);
 			if (!pdata->tx_buff) {
 				ret = -ENOMEM;
 				goto daqgert_kfree_exit;
 			}
 			pdata->rx_buff = kzalloc(SPI_BUFF_SIZE_NOHUNK,
-						GFP_KERNEL | GFP_DMA);
+						GFP_DMA);
 			if (!pdata->rx_buff) {
 				ret = -ENOMEM;
 				goto daqgert_kfree_tx_exit;
@@ -3682,12 +3682,12 @@ static int32_t spigert_spi_probe(struct spi_device * spi)
 		return -ENOMEM;
 
 	spi->dev.platform_data = pdata;
-	pdata->tx_buff = kzalloc(SPI_BUFF_SIZE, GFP_KERNEL | GFP_DMA);
+	pdata->tx_buff = kzalloc(SPI_BUFF_SIZE, GFP_DMA);
 	if (!pdata->tx_buff) {
 		ret = -ENOMEM;
 		goto kfree_exit;
 	}
-	pdata->rx_buff = kzalloc(SPI_BUFF_SIZE, GFP_KERNEL | GFP_DMA);
+	pdata->rx_buff = kzalloc(SPI_BUFF_SIZE, GFP_DMA);
 	if (!pdata->rx_buff) {
 		ret = -ENOMEM;
 		goto kfree_tx_exit;
