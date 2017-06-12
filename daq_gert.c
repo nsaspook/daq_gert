@@ -419,7 +419,7 @@ static const uint8_t ads1220_r3 = ADS1220_IDAC_OFF | ADS1220_DRDY_MODE;
 static const uint32_t PIC18_CONVD_25K22 = 24;
 static const uint32_t PIC18_CMDD_25K22 = 4;
 static const uint32_t SPI_BUFF_SIZE = 128000; // normally 5000
-static const uint32_t SPI_BUFF_SIZE_NOHUNK = 20000; // normally 64
+static const uint32_t SPI_BUFF_SIZE_NOHUNK = 64; // normally 64
 static const uint32_t MAX_CHANLIST_LEN = 256;
 static const uint32_t CONV_SPEED = 5000; /* 10s of nsecs: the true rate is ~3000/5000 so we need a fixup,  two conversions per mix scan */
 static const uint32_t CONV_SPEED_FIX = 19; /* usecs: round it up to ~50usecs total with this */
@@ -656,14 +656,14 @@ static const struct daqgert_device daqgert_devices[] = {
 	{
 		.name = "special",
 		.ai_subdev_flags = SDF_READABLE | SDF_GROUND | SDF_CMD_READ | SDF_COMMON,
-		.max_speed_hz = 32000000,
+		.max_speed_hz = 64000000,
 		.min_acq_ns = 30000,
 		.rate_min = 30000,
-		.spi_mode = 1,
+		.spi_mode = 3,
 		.spi_bpw = 8,
-		.n_chan_bits = 16,
+		.n_chan_bits = 12,
 		.n_chan = 2,
-		.n_transfers = 20000,
+		.n_transfers = 64,
 	},
 };
 
@@ -1794,7 +1794,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 		break;
 	case special: // dummy device transfer spped testing
 		pdata->one_t.len = devpriv->ai_spi->device_spi->n_transfers;
-		for (i = 0; i < 256; i++)
+		for (i = 0; i < 32; i++)
 			pdata->tx_buff[i] = 0xff;
 
 		spi_message_init_with_transfers(&m,
