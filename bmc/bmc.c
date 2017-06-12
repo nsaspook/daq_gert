@@ -15,7 +15,7 @@
 #include "bmc/bmc.h"
 #include "bmc/daq.h"
 
-struct bmcdata bmc; /* DIO buffer */
+volatile struct bmcdata bmc; /* DIO buffer */
 
 /* ripped from http://aquaticus.info/pwm-sine-wave */
 
@@ -57,7 +57,7 @@ uint8_t sine_wave[256] = {
 int main(int argc, char *argv[])
 {
 	int blink[3], flip[2] = {0, 0}, z = 0;
-	int do_ao_only = FALSE;
+	int do_ao_only = TRUE;
 	uint8_t i = 0;
 
 	if (do_ao_only) {
@@ -99,12 +99,13 @@ int main(int argc, char *argv[])
 		while (1) {
 
 			get_data_sample();
-			if (blink[2]++ >= 100) {
+
+			if (++blink[2] > 0) {
 				printf("         \r");
 				printf(" %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %u %u %u %u %u %u raw %x, %x : %x %x",
-				bmc.pv_voltage, bmc.cc_voltage, bmc.input_voltage, bmc.b1_voltage, bmc.b2_voltage, bmc.system_voltage, bmc.logic_voltage,
-				bmc.datain.D0, bmc.datain.D1, bmc.datain.D2, bmc.datain.D3, bmc.datain.D6, bmc.datain.D7, bmc.adc_sample[0], bmc.adc_sample[1],
-				bmc.dac_sample[0], bmc.dac_sample[1]);
+					bmc.pv_voltage, bmc.cc_voltage, bmc.input_voltage, bmc.b1_voltage, bmc.b2_voltage, bmc.system_voltage, bmc.logic_voltage,
+					bmc.datain.D0, bmc.datain.D1, bmc.datain.D2, bmc.datain.D3, bmc.datain.D6, bmc.datain.D7, bmc.adc_sample[0], bmc.adc_sample[1],
+					bmc.dac_sample[0], bmc.dac_sample[1]);
 				//        usleep(4990);
 				blink[2] = 0;
 
@@ -118,23 +119,21 @@ int main(int argc, char *argv[])
 					bmc.dataout.d.D0 = flip[0];
 					bmc.dataout.d.D2 = flip[0];
 					bmc.dataout.d.D3 = flip[0];
-					set_dac_volts(0, bmc.cc_voltage);
+					set_dac_volts(0, 2.000);
 				} else {
-					set_dac_volts(0, 1.666);
-					//bmc.dataout.d.D0 = 0;
+					set_dac_volts(0, 0.750);
 				}
 				if ((bmc.datain.D1 == 0)) {
 					if (((blink[1]++) % 150) == 0) {
 						flip[1] = !flip[1];
 					}
 					printf(" Flip led 1 %x ", flip[1]);
-					set_dac_volts(1, 0.333);
+					set_dac_volts(1, 1.000);
 					bmc.dataout.d.D1 = flip[1];
 					bmc.dataout.d.D4 = flip[1];
 					bmc.dataout.d.D5 = flip[1];
 				} else {
-					set_dac_volts(1, 1.333);
-					//bmc.dataout.d.D1 = 0;
+					set_dac_volts(1, 1.500);
 				}
 			}
 		}
