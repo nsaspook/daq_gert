@@ -1,4 +1,1 @@
-# fac_relay
-
-Custom firmware for the Microchip BLECM board. 
-Controls 4 possible relays via the led control switches
+Comedi driver for RPi ai, ao gpio for the  gertboard daq_gert.c
