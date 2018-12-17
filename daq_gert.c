@@ -487,7 +487,7 @@ extern uint32_t system_serial_low;
 extern uint32_t system_serial_high;
 
 static DECLARE_COMPLETION(done);
-static DECLARE_COMPLETION(done1);
+//static DECLARE_COMPLETION(done1);
 
 /* 
  * module configuration and data variables
@@ -853,7 +853,6 @@ static void daqgert_ao_put_sample(struct comedi_device *,
 static void daqgert_handle_ai_hunk(struct comedi_device *,
 	struct comedi_subdevice *);
 static void daqgert_produce_complete(void *);
-//static void daqgert_produce_complete1(void *);
 
 /* 
  * pin exclude list 
@@ -2639,7 +2638,6 @@ static int32_t daqgert_ai_delay_rate(struct comedi_device *dev,
 	bool test_mode)
 {
 	struct daqgert_private *devpriv = dev->private;
-
 	int32_t spacing_usecs = 0, sample_freq, total_sample_time, delay_time;
 
 	if (test_mode) {
@@ -2900,11 +2898,8 @@ static int32_t daqgert_ai_cmdtest(struct comedi_device *dev,
  */
 static void my_timer_ai_callback(struct timer_list *t)
 {
-	/* struct comedi_device *dev = (void*) data; */
 	struct daqgert_private *devpriv = from_timer(devpriv, t, ai_timer);
 	struct comedi_device *dev = devpriv->dev;
-	//	struct comedi_device *dev = from_timer(dev, t, my_timer);
-	//struct daqgert_private *devpriv = dev->private;
 	static uint32_t time_marks = 0;
 
 	if (!dev)
@@ -2933,7 +2928,6 @@ static void daqgert_ai_clear_eoc(struct comedi_device * dev)
 
 	del_timer_sync(&devpriv->ai_spi->my_timer);
 	timer_setup(&devpriv->ai_spi->my_timer, my_timer_ai_callback, 0);
-	/*		(unsigned long) dev); */
 	devpriv->run = false;
 	devpriv->timer = false;
 	do { /* wait if needed to SPI to clear or timeout */
@@ -4088,7 +4082,7 @@ module_exit(daqgert_exit);
 
 MODULE_AUTHOR("Fred Brooks <spam@sma2.rain.com>");
 MODULE_DESCRIPTION("RPi DIO/AI/AO Driver");
-MODULE_VERSION("4.13.0");
+MODULE_VERSION("4.20.0");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("spi:spigert");
 
