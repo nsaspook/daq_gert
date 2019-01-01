@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 {
 	int blink[3], flip[2] = {0, 0}, z = 0;
 	int do_ao_only = TRUE;
-	uint8_t i = 0,j=75;
+	uint8_t i = 0, j = 75;
 
 	if (do_ao_only) {
 		if (init_dac(0.0, 25.0, FALSE) < 0) {
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 			set_dac_raw(0, sine_wave[255 - i++] << 4);
 			set_dac_raw(1, sine_wave[255 - j++] << 4);
 			usleep(1);
-			//			printf("%d\n", i);
+			//printf("%d\n", i);
 		}
 	} else {
 
