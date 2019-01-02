@@ -65,6 +65,8 @@ int main(int argc, char *argv[])
 			printf("Missing Analog AO subdevice\n");
 			return -1;
 		}
+		
+		
 		while (TRUE) {
 
 			//set_dac_volts(1, ((double) sine_wave[i])*0.007);
