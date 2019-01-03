@@ -57,7 +57,7 @@
  * TODO: Refactor sample put get code to reduce the amount of build up/down time
  * 
 Driver: "experimental" daq_gert in progress ... 
- * for 4.4+ kernels with device-tree enabled
+ * for 4.20+ kernels with device-tree enabled
  * see README.md for install instructions
  * 
 Description: GERTBOARD daq_gert
@@ -74,7 +74,7 @@ WiringPI
 
 Devices: [] GERTBOARD (daq_gert)
 Status: inprogress (DIO 95%) (AI 95%) AO (96%) (My code cleanup 95%)
-Updated: Sept 2016 12:07:20 +0000
+Updated: Jan 2019 12:07:20 +0000
 
 The DAQ-GERT appears in Comedi as a  digital I/O subdevice (0) with
 17 or 21 or 30 channels, 
