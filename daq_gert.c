@@ -1864,10 +1864,12 @@ static void daqgert_handle_ai_eoc(struct comedi_device *dev,
 static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 	struct comedi_subdevice * s)
 {
+	const struct daqgert_board *board = dev->board_ptr;
 	struct daqgert_private *devpriv = dev->private;
 	struct comedi_cmd *cmd = &s->async->cmd;
-	uint32_t next_chan, sampl_val[2], i;
+	uint32_t next_chan, i;
 	uint32_t chan = s->async->cur_chan;
+	uint16_t sampl_val[board->n_aochan];
 
 	if (!comedi_buf_read_samples(s, &sampl_val[0], cmd->chanlist_len)) {
 		s->async->events |= COMEDI_CB_OVERFLOW;
@@ -3239,7 +3241,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	struct comedi_subdevice *s;
 	int32_t ret, i;
 	unsigned long spi_device_missing = 0;
-	int32_t num_ai_chan, num_ao_chan, num_dio_chan = NUM_DIO_CHAN;
+	int32_t num_ai_chan, num_dio_chan = NUM_DIO_CHAN;
 	struct daqgert_private *devpriv;
 	struct comedi_spigert *pdata;
 	struct spi_message m;
@@ -3631,11 +3633,10 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 		/* daq-gert ao */
 		s = &dev->subdevices[2];
 		s->private = devpriv->ao_spi;
-		num_ao_chan = daqgert_ao_config(dev, s);
 		s->type = COMEDI_SUBD_AO;
 		/* we support single-ended (ground)  */
-		s->n_chan = num_ao_chan;
-		s->len_chanlist = num_ao_chan;
+		s->n_chan = thisboard->n_aochan;
+		s->len_chanlist = thisboard->n_aochan;
 		/* analog resolution depends on the DAC chip 8,10,12 bits */
 		s->maxdata = (1 << thisboard->n_aochan_bits) - 1;
 		s->range_table = &daqgert_ao_range;
