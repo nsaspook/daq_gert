@@ -804,7 +804,6 @@ struct daqgert_private {
 	uint32_t ai_mix : 1;
 	uint32_t ai_neverending : 1;
 	uint32_t ao_neverending : 1;
-	uint32_t ao_delay_now : 1;
 	uint32_t timer : 1;
 	uint32_t ai_cmd_canceled : 1;
 	uint32_t ao_cmd_canceled : 1;
@@ -1462,12 +1461,10 @@ static int32_t daqgert_ao_thread_function(void *data)
 	while (!kthread_should_stop()) {
 		if (likely(test_bit(AO_CMD_RUNNING, &devpriv->state_bits))) {
 			daqgert_handle_ao_eoc(dev, s);
-			if (devpriv->ao_delay_now) {
-				pdata->kmin = ktime_set(0, pdata->delay_nsecs);
-				__set_current_state(TASK_UNINTERRUPTIBLE);
-				schedule_hrtimeout_range(&pdata->kmin, 0,
-					HRTIMER_MODE_REL_PINNED);
-			}
+			pdata->kmin = ktime_set(0, pdata->delay_nsecs);
+			__set_current_state(TASK_UNINTERRUPTIBLE);
+			schedule_hrtimeout_range(&pdata->kmin, 0,
+				HRTIMER_MODE_REL_PINNED);
 		} else {
 			clear_bit(SPI_AO_RUN, &devpriv->state_bits);
 			smp_mb__after_atomic();
@@ -1860,11 +1857,32 @@ static void daqgert_handle_ai_eoc(struct comedi_device *dev,
 	}
 }
 
-static void daqgert_ao_next_chan(struct comedi_device *dev,
+/* 
+ * start chan set in ao_cmd 
+ * see comedi driver amplc_pci224.c
+ */
+static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 	struct comedi_subdevice * s)
 {
 	struct daqgert_private *devpriv = dev->private;
 	struct comedi_cmd *cmd = &s->async->cmd;
+	uint32_t next_chan, sampl_val[2], i;
+	uint32_t chan = s->async->cur_chan;
+
+	if (!comedi_buf_read_samples(s, &sampl_val[0], cmd->chanlist_len)) {
+		s->async->events |= COMEDI_CB_OVERFLOW;
+		comedi_handle_events(dev, s);
+		return;
+	}
+
+	for (i = 0; i < cmd->chanlist_len; i++) {
+		/* possible munge of data */
+		daqgert_ao_put_sample(dev, s, sampl_val[i]);
+		next_chan = s->async->cur_chan;
+
+		if (cmd->chanlist[chan] != cmd->chanlist[next_chan])
+			daqgert_ao_set_chan_range(dev, cmd->chanlist[next_chan], false);
+	}
 
 	if (cmd->stop_src == TRIG_COUNT &&
 		s->async->scans_done >= cmd->stop_arg) {
@@ -1874,40 +1892,6 @@ static void daqgert_ao_next_chan(struct comedi_device *dev,
 			s->async->events |= COMEDI_CB_EOA;
 		}
 	}
-}
-
-/* 
- * start chan set in ao_cmd 
- */
-static void daqgert_handle_ao_eoc(struct comedi_device *dev,
-	struct comedi_subdevice * s)
-{
-	struct daqgert_private *devpriv = dev->private;
-	struct comedi_cmd *cmd = &s->async->cmd;
-	uint32_t next_chan, sampl_val;
-	uint32_t chan = s->async->cur_chan;
-
-	/* zero bytes from the write data buffer read */
-	if (!comedi_buf_read_samples(s, &sampl_val, 1)) {
-		s->async->events |= COMEDI_CB_OVERFLOW;
-		comedi_handle_events(dev, s);
-		return;
-	}
-
-	/* possible munge of data */
-	daqgert_ao_put_sample(dev, s, sampl_val);
-	next_chan = s->async->cur_chan;
-
-	/* don't delay AO outputs between scan channels */
-	if (cmd->convert_src == TRIG_NOW &&
-		next_chan + 1 >= cmd->scan_end_arg)
-		devpriv->ao_delay_now = false;
-	else
-		devpriv->ao_delay_now = true;
-
-	if (cmd->chanlist[chan] != cmd->chanlist[next_chan])
-		daqgert_ao_set_chan_range(dev, cmd->chanlist[next_chan], false);
-	daqgert_ao_next_chan(dev, s);
 }
 
 /*
@@ -2317,6 +2301,10 @@ static int32_t daqgert_ao_cmd(struct comedi_device *dev,
 	if (unlikely(!devpriv))
 		return -EFAULT;
 
+	/* Cannot handle null/empty chanlist. */
+	if (!cmd->chanlist || cmd->chanlist_len == 0)
+		return -EINVAL;
+
 	mutex_lock(&devpriv->cmd_lock);
 	dev_info(dev->class_dev, "ao_cmd\n");
 	if (test_bit(AO_CMD_RUNNING, &devpriv->state_bits)) {
@@ -2387,6 +2375,10 @@ static int32_t daqgert_ai_cmd(struct comedi_device *dev,
 
 	if (unlikely(!devpriv))
 		return -EFAULT;
+
+	/* Cannot handle null/empty chanlist. */
+	if (!cmd->chanlist || cmd->chanlist_len == 0)
+		return -EINVAL;
 
 	mutex_lock(&devpriv->cmd_lock);
 	dev_info(dev->class_dev, "ai_cmd\n");
