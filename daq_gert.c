@@ -1900,7 +1900,6 @@ static void daqgert_handle_ai_eoc(struct comedi_device *dev,
 static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 	struct comedi_subdevice * s)
 {
-	const struct daqgert_board *board = dev->board_ptr;
 	struct daqgert_private *devpriv = dev->private;
 	struct comedi_cmd *cmd = &s->async->cmd;
 	uint32_t next_chan, i;
