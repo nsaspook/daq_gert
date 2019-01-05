@@ -851,7 +851,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *,
 	struct comedi_subdevice *);
 static void daqgert_ao_put_sample(struct comedi_device *,
 	struct comedi_subdevice *,
-	uint32_t);
+	uint16_t);
 static void daqgert_ao_put_samples(struct comedi_device *,
 	struct comedi_subdevice *,
 	uint16_t *);
@@ -1637,7 +1637,7 @@ static void daqgert_ao_set_chan_range(struct comedi_device *dev,
  */
 static void daqgert_ao_put_sample(struct comedi_device *dev,
 	struct comedi_subdevice *s,
-	uint32_t val)
+	uint16_t val)
 {
 	struct daqgert_private *devpriv = dev->private;
 	struct spi_param_type *spi_data = s->private;
