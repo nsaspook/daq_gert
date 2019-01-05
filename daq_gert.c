@@ -419,6 +419,8 @@ static const uint8_t ads1220_r3 = ADS1220_IDAC_OFF | ADS1220_DRDY_MODE;
 #define ads8330  9
 #define special  10
 #define n_chips  10 /* set to the last chip array index number */
+#define MAX_AI   32
+#define MAX_AO   2
 
 static const uint32_t PIC18_CONVD_25K22 = 24;
 static const uint32_t PIC18_CMDD_25K22 = 4;
@@ -1903,7 +1905,7 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 	struct comedi_cmd *cmd = &s->async->cmd;
 	uint32_t next_chan, i;
 	uint32_t chan = s->async->cur_chan;
-	uint16_t sampl_val[board->n_aochan];
+	uint16_t sampl_val[MAX_AO];
 
 	if (!comedi_buf_read_samples(s, &sampl_val[0], cmd->chanlist_len)) {
 		s->async->events |= COMEDI_CB_OVERFLOW;
