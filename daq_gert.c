@@ -2954,7 +2954,7 @@ static void my_timer_ai_callback(struct timer_list *t)
 		if (!(time_marks++ % 100))
 			dev_info(dev->class_dev,
 			"speed testing %i: ao count %i, ai count %i, hunk %i, "
-			"length %i 1Mhz timer value 0x%x:0x%x\n",
+			"length %i 1MHz timer value 0x%x:0x%x\n",
 			time_marks, devpriv->ao_count, devpriv->ai_count, devpriv->hunk_count, hunk_len,
 			(uint32_t) ioread32(devpriv->timer_1mhz + 2),
 			(uint32_t) ioread32(devpriv->timer_1mhz + 1));
@@ -3535,7 +3535,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 
 	devpriv->timer_1mhz = ioremap(ST_BASE, 8);
 	if (!devpriv->timer_1mhz) {
-		dev_err(dev->class_dev, "invalid 1mhz timer base address!\n");
+		dev_err(dev->class_dev, "invalid 1MHz timer base address!\n");
 		return -EINVAL;
 	}
 
@@ -3712,7 +3712,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 
 	dev_info(dev->class_dev,
 		"%s attached: gpio iobase 0x%lx, ioremaps 0x%lx  "
-		"0x%lx, io pins 0x%x, 1Mhz timer value 0x%x:0x%x\n",
+		"0x%lx, io pins 0x%x, 1MHz timer value 0x%x:0x%x\n",
 		dev->driver->driver_name,
 		dev->iobase,
 		(long unsigned int) dev->mmio,
