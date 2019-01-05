@@ -850,6 +850,9 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *,
 static void daqgert_ao_put_sample(struct comedi_device *,
 	struct comedi_subdevice *,
 	uint32_t);
+static void daqgert_ao_put_samples(struct comedi_device *,
+	struct comedi_subdevice *,
+	uint16_t *);
 static void daqgert_handle_ai_hunk(struct comedi_device *,
 	struct comedi_subdevice *);
 static void daqgert_produce_complete(void *);
@@ -1648,6 +1651,37 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 	spi_write(spi, pdata->tx_buff, 2);
 	s->readback[chan] = val;
 	devpriv->ao_count++;
+	mutex_unlock(&devpriv->drvdata_lock);
+	smp_mb__after_atomic();
+}
+
+/*
+ * transfers two 32 bit values to the DAC device starting from the set channel scan
+ */
+static void daqgert_ao_put_samples(struct comedi_device *dev,
+	struct comedi_subdevice *s,
+	uint16_t *val)
+{
+	struct daqgert_private *devpriv = dev->private;
+	struct spi_param_type *spi_data = s->private;
+	struct spi_device *spi = spi_data->spi;
+	struct comedi_spigert *pdata = spi->dev.platform_data;
+	uint32_t chan, range;
+
+	mutex_lock(&devpriv->drvdata_lock);
+	chan = devpriv->ao_chan;
+	range = devpriv->ao_range;
+	pdata->tx_buff[1] = val[0] & 0xff;
+	pdata->tx_buff[0] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val[0] >> 8)& 0x0f));
+	s->readback[chan] = val[chan];
+	chan++; /* binary bit toggle to the next channel */
+	pdata->tx_buff[2] = val[1] & 0xff;
+	pdata->tx_buff[3] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val[1] >> 8)& 0x0f));
+	s->readback[chan] = val[chan];
+	spi_write(spi, pdata->tx_buff, 4);
+
+
+	devpriv->ao_count += 2;
 	mutex_unlock(&devpriv->drvdata_lock);
 	smp_mb__after_atomic();
 }
