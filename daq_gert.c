@@ -1668,6 +1668,7 @@ static void daqgert_ao_put_samples(struct comedi_device *dev,
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
 	struct comedi_spigert *pdata = spi->dev.platform_data;
+	static struct spi_message m;
 	uint32_t chan, range;
 
 	mutex_lock(&devpriv->drvdata_lock);
@@ -1677,10 +1678,33 @@ static void daqgert_ao_put_samples(struct comedi_device *dev,
 	pdata->tx_buff[0] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val[0] >> 8)& 0x0f));
 	s->readback[chan] = val[chan];
 	chan++; /* binary bit toggle to the next channel */
-	pdata->tx_buff[2] = val[1] & 0xff;
-	pdata->tx_buff[3] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val[1] >> 8)& 0x0f));
+	pdata->tx_buff[3] = val[1] & 0xff;
+	pdata->tx_buff[2] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val[1] >> 8)& 0x0f));
 	s->readback[chan] = val[chan];
-	spi_write(spi, pdata->tx_buff, 4);
+
+	/* use two spi transfers for the message */
+	pdata->t[0].cs_change = true;
+	pdata->t[0].len = 2;
+	pdata->t[0].tx_buf = &pdata->tx_buff[0];
+	pdata->t[0].rx_buf = &pdata->rx_buff[0];
+	pdata->t[0].delay_usecs = 0;
+#ifdef CS_CHANGE_USECS
+	pdata->t[0].cs_change_usecs = CS_CHANGE_DELAY_USECS;
+#endif
+	pdata->t[1].cs_change = false;
+	pdata->t[1].len = 2;
+	pdata->t[1].tx_buf = &pdata->tx_buff[2];
+	pdata->t[1].rx_buf = &pdata->rx_buff[2];
+	pdata->t[1].delay_usecs = 0;
+#ifdef CS_CHANGE_USECS
+	pdata->t[1].cs_change_usecs = CS_CHANGE_DELAY_USECS;
+#endif
+	spi_message_init_with_transfers(&m, &pdata->t[0], 2);
+	spi_bus_lock(spi->master);
+	spi_sync_locked(spi, &m);
+	spi_bus_unlock(spi->master);
+
+	//	spi_write(spi, pdata->tx_buff, 4);
 
 
 	devpriv->ao_count += 2;
@@ -1912,13 +1936,14 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 		return;
 	}
 
-	for (i = 0; i < cmd->chanlist_len; i++) {
-		/* possible munge of data */
-		daqgert_ao_put_sample(dev, s, sampl_val[i]);
-		next_chan = s->async->cur_chan;
-
-		if (cmd->chanlist[chan] != cmd->chanlist[next_chan])
-			daqgert_ao_set_chan_range(dev, cmd->chanlist[next_chan], false);
+	if (cmd->chanlist_len == 1) {
+		for (i = 0; i < cmd->chanlist_len; i++) {
+			daqgert_ao_set_chan_range(dev, cmd->chanlist[i], false);
+			/* possible munge of data */
+			daqgert_ao_put_sample(dev, s, sampl_val[i]);
+		}
+	} else {
+		daqgert_ao_put_samples(dev, s, &sampl_val[0]);
 	}
 
 	if (cmd->stop_src == TRIG_COUNT &&
