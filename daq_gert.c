@@ -1633,7 +1633,7 @@ static void daqgert_ao_set_chan_range(struct comedi_device *dev,
 }
 
 /*
- * transfers one 32 bit value to the DAC device
+ * transfers one 16 bit value to the DAC device
  */
 static void daqgert_ao_put_sample(struct comedi_device *dev,
 	struct comedi_subdevice *s,
@@ -1658,7 +1658,7 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 }
 
 /*
- * transfers two 32 bit values to the DAC device starting from the set channel scan
+ * transfers two 16 bit values to the DAC device starting from the set channel scan
  */
 static void daqgert_ao_put_samples(struct comedi_device *dev,
 	struct comedi_subdevice *s,
@@ -1703,9 +1703,6 @@ static void daqgert_ao_put_samples(struct comedi_device *dev,
 	spi_bus_lock(spi->master);
 	spi_sync_locked(spi, &m);
 	spi_bus_unlock(spi->master);
-
-	//	spi_write(spi, pdata->tx_buff, 4);
-
 
 	devpriv->ao_count += 2;
 	mutex_unlock(&devpriv->drvdata_lock);
@@ -1926,8 +1923,6 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 {
 	struct daqgert_private *devpriv = dev->private;
 	struct comedi_cmd *cmd = &s->async->cmd;
-	uint32_t next_chan, i;
-	uint32_t chan = s->async->cur_chan;
 	uint16_t sampl_val[MAX_AO];
 
 	if (!comedi_buf_read_samples(s, &sampl_val[0], cmd->chanlist_len)) {
@@ -1936,12 +1931,9 @@ static void daqgert_handle_ao_eoc(struct comedi_device *dev,
 		return;
 	}
 
-	if (cmd->chanlist_len == 1) {
-		for (i = 0; i < cmd->chanlist_len; i++) {
-			daqgert_ao_set_chan_range(dev, cmd->chanlist[i], false);
-			/* possible munge of data */
-			daqgert_ao_put_sample(dev, s, sampl_val[i]);
-		}
+	if (cmd->chanlist_len < 2) {
+		daqgert_ao_set_chan_range(dev, cmd->chanlist[0], false);
+		daqgert_ao_put_sample(dev, s, sampl_val[0]);
 	} else {
 		daqgert_ao_put_samples(dev, s, &sampl_val[0]);
 	}
@@ -3227,26 +3219,6 @@ static int32_t daqgert_ao_winsn(struct comedi_device *dev,
 	return insn->n;
 }
 
-static int32_t daqgert_ai_config(struct comedi_device *dev,
-	struct comedi_subdevice * s)
-{
-
-	struct spi_param_type *spi_data = s->private;
-
-	/* Stuff here? */
-	return spi_data->chan;
-}
-
-static int32_t daqgert_ao_config(struct comedi_device *dev,
-	struct comedi_subdevice * s)
-{
-
-	struct spi_param_type *spi_data = s->private;
-
-	/* Stuff here? */
-	return spi_data->chan;
-}
-
 /*
  * make two threads for the spi i/o streams
  */
@@ -3301,7 +3273,7 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 	struct comedi_subdevice *s;
 	int32_t ret, i;
 	unsigned long spi_device_missing = 0;
-	int32_t num_ai_chan, num_dio_chan = NUM_DIO_CHAN;
+	int32_t num_dio_chan = NUM_DIO_CHAN;
 	struct daqgert_private *devpriv;
 	struct comedi_spigert *pdata;
 	struct spi_message m;
@@ -3627,11 +3599,10 @@ static int32_t daqgert_auto_attach(struct comedi_device *dev,
 			hunk_len);
 		s = &dev->subdevices[1];
 		s->private = devpriv->ai_spi;
-		num_ai_chan = daqgert_ai_config(dev, s);
 		s->type = COMEDI_SUBD_AI;
 		/* default setups, we support single-ended (ground)  */
-		s->n_chan = num_ai_chan;
-		s->len_chanlist = num_ai_chan;
+		s->n_chan = devpriv->ai_spi->chan;
+		s->len_chanlist = devpriv->ai_spi->chan;
 		s->maxdata = (1 << (thisboard->n_aichan_bits - devpriv->ai_spi->device_spi->n_chan_bits)) - 1;
 		if (devpriv->ai_spi->range)
 			s->range_table = &daqgert_ai_range2_048;
@@ -3954,8 +3925,6 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 		return 0;
 	}
 
-	spi_dac->chan = thisboard->n_aochan;
-
 	switch (daqgert_conf) {
 	case 1:
 		spi_adc->device_type = mcp3202;
@@ -4002,7 +3971,8 @@ static int32_t daqgert_spi_probe(struct comedi_device * dev,
 
 	/* default setup */
 	spi_adc->pic18 = 0;
-	spi_adc->chan = 2;
+	spi_adc->chan = thisboard->n_aichan;
+	spi_dac->chan = thisboard->n_aochan;
 
 	if ((spi_adc->device_type != ads1220) && (spi_adc->device_type != ads8330)) {
 		/* 
