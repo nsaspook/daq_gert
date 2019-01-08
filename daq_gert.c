@@ -1648,8 +1648,8 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 	mutex_lock(&devpriv->drvdata_lock);
 	chan = devpriv->ao_chan;
 	range = devpriv->ao_range;
-	pdata->tx_buff[1] = val & 0xff;
 	pdata->tx_buff[0] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val >> 8)& 0x0f));
+	pdata->tx_buff[1] = val & 0xff;
 	spi_write(spi, pdata->tx_buff, 2);
 	s->readback[chan] = val;
 	devpriv->ao_count++;
@@ -1674,12 +1674,12 @@ static void daqgert_ao_put_samples(struct comedi_device *dev,
 	mutex_lock(&devpriv->drvdata_lock);
 	chan = devpriv->ao_chan;
 	range = devpriv->ao_range;
-	pdata->tx_buff[1] = val[0] & 0xff;
 	pdata->tx_buff[0] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val[0] >> 8)& 0x0f));
+	pdata->tx_buff[1] = val[0] & 0xff;
 	s->readback[chan] = val[chan];
 	chan++; /* binary bit toggle to the next channel */
-	pdata->tx_buff[3] = val[1] & 0xff;
 	pdata->tx_buff[2] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val[1] >> 8)& 0x0f));
+	pdata->tx_buff[3] = val[1] & 0xff;
 	s->readback[chan] = val[chan];
 
 	/* use two spi transfers for the message */
