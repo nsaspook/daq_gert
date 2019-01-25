@@ -1646,9 +1646,9 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 	uint32_t chan, range;
 
 	mutex_lock(&devpriv->drvdata_lock);
-	chan = devpriv->ao_chan;
+	chan = devpriv->ao_chan & 0x01;
 	range = devpriv->ao_range;
-	pdata->tx_buff[0] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val >> 8)& 0x0f));
+	pdata->tx_buff[0] = (0x10 | (chan << 7) | ((~range & 0x01) << 5) | ((val >> 8)& 0x0f));
 	pdata->tx_buff[1] = val & 0xff;
 	spi_write(spi, pdata->tx_buff, 2);
 	s->readback[chan] = val;
@@ -1672,13 +1672,13 @@ static void daqgert_ao_put_samples(struct comedi_device *dev,
 	uint32_t chan, range;
 
 	mutex_lock(&devpriv->drvdata_lock);
-	chan = devpriv->ao_chan;
+	chan = devpriv->ao_chan & 0x01;
 	range = devpriv->ao_range;
-	pdata->tx_buff[0] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val[0] >> 8)& 0x0f));
+	pdata->tx_buff[0] = (0x10 | (chan << 7) | ((~range & 0x01) << 5) | ((val[0] >> 8)& 0x0f));
 	pdata->tx_buff[1] = val[0] & 0xff;
 	s->readback[chan] = val[chan];
-	chan++; /* binary bit toggle to the next channel */
-	pdata->tx_buff[2] = (0x10 | ((chan & 0x01) << 7) | ((~range & 0x01) << 5) | ((val[1] >> 8)& 0x0f));
+	chan=(chan++) & 0x01; /* binary bit toggle to the next channel */
+	pdata->tx_buff[2] = (0x10 | (chan << 7) | ((~range & 0x01) << 5) | ((val[1] >> 8)& 0x0f));
 	pdata->tx_buff[3] = val[1] & 0xff;
 	s->readback[chan] = val[chan];
 
