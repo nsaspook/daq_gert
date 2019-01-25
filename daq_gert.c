@@ -1677,7 +1677,7 @@ static void daqgert_ao_put_samples(struct comedi_device *dev,
 	pdata->tx_buff[0] = (0x10 | (chan << 7) | ((~range & 0x01) << 5) | ((val[0] >> 8)& 0x0f));
 	pdata->tx_buff[1] = val[0] & 0xff;
 	s->readback[chan] = val[chan];
-	chan=(chan++) & 0x01; /* binary bit toggle to the next channel */
+	chan=((chan++) & 0x01); /* binary bit toggle to the next channel */
 	pdata->tx_buff[2] = (0x10 | (chan << 7) | ((~range & 0x01) << 5) | ((val[1] >> 8)& 0x0f));
 	pdata->tx_buff[3] = val[1] & 0xff;
 	s->readback[chan] = val[chan];
