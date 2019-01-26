@@ -681,7 +681,7 @@ struct daqgert_board {
 	int32_t board_type;
 	int32_t n_aichan;
 	uint8_t n_aichan_bits;
-	int32_t n_aochan;
+	int32_t n_aochan, n_aochan_mask;
 	uint8_t n_aochan_bits;
 	uint32_t ai_ns_min_calc;
 	uint32_t ao_ns_min_calc;
@@ -698,6 +698,7 @@ static const struct daqgert_board daqgert_boards[] = {
 		.n_aichan = 2,
 		.n_aichan_bits = 12,
 		.n_aochan = 2,
+		.n_aochan_mask = 0x01,
 		.n_aochan_bits = 12,
 		.ai_ns_min_calc = 35000,
 		.ao_ns_min_calc = 20000,
@@ -711,6 +712,7 @@ static const struct daqgert_board daqgert_boards[] = {
 		.board_type = 1,
 		.n_aichan = 8,
 		.n_aochan = 8,
+		.n_aochan_mask = 0x07,
 		.ai_ns_min_calc = 35000,
 		.ao_ns_min_calc = 12000,
 		.ai_cs = 0,
@@ -1633,12 +1635,13 @@ static void daqgert_ao_set_chan_range(struct comedi_device *dev,
 }
 
 /*
- * transfers one 16 bit value to the DAC device
+ * transfers one 16 bit value to the MPC48x2 DAC device
  */
 static void daqgert_ao_put_sample(struct comedi_device *dev,
 	struct comedi_subdevice *s,
 	uint16_t val)
 {
+	const struct daqgert_board *board = dev->board_ptr;
 	struct daqgert_private *devpriv = dev->private;
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
@@ -1646,7 +1649,7 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 	uint32_t chan, range;
 
 	mutex_lock(&devpriv->drvdata_lock);
-	chan = devpriv->ao_chan & 0x01;
+	chan = devpriv->ao_chan & board->n_aochan_mask;
 	range = devpriv->ao_range;
 	pdata->tx_buff[0] = (0x10 | (chan << 7) | ((~range & 0x01) << 5) | ((val >> 8)& 0x0f));
 	pdata->tx_buff[1] = val & 0xff;
@@ -1658,12 +1661,13 @@ static void daqgert_ao_put_sample(struct comedi_device *dev,
 }
 
 /*
- * transfers two 16 bit values to the DAC device starting from the set channel scan
+ * transfers two 16 bit values to the MPC48x2 DAC device starting from the set channel scan
  */
 static void daqgert_ao_put_samples(struct comedi_device *dev,
 	struct comedi_subdevice *s,
 	uint16_t *val)
 {
+	const struct daqgert_board *board = dev->board_ptr;
 	struct daqgert_private *devpriv = dev->private;
 	struct spi_param_type *spi_data = s->private;
 	struct spi_device *spi = spi_data->spi;
@@ -1672,13 +1676,13 @@ static void daqgert_ao_put_samples(struct comedi_device *dev,
 	uint32_t chan, range;
 
 	mutex_lock(&devpriv->drvdata_lock);
-	chan = devpriv->ao_chan & 0x01;
+	chan = devpriv->ao_chan & board->n_aochan_mask;
 	range = devpriv->ao_range;
 	pdata->tx_buff[0] = (0x10 | (chan << 7) | ((~range & 0x01) << 5) | ((val[0] >> 8)& 0x0f));
 	pdata->tx_buff[1] = val[0] & 0xff;
 	s->readback[chan] = val[chan];
 	chan++;
-	chan &= 0x01; /* binary bit toggle to the next channel */
+	chan &= board->n_aochan_mask; /* binary bit toggle to the next channel */
 	pdata->tx_buff[2] = (0x10 | (chan << 7) | ((~range & 0x01) << 5) | ((val[1] >> 8)& 0x0f));
 	pdata->tx_buff[3] = val[1] & 0xff;
 	s->readback[chan] = val[chan];
