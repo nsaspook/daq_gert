@@ -29,22 +29,6 @@ extern "C" {
 #include <comedilib.h>
 #include "bmc.h"
 
-	int subdev_ai; /* change this to your input subdevice */
-	int chan_ai; /* change this to your channel */
-	int range_ai; /* more on this later */
-	int aref_ai; /* more on this later */
-	int maxdata_ai, ranges_ai, channels_ai;
-
-	int subdev_dio; /* change this to your input subdevice */
-	int chan_dio; /* change this to your channel */
-	int range_dio; /* more on this later */
-	int aref_dio; /* more on this later */
-	int maxdata_dio, ranges_dio, channels_dio, datain_dio;
-
-	comedi_t *it;
-	comedi_range *ad_range;
-	int8_t ADC_OPEN, DIO_OPEN, ADC_ERROR, DEV_OPEN, DIO_ERROR;
-
 	extern volatile struct bmcdata bmc;
 	extern struct didata datain;
 	extern struct dodata dataout;

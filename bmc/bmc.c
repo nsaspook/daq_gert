@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 #include <comedilib.h>
 #include "bmc/bmc.h"
 #include "bmc/daq.h"
@@ -54,32 +55,65 @@ uint8_t sine_wave[256] = {
 	0x67, 0x6A, 0x6D, 0x70, 0x74, 0x77, 0x7A, 0x7D
 };
 
+void led_lightshow(int speed)
+{
+	static int j = 0;
+	static uint8_t cylon = 0xff;
+	static int alive_led = 0;
+	static bool LED_UP = true;
+
+	if (j++ >= speed) { // delay a bit ok
+		if (0) { // screen status feedback
+			bmc.dataout.dio_buf = ~cylon; // roll leds cylon style
+		} else {
+			bmc.dataout.dio_buf = cylon; // roll leds cylon style (inverted)
+		}
+
+		if (LED_UP && (alive_led != 0)) {
+			alive_led = alive_led * 2;
+			cylon = cylon << 1;
+		} else {
+			if (alive_led != 0) alive_led = alive_led / 2;
+			cylon = cylon >> 1;
+		}
+		if (alive_led < 2) {
+			alive_led = 2;
+			LED_UP = true;
+		} else {
+			if (alive_led > 128) {
+				alive_led = 128;
+				LED_UP = false;
+			}
+		}
+		j = 0;
+	}
+}
+
 int main(int argc, char *argv[])
 {
-	int blink[3], flip[2] = {0, 0}, z = 0;
-	int do_ao_only = FALSE;
+	//	int blink[3], flip[2] = {0, 0}, z = 0;
+	int do_ao_only = false;
 	uint8_t i = 0, j = 75;
 
 	if (do_ao_only) {
-		if (init_dac(0.0, 25.0, FALSE) < 0) {
+		if (init_dac(0.0, 25.0, false) < 0) {
 			printf("Missing Analog AO subdevice\n");
 			return -1;
 		}
-		
-		
-		while (TRUE) {
+
+
+		while (true) {
 
 			//set_dac_volts(1, ((double) sine_wave[i])*0.007);
 			//set_dac_raw(1, sine_wave[i] << 4);
 			//set_dac_volts(0, ((double) sine_wave[255 - i++])*0.007);
 			set_dac_raw(0, sine_wave[255 - i++] << 4);
 			set_dac_raw(1, sine_wave[255 - j++] << 4);
-			usleep(1);
 			//printf("%d\n", i);
 		}
 	} else {
 
-		if (init_daq(0.0, 25.0, FALSE) < 0) {
+		if (init_daq(0.0, 25.0, false) < 0) {
 			printf("Missing Analog subdevice(s)\n");
 			return -1;
 		}
@@ -87,58 +121,20 @@ int main(int argc, char *argv[])
 			printf("Missing Digital subdevice(s)\n");
 			return -1;
 		}
-//		set_dio_output(0); // gpio 17
-//		set_dio_output(1); // gpio 18
-//		set_dio_output(2); // gpio 21/27
-//		set_dio_output(3); // gpio 22
-//		set_dio_output(4); // gpio 23
-//		set_dio_output(5); // gpio 24
-//		set_dio_input(6); // gpio 25
-//		set_dio_input(7); // gpio 4
+		//		set_dio_output(0); // gpio 17
+		//		set_dio_output(1); // gpio 18
+		//		set_dio_output(2); // gpio 21/27
+		//		set_dio_output(3); // gpio 22
+		//		set_dio_output(4); // gpio 23
+		//		set_dio_output(5); // gpio 24
+		//		set_dio_input(6); // gpio 25
+		//		set_dio_input(7); // gpio 4
 		put_dio_bit(0, 1);
 		put_dio_bit(1, 1);
-		blink[2] = 0;
 
 		while (1) {
-
 			get_data_sample();
-
-			if (++blink[2] > 0) {
-				printf("         \r");
-				printf(" %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %2.3fV %u %u %u %u %u %u raw %x, %x : %x %x",
-					bmc.pv_voltage, bmc.cc_voltage, bmc.input_voltage, bmc.b1_voltage, bmc.b2_voltage, bmc.system_voltage, bmc.logic_voltage,
-					bmc.datain.D0, bmc.datain.D1, bmc.datain.D2, bmc.datain.D3, bmc.datain.D6, bmc.datain.D7, bmc.adc_sample[0], bmc.adc_sample[1],
-					bmc.dac_sample[0], bmc.dac_sample[1]);
-				//        usleep(4990);
-				blink[2] = 0;
-
-				bmc.dataout.dio_buf = z++ >>3;
-
-				if ((bmc.datain.D0 == 0)) {
-					if (((blink[0]++) % 150) == 0) {
-						flip[0] = !flip[0];
-					}
-					printf(" Flip led 0 %x ", flip[0]);
-					bmc.dataout.d.D0 = flip[0];
-					bmc.dataout.d.D2 = flip[0];
-					bmc.dataout.d.D3 = flip[0];
-					set_dac_volts(0, 2.000);
-				} else {
-					set_dac_volts(0, 0.750);
-				}
-				if ((bmc.datain.D1 == 0)) {
-					if (((blink[1]++) % 150) == 0) {
-						flip[1] = !flip[1];
-					}
-					printf(" Flip led 1 %x ", flip[1]);
-					set_dac_volts(1, 1.000);
-					bmc.dataout.d.D1 = flip[1];
-					bmc.dataout.d.D4 = flip[1];
-					bmc.dataout.d.D5 = flip[1];
-				} else {
-					set_dac_volts(1, 1.500);
-				}
-			}
+			led_lightshow(0);
 		}
 	}
 	return 0;

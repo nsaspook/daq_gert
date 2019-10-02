@@ -24,10 +24,13 @@ int chan_do = 0; /* change this to your channel */
 int range_do = 0; /* more on this later */
 int maxdata_do, ranges_do, channels_do, datain_do;
 
+int subdev_dio; /* change this to your input subdevice */
+int aref_dio; /* more on this later */
+
 comedi_t *it;
 comedi_range *ad_range, *da_range;
-int8_t ADC_OPEN = FALSE, DIO_OPEN = FALSE, ADC_ERROR = FALSE, DEV_OPEN = FALSE,
-	DIO_ERROR = FALSE, HAS_AO = FALSE, DAC_ERROR = FALSE;
+bool ADC_OPEN = false, DIO_OPEN = false, ADC_ERROR = false, DEV_OPEN = false,
+	DIO_ERROR = false, HAS_AO = false, DAC_ERROR = false;
 
 int init_daq(double min_range, double max_range, int range_update)
 {
@@ -37,25 +40,25 @@ int init_daq(double min_range, double max_range, int range_update)
 		it = comedi_open("/dev/comedi0");
 		if (it == NULL) {
 			comedi_perror("comedi_open");
-			ADC_OPEN = FALSE;
-			DEV_OPEN = FALSE;
+			ADC_OPEN = false;
+			DEV_OPEN = false;
 			return -1;
 		}
-		DEV_OPEN = TRUE;
+		DEV_OPEN = true;
 	}
 
 	subdev_ai = comedi_find_subdevice_by_type(it, COMEDI_SUBD_AI, subdev_ai);
 	if (subdev_ai < 0) {
 		return -2;
-		ADC_OPEN = FALSE;
+		ADC_OPEN = false;
 	}
 
 
 	subdev_ao = comedi_find_subdevice_by_type(it, COMEDI_SUBD_AO, subdev_ao);
 	if (subdev_ao < 0) {
-		HAS_AO = FALSE;
+		HAS_AO = false;
 	} else {
-		HAS_AO = TRUE;
+		HAS_AO = true;
 	}
 
 	printf("Subdev AI  %i ", subdev_ai);
@@ -86,7 +89,7 @@ int init_daq(double min_range, double max_range, int range_update)
 			da_range->max);
 	}
 
-	ADC_OPEN = TRUE;
+	ADC_OPEN = true;
 	comedi_set_global_oor_behavior(COMEDI_OOR_NUMBER);
 	return 0;
 }
@@ -99,18 +102,18 @@ int init_dac(double min_range, double max_range, int range_update)
 		it = comedi_open("/dev/comedi0");
 		if (it == NULL) {
 			comedi_perror("comedi_open");
-			ADC_OPEN = FALSE;
-			DEV_OPEN = FALSE;
+			ADC_OPEN = false;
+			DEV_OPEN = false;
 			return -1;
 		}
-		DEV_OPEN = TRUE;
+		DEV_OPEN = true;
 	}
 
 	subdev_ao = comedi_find_subdevice_by_type(it, COMEDI_SUBD_AO, subdev_ao);
 	if (subdev_ao < 0) {
-		HAS_AO = FALSE;
+		HAS_AO = false;
 	} else {
-		HAS_AO = TRUE;
+		HAS_AO = true;
 	}
 
 	if (HAS_AO) {
@@ -162,7 +165,7 @@ int set_dac_volts(int chan, double voltage)
 	retval = comedi_data_write(it, subdev_ao, chan, range_ao, aref_ao, data);
 	if (retval < 0) {
 		comedi_perror("comedi_data_write in set_dac_volts");
-		DAC_ERROR = TRUE;
+		DAC_ERROR = true;
 	}
 	return retval;
 }
@@ -174,7 +177,7 @@ int set_dac_raw(int chan, lsampl_t voltage)
 	retval = comedi_data_write(it, subdev_ao, chan, range_ao, aref_ao, voltage);
 	if (retval < 0) {
 		comedi_perror("comedi_data_write in set_dac_raw");
-		DAC_ERROR = TRUE;
+		DAC_ERROR = true;
 	}
 	return retval;
 }
@@ -187,7 +190,7 @@ double get_adc_volts(int chan)
 	retval = comedi_data_read_n(it, subdev_ai, chan, range_ai, aref_ai, &data[0], 8);
 	if (retval < 0) {
 		comedi_perror("comedi_data_read in get_adc_volts");
-		ADC_ERROR = TRUE;
+		ADC_ERROR = true;
 		return 0.0;
 	}
 	bmc.adc_sample[chan] = data[0];
@@ -218,10 +221,9 @@ int get_dio_bit(int chan)
 	retval = comedi_data_read(it, subdev_di, chan, range_di, aref_dio, &data);
 	if (retval < 0) {
 		comedi_perror("comedi_data_read in get_dio_bits");
-		DIO_ERROR = TRUE;
+		DIO_ERROR = true;
 		return 0;
 	}
-	if (data != 0) data = 1;
 	return data;
 }
 
@@ -233,7 +235,7 @@ int put_dio_bit(int chan, int bit_data)
 	retval = comedi_data_write(it, subdev_do, chan, range_do, aref_dio, data);
 	if (retval < 0) {
 		comedi_perror("comedi_data_write in put_dio_bits");
-		DIO_ERROR = TRUE;
+		DIO_ERROR = true;
 		return -1;
 	}
 	return 0;
@@ -247,29 +249,29 @@ int init_dio(void)
 		it = comedi_open("/dev/comedi0");
 		if (it == NULL) {
 			comedi_perror("comedi_open");
-			DIO_OPEN = FALSE;
-			DEV_OPEN = FALSE;
+			DIO_OPEN = false;
+			DEV_OPEN = false;
 			return -1;
 		}
-		DEV_OPEN = TRUE;
+		DEV_OPEN = true;
 	}
 
 	subdev_di = comedi_find_subdevice_by_type(it, COMEDI_SUBD_DI, subdev_di);
 	if (subdev_di < 0) {
 		return -1;
-		DIO_OPEN = FALSE;
+		DIO_OPEN = false;
 	}
 	subdev_do = comedi_find_subdevice_by_type(it, COMEDI_SUBD_DO, subdev_do);
 	if (subdev_do < 0) {
 		return -1;
-		DIO_OPEN = FALSE;
+		DIO_OPEN = false;
 	}
 
 	printf("Subdev DI %i ", subdev_di);
 	channels_di = comedi_get_n_channels(it, subdev_di);
 	printf("Digital Channels %i ", channels_di);
 	maxdata_di = comedi_get_maxdata(it, subdev_di, i);
-	printf("Maxdata %i ", maxdata_dio);
+	printf("Maxdata %i ", maxdata_di);
 	ranges_di = comedi_get_n_ranges(it, subdev_di, i);
 	printf("Ranges %i \r\n", ranges_di);
 
@@ -280,50 +282,26 @@ int init_dio(void)
 	printf("Maxdata %i ", maxdata_do);
 	ranges_do = comedi_get_n_ranges(it, subdev_do, i);
 	printf("Ranges %i \r\n", ranges_do);
-	DIO_OPEN = TRUE;
+	DIO_OPEN = true;
 	return 0;
 }
 
-/*
-typedef struct bmcdata {
-    double pv_voltage,cc_voltage, input_voltage, b1_voltage, b2_voltage, system_voltage,logic_voltage;
-    double pv_current,cc_current,battery_current;
-    struct didata datain;
-    struct dodata dataout;
-    int32_t utc;
-}
- */
 int get_data_sample(void)
 {
-	int i;
 
-	bmc.pv_voltage = get_adc_volts(PVV_C);
-	bmc.cc_voltage = get_adc_volts(CCV_C);
-	//        bmc.input_voltage = lp_filter(get_adc_volts(INV_C), INV_C, TRUE);
-	//        bmc.b1_voltage = lp_filter(get_adc_volts(B1V_C), B1V_C, TRUE);
-	//        bmc.b2_voltage = lp_filter(get_adc_volts(B2V_C), B2V_C, TRUE);
-	//        bmc.pv_current = lp_filter(get_adc_volts(PVC_C), PVC_C, TRUE);
-	//        bmc.cc_current = lp_filter(get_adc_volts(CCC_C), CCC_C, TRUE);
-	//        bmc.battery_current = lp_filter(get_adc_volts(BAC_C), BAC_C, TRUE);
-	//    bmc.system_voltage = get_adc_volts(SYV_C);
-	//    bmc.logic_voltage = get_adc_volts(VD5_C);
+	//	bmc.pv_voltage = get_adc_volts(PVV_C);
+	//	bmc.cc_voltage = get_adc_volts(CCV_C);
 
-	bmc.datain.D0 = get_dio_bit(0); // GPIO 25
-	bmc.datain.D1 = get_dio_bit(1); // GPIO 4
-	bmc.datain.D2 = get_dio_bit(2); // read output bit wpi 0
-	bmc.datain.D3 = get_dio_bit(3); // read output bit wpi 1
-	//    bmc.datain.D4 = get_dio_bit(12);
-	//    bmc.datain.D5 = get_dio_bit(13);
-	//    bmc.datain.D6 = get_dio_bit(15); // GPIO 14 
-	//    bmc.datain.D7 = get_dio_bit(16); // GPIO 15 
-	put_dio_bit(0, bmc.dataout.d.D0); // GPIO 17
-	put_dio_bit(1, bmc.dataout.d.D1); // GPIO 18
-	put_dio_bit(2, bmc.dataout.d.D2); // GPIO 21
-	put_dio_bit(3, bmc.dataout.d.D3); // GPIO 22
+	bmc.datain.D0 = get_dio_bit(0);
+	put_dio_bit(0, bmc.dataout.d.D0);
+	put_dio_bit(1, bmc.dataout.d.D1);
+	put_dio_bit(2, bmc.dataout.d.D2);
+	put_dio_bit(3, bmc.dataout.d.D3);
 	put_dio_bit(4, bmc.dataout.d.D4);
 	put_dio_bit(5, bmc.dataout.d.D5);
 	put_dio_bit(6, bmc.dataout.d.D6);
 	put_dio_bit(7, bmc.dataout.d.D7);
+	return 0;
 }
 
 double lp_filter(double new, int bn, int slow) // low pass filter, slow rate of change for new, LPCHANC channels, slow/fast select (-1) to zero channel

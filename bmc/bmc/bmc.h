@@ -11,9 +11,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define TRUE    1
-#define FALSE   0
+#include <stdbool.h>
 
 	struct didata {
 		uint32_t D0 : 1; // 
@@ -24,7 +22,7 @@ extern "C" {
 		uint32_t D5 : 1; // 
 		uint32_t D6 : 1; // 
 		uint32_t D7 : 1; // 
-	} volatile ditype;
+	} ditype;
 
 	union dio_buf_type {
 		uint32_t dio_buf;
@@ -40,7 +38,9 @@ extern "C" {
 		int32_t dac_sample[32];
 		int32_t utc;
 	}
-	volatile bmctype;
+	bmctype;
+
+	void led_lightshow(int);
 
 #ifdef __cplusplus
 }
