@@ -57,7 +57,7 @@ uint8_t sine_wave[256] = {
 int main(int argc, char *argv[])
 {
 	int blink[3], flip[2] = {0, 0}, z = 0;
-	int do_ao_only = TRUE;
+	int do_ao_only = FALSE;
 	uint8_t i = 0, j = 75;
 
 	if (do_ao_only) {
@@ -87,14 +87,14 @@ int main(int argc, char *argv[])
 			printf("Missing Digital subdevice(s)\n");
 			return -1;
 		}
-		set_dio_output(0); // gpio 17
-		set_dio_output(1); // gpio 18
-		set_dio_output(2); // gpio 21/27
-		set_dio_output(3); // gpio 22
-		set_dio_output(4); // gpio 23
-		set_dio_output(5); // gpio 24
-		set_dio_input(6); // gpio 25
-		set_dio_input(7); // gpio 4
+//		set_dio_output(0); // gpio 17
+//		set_dio_output(1); // gpio 18
+//		set_dio_output(2); // gpio 21/27
+//		set_dio_output(3); // gpio 22
+//		set_dio_output(4); // gpio 23
+//		set_dio_output(5); // gpio 24
+//		set_dio_input(6); // gpio 25
+//		set_dio_input(7); // gpio 4
 		put_dio_bit(0, 1);
 		put_dio_bit(1, 1);
 		blink[2] = 0;
