@@ -14,10 +14,15 @@ int range_ao = 0; /* more on this later */
 int aref_ao = AREF_GROUND; /* more on this later */
 int maxdata_ao, ranges_ao, channels_ao;
 
-int subdev_dio = 0; /* change this to your input subdevice */
-int chan_dio = 0; /* change this to your channel */
-int range_dio = 0; /* more on this later */
-int maxdata_dio, ranges_dio, channels_dio, datain_dio;
+int subdev_di = 0; /* change this to your input subdevice */
+int chan_di = 0; /* change this to your channel */
+int range_di = 0; /* more on this later */
+int maxdata_di, ranges_di, channels_di, datain_di;
+
+int subdev_do = 0; /* change this to your input subdevice */
+int chan_do = 0; /* change this to your channel */
+int range_do = 0; /* more on this later */
+int maxdata_do, ranges_do, channels_do, datain_do;
 
 comedi_t *it;
 comedi_range *ad_range, *da_range;
@@ -210,7 +215,7 @@ int get_dio_bit(int chan)
 	lsampl_t data;
 	int retval;
 
-	retval = comedi_data_read(it, subdev_dio, chan, range_dio, aref_dio, &data);
+	retval = comedi_data_read(it, subdev_di, chan, range_di, aref_dio, &data);
 	if (retval < 0) {
 		comedi_perror("comedi_data_read in get_dio_bits");
 		DIO_ERROR = TRUE;
@@ -225,7 +230,7 @@ int put_dio_bit(int chan, int bit_data)
 	lsampl_t data = bit_data;
 	int retval;
 
-	retval = comedi_data_write(it, subdev_dio, chan, range_dio, aref_dio, data);
+	retval = comedi_data_write(it, subdev_do, chan, range_do, aref_dio, data);
 	if (retval < 0) {
 		comedi_perror("comedi_data_write in put_dio_bits");
 		DIO_ERROR = TRUE;
@@ -249,19 +254,32 @@ int init_dio(void)
 		DEV_OPEN = TRUE;
 	}
 
-	subdev_dio = comedi_find_subdevice_by_type(it, COMEDI_SUBD_DIO, subdev_dio);
-	if (subdev_dio < 0) {
+	subdev_di = comedi_find_subdevice_by_type(it, COMEDI_SUBD_DI, subdev_di);
+	if (subdev_di < 0) {
+		return -1;
+		DIO_OPEN = FALSE;
+	}
+	subdev_do = comedi_find_subdevice_by_type(it, COMEDI_SUBD_DO, subdev_do);
+	if (subdev_do < 0) {
 		return -1;
 		DIO_OPEN = FALSE;
 	}
 
-	printf("Subdev DIO %i ", subdev_dio);
-	channels_dio = comedi_get_n_channels(it, subdev_dio);
-	printf("Digital Channels %i ", channels_dio);
-	maxdata_dio = comedi_get_maxdata(it, subdev_dio, i);
+	printf("Subdev DI %i ", subdev_di);
+	channels_di = comedi_get_n_channels(it, subdev_di);
+	printf("Digital Channels %i ", channels_di);
+	maxdata_di = comedi_get_maxdata(it, subdev_di, i);
 	printf("Maxdata %i ", maxdata_dio);
-	ranges_dio = comedi_get_n_ranges(it, subdev_dio, i);
-	printf("Ranges %i \r\n", ranges_dio);
+	ranges_di = comedi_get_n_ranges(it, subdev_di, i);
+	printf("Ranges %i \r\n", ranges_di);
+
+	printf("Subdev DO %i ", subdev_do);
+	channels_do = comedi_get_n_channels(it, subdev_do);
+	printf("Digital Channels %i ", channels_do);
+	maxdata_do = comedi_get_maxdata(it, subdev_do, i);
+	printf("Maxdata %i ", maxdata_do);
+	ranges_do = comedi_get_n_ranges(it, subdev_do, i);
+	printf("Ranges %i \r\n", ranges_do);
 	DIO_OPEN = TRUE;
 	return 0;
 }
@@ -290,10 +308,10 @@ int get_data_sample(void)
 	//    bmc.system_voltage = get_adc_volts(SYV_C);
 	//    bmc.logic_voltage = get_adc_volts(VD5_C);
 
-	bmc.datain.D0 = get_dio_bit(6); // GPIO 25
-	bmc.datain.D1 = get_dio_bit(7); // GPIO 4
-	bmc.datain.D2 = get_dio_bit(0); // read output bit wpi 0
-	bmc.datain.D3 = get_dio_bit(1); // read output bit wpi 1
+	bmc.datain.D0 = get_dio_bit(0); // GPIO 25
+	bmc.datain.D1 = get_dio_bit(1); // GPIO 4
+	bmc.datain.D2 = get_dio_bit(2); // read output bit wpi 0
+	bmc.datain.D3 = get_dio_bit(3); // read output bit wpi 1
 	//    bmc.datain.D4 = get_dio_bit(12);
 	//    bmc.datain.D5 = get_dio_bit(13);
 	//    bmc.datain.D6 = get_dio_bit(15); // GPIO 14 
