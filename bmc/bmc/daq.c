@@ -267,7 +267,7 @@ int init_dio(void)
 		DIO_OPEN = false;
 	}
 
-	printf("Subdev DI %i ", subdev_di);
+	printf("Subdev DI  %i ", subdev_di);
 	channels_di = comedi_get_n_channels(it, subdev_di);
 	printf("Digital Channels %i ", channels_di);
 	maxdata_di = comedi_get_maxdata(it, subdev_di, i);
@@ -275,7 +275,7 @@ int init_dio(void)
 	ranges_di = comedi_get_n_ranges(it, subdev_di, i);
 	printf("Ranges %i \r\n", ranges_di);
 
-	printf("Subdev DO %i ", subdev_do);
+	printf("Subdev DO  %i ", subdev_do);
 	channels_do = comedi_get_n_channels(it, subdev_do);
 	printf("Digital Channels %i ", channels_do);
 	maxdata_do = comedi_get_maxdata(it, subdev_do, i);
