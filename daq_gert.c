@@ -433,7 +433,11 @@ static const uint32_t CONV_SPEED_FIX_FREERUN = 1; /* usecs: round it up to ~30us
 static const uint32_t CONV_SPEED_FIX_FAST = 9; /* used for the MCP3002 ADC */
 static const uint32_t CONV_ADS8330 = 0; /* used for the ADS8330 ADC */
 static const uint32_t MAX_BOARD_RATE = 1000000000;
-static const uint32_t CS_CHANGE_DELAY_USECS = 1; // spi transfer spacing 1 equals zero microseconds of delay, 0 equals the default of 10us
+static const struct spi_delay  CS_CHANGE_DELAY_USECS = {
+.value=1,
+.unit=0
+};
+// spi transfer spacing 1 equals zero microseconds of delay, 0 equals the default of 10us
 static const uint32_t CSnA = 0; /* GPIO 8  Gertboard ADC */
 static const uint32_t CSnB = 1; /* GPIO 7  Gertboard DAC */
 
@@ -1578,19 +1582,19 @@ static void daqgert_ai_set_chan_range_ads8330(struct comedi_device *dev,
 		pdata->t[0].tx_buf = &pdata->tx_buff[0];
 		pdata->t[0].rx_buf = &pdata->rx_buff[0];
 		pdata->t[0].delay_usecs = 0;
-		pdata->t[0].cs_change_usecs = CS_CHANGE_DELAY_USECS;
+		pdata->t[0].cs_change_delay = CS_CHANGE_DELAY_USECS;
 		pdata->t[1].cs_change = false;
 		pdata->t[1].len = 2;
 		pdata->t[1].tx_buf = &pdata->tx_buff[2];
 		pdata->t[1].rx_buf = &pdata->rx_buff[2];
 		pdata->t[1].delay_usecs = 0;
-		pdata->t[1].cs_change_usecs = CS_CHANGE_DELAY_USECS;
+		pdata->t[1].cs_change_delay = CS_CHANGE_DELAY_USECS;
 		pdata->t[2].cs_change = false;
 		pdata->t[2].len = 2;
 		pdata->t[2].tx_buf = &pdata->tx_buff[4];
 		pdata->t[2].rx_buf = &pdata->rx_buff[4];
 		pdata->t[2].delay_usecs = 0;
-		pdata->t[2].cs_change_usecs = CS_CHANGE_DELAY_USECS;
+		pdata->t[2].cs_change_delay = CS_CHANGE_DELAY_USECS;
 		spi_message_init_with_transfers(&m, &pdata->t[0], 2);
 		spi_bus_lock(spi->master);
 		spi_sync_locked(spi, &m);
@@ -1694,7 +1698,7 @@ static void daqgert_ao_put_samples(struct comedi_device *dev,
 	pdata->t[0].rx_buf = &pdata->rx_buff[0];
 	pdata->t[0].delay_usecs = 0;
 #ifdef CS_CHANGE_USECS
-	pdata->t[0].cs_change_usecs = CS_CHANGE_DELAY_USECS;
+	pdata->t[0].cs_change_delay = CS_CHANGE_DELAY_USECS;
 #endif
 	pdata->t[1].cs_change = false;
 	pdata->t[1].len = 2;
@@ -1702,7 +1706,7 @@ static void daqgert_ao_put_samples(struct comedi_device *dev,
 	pdata->t[1].rx_buf = &pdata->rx_buff[2];
 	pdata->t[1].delay_usecs = 0;
 #ifdef CS_CHANGE_USECS
-	pdata->t[1].cs_change_usecs = CS_CHANGE_DELAY_USECS;
+	pdata->t[1].cs_change_delay = CS_CHANGE_DELAY_USECS;
 #endif
 	spi_message_init_with_transfers(&m, &pdata->t[0], 2);
 	spi_bus_lock(spi->master);
@@ -1773,7 +1777,7 @@ static int32_t daqgert_ai_get_sample(struct comedi_device *dev,
 			pdata->t[0].len = 2;
 			pdata->t[0].cs_change = false;
 			pdata->t[0].delay_usecs = 0;
-			pdata->t[0].cs_change_usecs = CS_CHANGE_DELAY_USECS;
+			pdata->t[0].cs_change_delay = CS_CHANGE_DELAY_USECS;
 			pdata->t[0].tx_buf = &pdata->tx_buff[0];
 			pdata->t[0].rx_buf = &pdata->rx_buff[0];
 			spi_message_init_with_transfers(&m,
@@ -2118,7 +2122,7 @@ static int32_t transfer_to_hunk_buf(struct comedi_device *dev,
 		 * cs_change_usecs is a optional patch to spi.h and spi.c
 		 */
 #ifdef CS_CHANGE_USECS
-		pdata->t[i].cs_change_usecs = CS_CHANGE_DELAY_USECS;
+		pdata->t[i].cs_change_delay = CS_CHANGE_DELAY_USECS;
 #endif
 		tx_buff += len; /* move to the next data set */
 		rx_buff += len;
