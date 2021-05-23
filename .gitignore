@@ -40,3 +40,4 @@ Module.symvers
 /BLECM/blecm_dk.X/nbproject/private/
 /BLECM/blecm_dk.X/build/default/
 /bmc/bmc/build/
+/hidapi/linux_test/hidapi_test/build/
