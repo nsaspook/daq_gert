@@ -123,7 +123,8 @@ int main(int argc, char *argv[])
 
 		while (1) {
 			get_data_sample();
-			led_lightshow(0);
+			if (!bmc.datain.D0)
+				led_lightshow(4);
 		}
 	}
 	return 0;

@@ -24,6 +24,8 @@ extern "C" {
 #define BAC_C   10    
 
 #define LPCHANC        16
+	
+#define JUST_BITS	false
 
 #include <stdint.h>
 #include <comedilib.h>

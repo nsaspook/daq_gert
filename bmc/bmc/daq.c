@@ -30,10 +30,16 @@ int maxdata_do, ranges_do, channels_do, datain_do;
 int subdev_dio; /* change this to your input subdevice */
 int aref_dio; /* more on this later */
 
+int subdev_counter; /* change this to your input subdevice */
+int chan_counter = 0; /* change this to your channel */
+int range_counter = 0; /* more on this later */
+int maxdata_counter, ranges_counter, channels_counter, datain_counter;
+
 comedi_t *it;
 comedi_range *ad_range, *da_range;
 bool ADC_OPEN = false, DIO_OPEN = false, ADC_ERROR = false, DEV_OPEN = false,
-	DIO_ERROR = false, HAS_AO = false, DAC_ERROR = false;
+	DIO_ERROR = false, HAS_AO = false, DAC_ERROR = false, PWM_OPEN = false,
+	PWM_ERROR = false;
 
 int init_daq(double min_range, double max_range, int range_update)
 {
@@ -270,6 +276,12 @@ int init_dio(void)
 		DIO_OPEN = false;
 	}
 
+	subdev_counter = comedi_find_subdevice_by_type(it, COMEDI_SUBD_COUNTER, subdev_counter);
+	if (subdev_counter < 0) {
+		return -1;
+		PWM_OPEN = false;
+	}
+
 	printf("Subdev DI  %i ", subdev_di);
 	channels_di = comedi_get_n_channels(it, subdev_di);
 	printf("Digital Channels %i ", channels_di);
@@ -285,25 +297,40 @@ int init_dio(void)
 	printf("Maxdata %i ", maxdata_do);
 	ranges_do = comedi_get_n_ranges(it, subdev_do, i);
 	printf("Ranges %i \r\n", ranges_do);
+
+	printf("Subdev COU %i ", subdev_counter);
+	channels_counter = comedi_get_n_channels(it, subdev_counter);
+	printf("Digital Channels %i ", channels_counter);
+	maxdata_counter = comedi_get_maxdata(it, subdev_counter, i);
+	printf("Maxdata %i ", maxdata_counter);
+	ranges_counter = comedi_get_n_ranges(it, subdev_counter, i);
+	printf("Ranges %i \r\n", ranges_counter);
 	DIO_OPEN = true;
 	return 0;
 }
 
 int get_data_sample(void)
 {
-
+	unsigned int obits;
 	//	bmc.pv_voltage = get_adc_volts(PVV_C);
 	//	bmc.cc_voltage = get_adc_volts(CCV_C);
 
 	bmc.datain.D0 = get_dio_bit(0);
-	put_dio_bit(0, bmc.dataout.d.D0);
-	put_dio_bit(1, bmc.dataout.d.D1);
-	put_dio_bit(2, bmc.dataout.d.D2);
-	put_dio_bit(3, bmc.dataout.d.D3);
-	put_dio_bit(4, bmc.dataout.d.D4);
-	put_dio_bit(5, bmc.dataout.d.D5);
-	put_dio_bit(6, bmc.dataout.d.D6);
-	put_dio_bit(7, bmc.dataout.d.D7);
+
+	if (JUST_BITS) { // send I/O bit by bit
+		put_dio_bit(0, bmc.dataout.d.D0);
+		put_dio_bit(1, bmc.dataout.d.D1);
+		put_dio_bit(2, bmc.dataout.d.D2);
+		put_dio_bit(3, bmc.dataout.d.D3);
+		put_dio_bit(4, bmc.dataout.d.D4);
+		put_dio_bit(5, bmc.dataout.d.D5);
+		put_dio_bit(6, bmc.dataout.d.D6);
+		put_dio_bit(7, bmc.dataout.d.D7);
+	} else { // send I/O as a byte mask
+		obits = bmc.dataout.dio_buf;
+		comedi_dio_bitfield2(it, subdev_do, 0xff, &obits, 0);
+	}
+
 	return 0;
 }
 
