@@ -4,7 +4,6 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>bmc.h</itemPath>
       <itemPath>daq.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -29,9 +28,6 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
-  <sourceRootList>
-    <Elem>..</Elem>
-  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Debug" type="1">
@@ -49,8 +45,6 @@
         </linkerTool>
       </compileType>
       <item path="../bmc.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="bmc.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="daq.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -85,8 +79,6 @@
         </linkerTool>
       </compileType>
       <item path="../bmc.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="bmc.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="daq.c" ex="false" tool="0" flavor2="0">
       </item>

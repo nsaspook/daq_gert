@@ -13,8 +13,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include <comedilib.h>
-#include "bmc/bmc.h"
 #include "bmc/daq.h"
+
+
+
+void led_lightshow(int);
 
 volatile struct bmcdata bmc; /* DIO buffer */
 
@@ -115,6 +118,8 @@ int main(int argc, char *argv[])
 			printf("Missing Digital subdevice(s)\n");
 			return -1;
 		}
+		
+		set_dac_raw(0,255); // show max Voltage
 
 		while (1) {
 			get_data_sample();

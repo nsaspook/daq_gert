@@ -1,6 +1,9 @@
-#include "daq.h"
 #include <stdio.h> /* for printf() */
 #include <unistd.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <comedilib.h>
+#include "daq.h"
 
 int subdev_ai = 0; /* change this to your input subdevice */
 int chan_ai = 0; /* change this to your channel */
