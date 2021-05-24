@@ -5,7 +5,7 @@
  */
 
 #include "tic12400.h"
-#include "./../tictest/tictest.h"
+#include "tictest.h"
 
 /*
  * command structure data

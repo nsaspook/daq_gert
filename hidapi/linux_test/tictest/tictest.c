@@ -49,7 +49,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <hidapi/hidapi.h>
-#include "./../tictest/tictest.h"
+#include "tictest.h"
 #include "tic12400.h"
 
 unsigned char buf[64]; // command buffer writen to MCP2210

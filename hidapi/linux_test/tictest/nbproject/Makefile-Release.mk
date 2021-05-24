@@ -35,8 +35,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/ae6fe64b/tic12400.o \
-	${OBJECTDIR}/_ext/ae6fe64b/tictest.o
+	${OBJECTDIR}/tic12400.o \
+	${OBJECTDIR}/tictest.o
 
 
 # C Compiler Flags
@@ -63,15 +63,15 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/tictest: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/tictest ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/_ext/ae6fe64b/tic12400.o: ../hidapi_test/tic12400.c
-	${MKDIR} -p ${OBJECTDIR}/_ext/ae6fe64b
+${OBJECTDIR}/tic12400.o: tic12400.c
+	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 `pkg-config --cflags hidapi-hidraw` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/ae6fe64b/tic12400.o ../hidapi_test/tic12400.c
+	$(COMPILE.c) -O2 `pkg-config --cflags hidapi-hidraw` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/tic12400.o tic12400.c
 
-${OBJECTDIR}/_ext/ae6fe64b/tictest.o: ../hidapi_test/tictest.c
-	${MKDIR} -p ${OBJECTDIR}/_ext/ae6fe64b
+${OBJECTDIR}/tictest.o: tictest.c
+	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 `pkg-config --cflags hidapi-hidraw` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/ae6fe64b/tictest.o ../hidapi_test/tictest.c
+	$(COMPILE.c) -O2 `pkg-config --cflags hidapi-hidraw` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/tictest.o tictest.c
 
 # Subprojects
 .build-subprojects:

@@ -4,7 +4,8 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>../hidapi_test/tic12400.h</itemPath>
+      <itemPath>tic12400.h</itemPath>
+      <itemPath>tictest.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -13,8 +14,8 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../hidapi_test/tic12400.c</itemPath>
-      <itemPath>../hidapi_test/tictest.c</itemPath>
+      <itemPath>tic12400.c</itemPath>
+      <itemPath>tictest.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -41,11 +42,13 @@
           <standard>10</standard>
         </cTool>
       </compileType>
-      <item path="../hidapi_test/tic12400.c" ex="false" tool="0" flavor2="0">
+      <item path="tic12400.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="../hidapi_test/tic12400.h" ex="false" tool="3" flavor2="0">
+      <item path="tic12400.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../hidapi_test/tictest.c" ex="false" tool="0" flavor2="0">
+      <item path="tictest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tictest.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release" type="1">
@@ -74,11 +77,13 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <item path="../hidapi_test/tic12400.c" ex="false" tool="0" flavor2="0">
+      <item path="tic12400.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="../hidapi_test/tic12400.h" ex="false" tool="3" flavor2="0">
+      <item path="tic12400.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../hidapi_test/tictest.c" ex="false" tool="0" flavor2="0">
+      <item path="tictest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tictest.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>
