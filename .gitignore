@@ -41,3 +41,5 @@ Module.symvers
 /BLECM/blecm_dk.X/build/default/
 /bmc/bmc/build/
 /hidapi/linux_test/hidapi_test/build/
+/hidapi/linux_test/tictest/build/
+/hidapi/linux_test/tictest/dist/

@@ -5,6 +5,7 @@
  */
 
 #include "tic12400.h"
+#include "./../tictest/tictest.h"
 
 /*
  * command structure data
@@ -98,7 +99,7 @@ const ticbuf_type ticreset1a = {
 /*
  * global status and value registers
  */
-volatile uint32_t tic12400_status = 0, tic12400_counts = 0,tic12400_value_counts = 0;
+volatile uint32_t tic12400_status = 0, tic12400_counts = 0, tic12400_value_counts = 0;
 volatile uint32_t tic12400_value = 0;
 ticread_type *ticstatus = (ticread_type*) & tic12400_status;
 ticread_type *ticvalue = (ticread_type*) & tic12400_value;
@@ -111,7 +112,6 @@ volatile bool tic12400_parity_status = false;
  */
 void tic12400_reset(void)
 {
-	TIC12400_EN0_Set();
 	tic12400_wr(&ticreset1a, 2);
 }
 
@@ -122,7 +122,6 @@ void tic12400_reset(void)
  */
 bool tic12400_init(void)
 {
-	TIC12400_EN0_Set();
 	tic12400_status = tic12400_wr(&ticstat02, 0); // get status to check for proper operation
 
 	if ((ticstatus->data > por_bit) || !ticstatus->por) { // check for any high bits beyond POR bits set
@@ -150,8 +149,8 @@ bool tic12400_init(void)
 	/*
 	 * configure event handler for tic12400 interrupts
 	 */
-	EVIC_ExternalInterruptCallbackRegister(EXTERNAL_INT_2, tic12400_interrupt, 0);
-	EVIC_ExternalInterruptEnable(EXTERNAL_INT_2);
+	//	EVIC_ExternalInterruptCallbackRegister(EXTERNAL_INT_2, tic12400_interrupt, 0);
+	//	EVIC_ExternalInterruptEnable(EXTERNAL_INT_2);
 
 fail:
 	return !tic12400_init_fail; // flip to return true if NO configuration failures
@@ -165,16 +164,14 @@ uint32_t tic12400_wr(const ticbuf_type * buffer, uint16_t del)
 {
 	static uint32_t rbuffer = 0;
 
-	TIC12400_EN0_Clear();
-	SPI5_WriteRead((void*) buffer, 4, &rbuffer, 4);
-	TIC12400_EN0_Set();
+	SPI5_WriteRead((void*) buffer, 4, (void*) &rbuffer, 4);
 
 	if (ticvalue->parity_fail) { // check for command parity errors
 		tic12400_parity_status = true;
 	};
 
 	if (del) {
-		delay_ms(del);
+		sleep_us(del * 1000);
 	}
 
 	return rbuffer;
@@ -191,15 +188,15 @@ uint32_t tic12400_get_sw(void)
 	}
 
 	if (tic12400_value & (raw_mask_0)) {
-		BSP_LED1_Clear();
+		//		BSP_LED1_Clear();
 	} else {
-		BSP_LED1_Set();
+		//		BSP_LED1_Set();
 	}
 
 	if (tic12400_value & (raw_mask_11)) {
-		BSP_LED2_Clear();
+		//		BSP_LED2_Clear();
 	} else {
-		BSP_LED2_Set();
+		//		BSP_LED2_Set();
 	}
 
 	tic12400_event = false;
@@ -229,10 +226,10 @@ void tic12400_interrupt(uint32_t a, uintptr_t b)
 {
 	tic12400_value = tic12400_wr(&ticread05, 0); // read switch
 	tic12400_status = tic12400_wr(&ticstat02, 0); // read status
-	RESET_LED_Toggle();
+	//	RESET_LED_Toggle();
 
 	if (ticvalue->ssc && tic12400_parity(tic12400_value)) { // only trigger on switch state change
-		BSP_LED3_Toggle();
+		//		BSP_LED3_Toggle();
 		tic12400_event = true;
 		tic12400_value_counts++;
 	}

@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>../hidapi_test/tic12400.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -12,6 +13,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>../hidapi_test/tic12400.c</itemPath>
       <itemPath>../hidapi_test/tictest.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -39,6 +41,10 @@
           <standard>10</standard>
         </cTool>
       </compileType>
+      <item path="../hidapi_test/tic12400.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../hidapi_test/tic12400.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../hidapi_test/tictest.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>
@@ -68,6 +74,10 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="../hidapi_test/tic12400.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../hidapi_test/tic12400.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../hidapi_test/tictest.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>

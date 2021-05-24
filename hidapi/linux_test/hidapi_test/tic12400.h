@@ -1,9 +1,9 @@
 #ifndef TIC12400_H    /* Guard against multiple inclusion */
 #define TIC12400_H
 
-#include "vcan.h"
-#include "dio.h"
-#include "timers.h"
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 #define TIC12400_DRIVER	"V0.4"
 

@@ -41,18 +41,16 @@
 
  *******************************************************/
 
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
 #include <stdlib.h>
 #include <hidapi/hidapi.h>
-
-// Headers needed for sleeping.
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <unistd.h>
-#endif
+#include "./../tictest/tictest.h"
+#include "tic12400.h"
 
 unsigned char buf[64]; // command buffer writen to MCP2210
 unsigned char rbuf[64]; // response buffer read from MCP2210
@@ -64,6 +62,40 @@ hid_device *handle; // handle of device returned by hid_open()
 #define MAX_STR 255
 wchar_t wstr[MAX_STR]; // buffer for id settings strings from MPC2210
 struct hid_device_info *devs, *cur_dev;
+
+
+int nanosleep(const struct timespec *, struct timespec *);
+
+void sleep_us(unsigned long microseconds)
+{
+	struct timespec ts;
+	ts.tv_sec = microseconds / 1000000; // whole seconds
+	ts.tv_nsec = (microseconds % 1000000) * 1000; // remainder, in nanoseconds
+	nanosleep(&ts, NULL);
+}
+
+bool SPI5_WriteRead(unsigned char* pTransmitData, size_t txSize, unsigned char* pReceiveData, size_t rxSize)
+{
+	buf[0] = 0x42; // transfer SPI data command
+	buf[1] = 4; // no. of SPI bytes to transfer
+	buf[4] = pTransmitData[0];
+	buf[5] = pTransmitData[1];
+	buf[6] = pTransmitData[2];
+	buf[7] = pTransmitData[3];
+	res = hid_write(handle, buf, 8);
+	if (res < 0) {
+		printf("Error: %ls\n", hid_error(handle));
+		return false;
+	}
+	sleep_us(5000);
+
+	res = hid_read(handle, rbuf, 8); // read the 0x32 response from MCP2210
+	pReceiveData[0] = rbuf[4];
+	pReceiveData[1] = rbuf[5];
+	pReceiveData[2] = rbuf[6];
+	pReceiveData[3] = rbuf[7];
+	return true;
+}
 
 int main(int argc, char* argv[])
 {
@@ -146,7 +178,7 @@ int main(int argc, char* argv[])
 	memset(buf, 0, 17); // buf initialized to zeros
 
 	buf[0] = 0x21; // command 21 - set GPIO pin's functions
-	buf[5] = 0x01; // GPIO 1 set to 0x01 - SPI CS
+	buf[9] = 0x01; // GPIO 5 set to 0x01 - SPI CS
 
 	// function: 0x00 = gpio, 0x01 = CS, 0x02 = dedicated function
 	// with buf all zeros, all 9 GPIO pins are set to GPIO's 
@@ -242,7 +274,7 @@ int main(int argc, char* argv[])
 	buf[9] = 0x01;
 	buf[10] = 0x00; // set CS active values to 0
 	buf[11] = 0x00;
-	buf[18] = 0x03; // set no of bytes to transfer = 3
+	buf[18] = 0x04; // set no of bytes to transfer = 3
 
 	res = hid_write(handle, buf, 21); // write setting into MCP2210
 	if (res < 0) {
@@ -263,40 +295,18 @@ int main(int argc, char* argv[])
 	}
 
 	res = hid_read(handle, rbuf, 21); // read the 0x41 response from MCP2210
-	printf("SPI MCP3204 transfer settings\n   "); // Print out the 0x41 returned buffer.
+	printf("SPI TIC12400 transfer settings\n   "); // Print out the 0x41 returned buffer.
 	for (int i = 0; i < res; i++) {
 		printf("%02hhx ", rbuf[i]);
 	}
 	printf("\n");
 
-	//---------------- MCP3204 A/D converter operations --------------
+	tic12400_reset();
+	tic12400_init();
 
-	memset(buf, 0, 17); // buf initialized to zeros
-	memset(rbuf, 0, sizeof(rbuf)); // rbuf initialized to all zeros  
-
-	buf[0] = 0x42; // transfer SPI data command
-	buf[1] = 3; // no. of SPI bytes to transfer
-	buf[4] = 0x06; // MSB sent first - single ended. channel 0,  SGL/DIF = 1; channel D2,D1,D0 = 0;
-
-	for (int i = 0; i < 2; i++) { // done twice as A hack to get rbuf[3] = 0x10 "spi transfer finished" response 5
-		res = hid_write(handle, buf, 7); // write buf[0] thru  buf[7] 
-		usleep(4000); // 4ms delay for conversion to finish and send result
-		res = hid_read(handle, rbuf, 7); // read 0x42 response data sent from MCP3008 (includes A/D voltage reading)
-//		if (rbuf[3]==0x10)
-//			break;
+	while (1) {
+		tic12400_interrupt(0, 0);
 	}
-
-	printf("SPI transfer response\n   "); // Print out the 0x42 returned buffer.
-	for (int i = 0; i < res; i++) {
-		printf("%02hhx ", rbuf[i]);
-	}
-
-	// -------------- Write MCP3204 A/D conversion --------
-	char LCDbuf[15]; // buffer for volts converted to a decimal string
-	unsigned int volts = (((rbuf[5]&0xf) << 8) | rbuf[6]); // put A/D voltage read into variable volts            
-	// 12 bit A/D result is in buf[4] - 4 bits, and buf[5] - 8 bits
-	sprintf(LCDbuf, "MCP3204 chan 0 volts = %3.2f", volts / 4096.0 * 2.5 * 2); // convert volts 
-	printf("\n%s\n\n", LCDbuf); // also send the voltage string to the terminal  
 
 	//-------------- Set GPIO pin function (0x21) -------------
 	memset(buf, 0, 17); // buf initialized to zeros
@@ -372,14 +382,14 @@ int main(int argc, char* argv[])
 				buf[6] = 1 << i;
 				res = hid_write(handle, buf, 7);
 				res = hid_read(handle, rbuf, 7);
-				usleep(20000ul);
+				sleep_us(20000ul);
 			}
 			//lights up LED7 through LED0 one by one
 			for (int i = 0; i < 8; i++) {
 				buf[6] = 0x80 >> i;
 				res = hid_write(handle, buf, 7);
 				res = hid_read(handle, rbuf, 7);
-				usleep(20000ul);
+				sleep_us(20000ul);
 			}
 		}
 	}

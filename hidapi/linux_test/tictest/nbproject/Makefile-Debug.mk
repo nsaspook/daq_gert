@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/ae6fe64b/tic12400.o \
 	${OBJECTDIR}/_ext/ae6fe64b/tictest.o
 
 
@@ -61,6 +62,11 @@ LDLIBSOPTIONS=
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/tictest: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/tictest ${OBJECTFILES} ${LDLIBSOPTIONS}
+
+${OBJECTDIR}/_ext/ae6fe64b/tic12400.o: ../hidapi_test/tic12400.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/ae6fe64b
+	${RM} "$@.d"
+	$(COMPILE.c) -g -std=c11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/ae6fe64b/tic12400.o ../hidapi_test/tic12400.c
 
 ${OBJECTDIR}/_ext/ae6fe64b/tictest.o: ../hidapi_test/tictest.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/ae6fe64b

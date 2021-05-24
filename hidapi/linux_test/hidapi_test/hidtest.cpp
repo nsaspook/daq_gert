@@ -40,7 +40,7 @@
 	 buf[5] bit 0 = GPIO 8   
 
  *******************************************************/
-
+#include <unistd.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
