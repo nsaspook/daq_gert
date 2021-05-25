@@ -19,8 +19,14 @@ extern "C" {
 #endif
 #include <time.h>
 
-void sleep_us(unsigned long);
-bool SPI5_WriteRead (unsigned char* pTransmitData, size_t txSize, unsigned char* pReceiveData, size_t rxSize);
+	void sleep_us(unsigned long);
+	bool SPI5_WriteRead(unsigned char* pTransmitData, size_t txSize, unsigned char* pReceiveData, size_t rxSize);
+	void setup_tic12400_transfer(void);
+	void get_tic12400_transfer(void);
+	void setup_mcp23s08_transfer(void);
+	void get_mcp23s08_transfer(void);
+	void mcp23s08_init(void);
+	bool hidrawapi_mcp2210_init(void);
 
 #ifdef __cplusplus
 }
