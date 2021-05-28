@@ -18,7 +18,16 @@
 extern "C" {
 #endif
 #include <time.h>
+	#include <hidapi/hidapi.h>
 
+#define OPERATION_SUCCESSFUL 0
+#define ERROR_UNABLE_TO_OPEN_DEVICE -1
+#define ERROR_UNABLE_TO_WRITE_TO_DEVICE -2
+#define ERROR_UNABLE_TO_READ_FROM_DEVICE -3
+#define ERROR_INVALID_DEVICE_HANDLE -99
+
+	void cbufs();
+	int SendUSBCmd(hid_device *, uint8_t *, uint8_t *);
 	void sleep_us(unsigned long);
 	bool SPI5_WriteRead(unsigned char* pTransmitData, size_t txSize, unsigned char* pReceiveData, size_t rxSize);
 	void setup_tic12400_transfer(void);
