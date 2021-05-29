@@ -333,7 +333,7 @@ void get_tic12400_transfer(void)
 
 int main(int argc, char* argv[])
 {
-	uint32_t fspeed = 20000;
+	uint32_t fspeed = 20000; // led movement speed
 
 	/*
 	 * setup the hidraw* device to communicate with the MCP2210
@@ -342,7 +342,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	cancel_spi_transfer();
+	cancel_spi_transfer(); // cleanup
 	/*
 	 * handle the TIC12400 chip MCP2210 SPI setting
 	 */
@@ -350,19 +350,21 @@ int main(int argc, char* argv[])
 	get_tic12400_transfer();
 
 	/*
-	 * init and read 24 switch inputs from the TIC12400 chip
+	 * init and program 24 switch inputs from the TIC12400 chip
 	 */
 	tic12400_reset();
-
 	if (!tic12400_init()) {
 		printf("tic12400_init failed\n");
 	}
 
+	/*
+	 * we need to change SPI speed, mode, transfer size and cs as we switch to different devices.
+	 */
 	while (true) { // blink LED loop
 		/*
 		 * handle the MCP23S08 chip MCP2210 SPI setting
 		 */
-		setup_mcp23s08_transfer();
+		setup_mcp23s08_transfer(); // CS 4 and mode 0
 		/*
 		 * handle the MCP23S08 chip setting
 		 */
@@ -373,6 +375,9 @@ int main(int argc, char* argv[])
 		buf[4] = 0x40;
 		buf[5] = 0x0a;
 
+		/*
+		 * light show sequence
+		 */
 		for (int k = 0; k < 10; k++) {
 			//lights up LED0 through LED7 one by one
 			for (int i = 0; i < 8; i++) {
@@ -390,7 +395,7 @@ int main(int argc, char* argv[])
 		/*
 		 * handle the TIC12400 chip MCP2210 SPI setting
 		 */
-		setup_tic12400_transfer();
+		setup_tic12400_transfer(); // CS 5 and mode 1
 		/*
 		 * read 24 switch inputs after light show sequence
 		 */
