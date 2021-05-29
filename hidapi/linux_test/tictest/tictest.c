@@ -110,27 +110,7 @@ void sleep_us(unsigned long microseconds)
 bool SPI5_WriteRead(unsigned char* pTransmitData, size_t txSize, unsigned char* pReceiveData, size_t rxSize)
 {
 	static uint32_t tx_count = 0;
-
-	cbufs();
-	buf[0] = 0x40; // SPI transfer settings command
-	buf[4] = 0xc0; // set SPI transfer bit rate;
-	buf[5] = 0xc6; // 32 bits, lsb = buf[4], msb buf[7]
-	buf[6] = 0x2d; // 2d
-	buf[7] = 0x00;
-	buf[8] = 0xff; // set CS idle values to 1
-	buf[9] = 0x01;
-	buf[10] = 0x00; // set CS active values to 0
-	buf[11] = 0x00;
-	buf[18] = txSize; // set no of bytes to transfer = 4 // 32-bit transfers
-	buf[20] = 0x01; // spi mode 1
-
-	res = SendUSBCmd(handle, buf, rbuf);
-	printf("TX set trans %x\n", res);
-	if (res == 0xf8) {
-		sleep_us(5000);
-		res = SendUSBCmd(handle, buf, rbuf);
-		printf("Again TX set trans %x\n", res);
-	}
+	uint32_t rcount = 0;
 
 	cbufs();
 	buf[0] = 0x42; // transfer SPI data command
@@ -146,6 +126,12 @@ bool SPI5_WriteRead(unsigned char* pTransmitData, size_t txSize, unsigned char* 
 
 	res = SendUSBCmd(handle, buf, rbuf);
 	printf("TX SPI res %x - tx count %i\n", res, ++tx_count);
+
+	rcount = 0;
+	while (rbuf[3] == 0x20 || rbuf[3] == 0x30) {
+		printf("SPI wait %i: code %x\n", ++rcount, rbuf[3]);
+		res = SendUSBCmd(handle, buf, rbuf);
+	}
 
 	pReceiveData[3] = rbuf[4];
 	pReceiveData[2] = rbuf[5];
@@ -227,12 +213,7 @@ bool hidrawapi_mcp2210_init(void)
 	//-------------- Set GPIO pin function (0x21) -------------
 	cbufs();
 	buf[0] = 0x21; // command 21 - set GPIO pin's functions
-
-	// function: 0x00 = gpio, 0x01 = CS, 0x02 = dedicated function
-	// with buf all zeros, all 9 GPIO pins are set to GPIO's
-	//	buf[13] = 0xff;
-	//	buf[14] = 0xff;
-	//	buf[11] = 0x00; // release SPI bus
+	buf[7] = 0x02; // act led
 	res = SendUSBCmd(handle, buf, rbuf);
 
 	// ------------ Set GPIO pin direction (0x32)--------------
@@ -256,37 +237,27 @@ bool hidrawapi_mcp2210_init(void)
 
 void mcp23s08_init(void)
 {
-	memset(buf, 0, 32); // buf initialized to zeros
-	memset(rbuf, 0, sizeof(rbuf)); // rbuf initialized to all zeros
-
+	cbufs();
 	// MCP23S08 config
 	buf[0] = 0x42; // transfer SPI data command
 	buf[1] = 3; // no. of SPI bytes to transfer
 	buf[4] = 0x40; //device address is 01000A1A0, write
 	buf[5] = 0x00; //write to IODIR register,
 	buf[6] = 0x00; //set all outputs to low
-
-	res = hid_write(handle, buf, 7);
-	res = hid_read(handle, rbuf, 7);
+	res = SendUSBCmd(handle, buf, rbuf);
 }
 
 void setup_mcp23s08_transfer(void)
 {
 	//-------------- Set GPIO pin function (0x21) -------------
-	memset(buf, 0, 32); // buf initialized to zeros
+	cbufs();
 	buf[0] = 0x21; // command 21 - set GPIO pin's functions
+	buf[7] = 0x02; // act led
 	buf[8] = 0x01; // GPIO 4 set to 0x01 - SPI CS
+	res = SendUSBCmd(handle, buf, rbuf);
 
-	res = hid_write(handle, buf, 18); // write pin function settings into MCP2210
-	if (res < 0) {
-		printf("Unable to write()\n");
-		printf("Error: error setting pin function %ls\n", hid_error(handle));
-	}
-	res = hid_read(handle, rbuf, 2); // read the 0x21 response
-
-	memset(buf, 0, sizeof(buf)); // initialize buf to zeros
+	cbufs();
 	buf[0] = 0x40; // SPI transfer settings command
-
 	buf[4] = 0x40; // set SPI transfer bit rate;
 	buf[5] = 0x4b; // 32 bits, lsb = buf[4], msb buf[7]
 	buf[6] = 0x4c; // 5Mhz
@@ -297,19 +268,14 @@ void setup_mcp23s08_transfer(void)
 	buf[11] = 0x00;
 	buf[18] = 0x03; // set no of bytes to transfer = 3
 	buf[20] = 0x00; // spi mode 0
-
-	res = hid_write(handle, buf, 21); // write setting into MCP2210
-	if (res < 0) {
-		printf("Unable to write()\n");
-		printf("Error: setting SPI transfer settings %ls\n", hid_error(handle));
-	}
-	res = hid_read(handle, rbuf, 2); // read the 0x40 response from MCP2210
+	res = SendUSBCmd(handle, buf, rbuf);
 }
 
 void setup_tic12400_transfer(void)
 {
 	cbufs();
 	buf[0] = 0x21; // command 21 - set GPIO pin's functions
+	buf[7] = 0x02; // act led
 	buf[8] = 0x01; // GPIO 4 set to 0x01 - SPI CS
 	res = SendUSBCmd(handle, buf, rbuf);
 
@@ -331,15 +297,9 @@ void setup_tic12400_transfer(void)
 void get_mcp23s08_transfer(void)
 {
 	// ---------- Get SPI transfer settings (0x41)-------------
-
+	cbufs();
 	buf[0] = 0x41; // 0x41 Get SPI transfer settings
-	res = hid_write(handle, buf, 2); // write setting into MCP2210
-	if (res < 0) {
-		printf("Unable to write()\n");
-		printf("Error: getting SPI transfer settings %ls\n", hid_error(handle));
-	}
-
-	res = hid_read(handle, rbuf, 21); // read the 0x41 response from MCP2210
+	res = SendUSBCmd(handle, buf, rbuf);
 	printf("SPI MCP23S08 transfer settings\n   "); // Print out the 0x41 returned buffer.
 	for (int i = 0; i < rbuf[2]; i++) {
 		printf("%02hhx ", rbuf[i]);
@@ -389,7 +349,7 @@ int main(int argc, char* argv[])
 	}
 
 	while (1) {
-	//	tic12400_interrupt(0, 0);
+		tic12400_interrupt(0, 0);
 		sleep_us(200000);
 	}
 

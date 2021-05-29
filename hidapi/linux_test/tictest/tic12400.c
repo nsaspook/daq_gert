@@ -113,6 +113,7 @@ volatile bool tic12400_parity_status = false;
 void tic12400_reset(void)
 {
 	tic12400_wr(&ticreset1a, 4);
+	tic12400_wr(&ticreset1a, 4);
 }
 
 /*
@@ -125,8 +126,8 @@ bool tic12400_init(void)
 	tic12400_status = tic12400_wr(&ticstat02, 0); // get status to check for proper operation
 
 	if ((ticstatus->data > por_bit) || !ticstatus->por) { // check for any high bits beyond POR bits set
-//		tic12400_init_fail = true;
-//		goto fail;
+		tic12400_init_fail = true;
+		goto fail;
 	}
 
 	tic12400_wr(&setup32, 0); //all set to compare mode, 0x32
@@ -141,8 +142,8 @@ bool tic12400_init(void)
 	tic12400_status = tic12400_wr(&setup1a_trigger, 2); // trigger switch detections & CRC, 0x1a
 
 	if (ticstatus->spi_fail) {
-//		tic12400_init_fail = true;
-//		goto fail;
+		tic12400_init_fail = true;
+		goto fail;
 	}
 
 	tic12400_status = tic12400_wr(&ticdevid01, 0); // get device id, 0x01
