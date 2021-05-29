@@ -41,6 +41,7 @@ extern "C" {
 	void cbufs();
 	int32_t SendUSBCmd(hid_device *, uint8_t *, uint8_t *);
 	void sleep_us(uint32_t);
+	bool get_MCP2210_ext_interrupt(void);
 	int32_t cancel_spi_transfer(void);
 	bool SPI_WriteRead(hid_device *, uint8_t *, uint8_t *);
 	bool SPI_MCP2210_WriteRead(uint8_t* pTransmitData, size_t txSize, uint8_t* pReceiveData, size_t rxSize);

@@ -96,7 +96,7 @@ int32_t SendUSBCmd(hid_device *handle, uint8_t *cmdBuf, uint8_t *responseBuf)
 		if (r < 0) {
 			return ERROR_UNABLE_TO_READ_FROM_DEVICE;
 		}
-		sleep_us(1000);
+		sleep_us(10);
 	}
 
 	return responseBuf[1];
@@ -110,6 +110,20 @@ void sleep_us(uint32_t microseconds)
 	ts.tv_sec = microseconds / 1000000; // whole seconds
 	ts.tv_nsec = (microseconds % 1000000) * 1000; // remainder, in nanoseconds
 	nanosleep(&ts, NULL);
+}
+/*
+ * when connected to the TIC12400 interrupt pin it shows a switch has changed state
+ */
+bool get_MCP2210_ext_interrupt(void)
+{
+	cbufs();
+	buf[0] = 0x12; // Get (VM) the Current Number of Events From the Interrupt Pin, GPIO 6 FUNC2
+	buf[1] = 0x00; // reads, then resets the event counter
+	res = SendUSBCmd(handle, buf, rbuf);
+	if (rbuf[4] || rbuf[5]) {
+		return true;
+	}
+	return false;
 }
 
 int32_t cancel_spi_transfer(void)
