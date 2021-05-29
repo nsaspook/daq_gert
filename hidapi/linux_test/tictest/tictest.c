@@ -35,7 +35,7 @@
 	 buf[4] bit 3 =	FUNC2	SPI ACTIVE LED
 	 buf[4] bit 4 = CS 4    MCP23S08
 	 buf[4] bit 5 = CS 5	TIC12400
-	 buf[4] bit 6 = GPIO 6
+	 buf[4] bit 6 = FUNC2	Ext Interrupt counter
 	 buf[4] bit 7 = CS 7    temp chip CS
 	 buf[5] bit 0 = GPIO 8
 
@@ -260,6 +260,7 @@ void setup_mcp23s08_transfer(void)
 	buf[5] = 0x01; // GPIO 1 set to 0x01 - SPI CS
 	buf[8] = 0x01; // GPIO 4 set to 0x01 - SPI CS, mcp23s08
 	buf[9] = 0x01; // GPIO 5 set to 0x01 - SPI CS
+	buf[10] = 0x02; // GPIO 6 external interrupt input
 	buf[11] = 0x01; // GPIO 7 set to 0x01 - SPI CS
 	res = SendUSBCmd(handle, buf, rbuf);
 
@@ -287,6 +288,7 @@ void setup_tic12400_transfer(void)
 	buf[5] = 0x01; // GPIO 1 set to 0x01 - SPI CS
 	buf[8] = 0x01; // GPIO 4 set to 0x01 - SPI CS
 	buf[9] = 0x01; // GPIO 5 set to 0x01 - SPI CS, tic12400
+	buf[10] = 0x02; // GPIO 6 external interrupt input
 	buf[11] = 0x01; // GPIO 7 set to 0x01 - SPI CS
 	res = SendUSBCmd(handle, buf, rbuf);
 
