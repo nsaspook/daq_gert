@@ -32,9 +32,9 @@
 	 buf[4] bit 0 = CS 0    EEPROM CS
 	 buf[4] bit 1 = CS 1    MCP3204 CS pin
 	 buf[4] bit 2 = GPIO 2
-	 buf[4] bit 3 = GPIO 3
+	 buf[4] bit 3 =	FUNC2	SPI ACTIVE LED
 	 buf[4] bit 4 = CS 4    MCP23S08
-	 buf[4] bit 5 = GPIO 5
+	 buf[4] bit 5 = CS 5	TIC12400
 	 buf[4] bit 6 = GPIO 6
 	 buf[4] bit 7 = CS 7    temp chip CS
 	 buf[5] bit 0 = GPIO 8
@@ -52,10 +52,9 @@
 #include "tictest.h"
 #include "tic12400.h"
 
-unsigned char buf[64]; // command buffer writen to MCP2210
-unsigned char rbuf[64]; // response buffer read from MCP2210
-char snd = 0; // data to send to LCD display
-int res = 0; // # of bytes sent from hid_read(), hid_write() functions
+uint8_t buf[COMMAND_BUFFER_LENGTH]; // command buffer written to MCP2210
+uint8_t rbuf[RESPONSE_BUFFER_LENGTH]; // response buffer
+int32_t res = 0; // # of bytes sent from hid_read(), hid_write() functions
 
 hid_device *handle; // handle of device returned by hid_open()
 
@@ -69,11 +68,14 @@ void cbufs(void)
 	memset(rbuf, 0, sizeof(rbuf));
 }
 
-int SendUSBCmd(hid_device *handle, uint8_t *cmdBuf, uint8_t *responseBuf)
+int32_t SendUSBCmd(hid_device *handle, uint8_t *cmdBuf, uint8_t *responseBuf)
 {
-	int r = 0;
-	r = hid_write(handle, cmdBuf, 64);
-	if (r < 0) return ERROR_UNABLE_TO_WRITE_TO_DEVICE;
+	int32_t r;
+
+	r = hid_write(handle, cmdBuf, COMMAND_BUFFER_LENGTH);
+	if (r < 0) {
+		return ERROR_UNABLE_TO_WRITE_TO_DEVICE;
+	}
 
 	//when the hid device is configured as synchronous, the first 
 	//hid_read returns the desired results. and the while() loop
@@ -84,22 +86,25 @@ int SendUSBCmd(hid_device *handle, uint8_t *cmdBuf, uint8_t *responseBuf)
 	//of the attached device. When no data is returned, r = 0 and
 	//the while loop keeps polling the returned data until it is 
 	//received.
-	r = 0;
-	r = hid_read(handle, responseBuf, 64);
-	if (r < 0) return ERROR_UNABLE_TO_READ_FROM_DEVICE;
+	r = hid_read(handle, responseBuf, RESPONSE_BUFFER_LENGTH);
+	if (r < 0) {
+		return ERROR_UNABLE_TO_READ_FROM_DEVICE;
+	}
 
 	while (r == 0) {
-		r = hid_read(handle, responseBuf, 64);
-		if (r < 0) return ERROR_UNABLE_TO_READ_FROM_DEVICE;
+		r = hid_read(handle, responseBuf, RESPONSE_BUFFER_LENGTH);
+		if (r < 0) {
+			return ERROR_UNABLE_TO_READ_FROM_DEVICE;
+		}
 		sleep_us(1000);
 	}
 
 	return responseBuf[1];
 }
 
-int nanosleep(const struct timespec *, struct timespec *);
+int32_t nanosleep(const struct timespec *, struct timespec *);
 
-void sleep_us(unsigned long microseconds)
+void sleep_us(uint32_t microseconds)
 {
 	struct timespec ts;
 	ts.tv_sec = microseconds / 1000000; // whole seconds
@@ -107,7 +112,24 @@ void sleep_us(unsigned long microseconds)
 	nanosleep(&ts, NULL);
 }
 
-bool SPI5_WriteRead(unsigned char* pTransmitData, size_t txSize, unsigned char* pReceiveData, size_t rxSize)
+int32_t cancel_spi_transfer(void)
+{
+	cbufs();
+	buf[0] = 0x11; // 0x11 cancel SPI transfer
+	res = SendUSBCmd(handle, buf, rbuf);
+	return res;
+}
+
+bool SPI_WriteRead(hid_device *handle, uint8_t *buf, uint8_t *rbuf)
+{
+	res = SendUSBCmd(handle, buf, rbuf);
+	while (rbuf[3] == SPI_STATUS_STARTED_NO_DATA_TO_RECEIVE || rbuf[3] == SPI_STATUS_SUCCESSFUL) {
+		res = SendUSBCmd(handle, buf, rbuf);
+	}
+	return true;
+}
+
+bool SPI_MCP2210_WriteRead(uint8_t* pTransmitData, size_t txSize, uint8_t* pReceiveData, size_t rxSize)
 {
 	static uint32_t tx_count = 0;
 	uint32_t rcount = 0;
@@ -119,20 +141,18 @@ bool SPI5_WriteRead(unsigned char* pTransmitData, size_t txSize, unsigned char* 
 	buf[5] = pTransmitData[2];
 	buf[6] = pTransmitData[1];
 	buf[7] = pTransmitData[0];
-	//	    buf[4] = 0x0f;
-	//	    buf[5] = 0xf0;
-	//	    buf[6] = 0x0f;
-	//	    buf[7] = 0xf0;
-
 	res = SendUSBCmd(handle, buf, rbuf);
+#ifdef DPRINT
 	printf("TX SPI res %x - tx count %i\n", res, ++tx_count);
+#endif
 
 	rcount = 0;
-	while (rbuf[3] == 0x20 || rbuf[3] == 0x30) {
-		printf("SPI wait %i: code %x\n", ++rcount, rbuf[3]);
+	while (rbuf[3] == SPI_STATUS_STARTED_NO_DATA_TO_RECEIVE || rbuf[3] == SPI_STATUS_SUCCESSFUL) {
+#ifdef DPRINT
+		printf("SPI RX wait %i: code %x\n", ++rcount, rbuf[3]);
+#endif
 		res = SendUSBCmd(handle, buf, rbuf);
 	}
-
 	pReceiveData[3] = rbuf[4];
 	pReceiveData[2] = rbuf[5];
 	pReceiveData[1] = rbuf[6];
@@ -143,26 +163,11 @@ bool SPI5_WriteRead(unsigned char* pTransmitData, size_t txSize, unsigned char* 
 bool hidrawapi_mcp2210_init(void)
 {
 	if (hid_init()) {
+		printf("hidapi init error\n");
 		return false;
 	}
 
-	//	devs = hid_enumerate(0x0, 0x0);
-	//	cur_dev = devs;
-	//	while (cur_dev) {
-	//		printf("Device Found\n  type: %04hx %04hx\n  path: %s\n  serial_number: %ls", cur_dev->vendor_id, cur_dev->product_id, cur_dev->path, cur_dev->serial_number);
-	//		printf("\n\n");
-	//		printf("  Manufacturer: %ls\n", cur_dev->manufacturer_string);
-	//		printf("  Product:      %ls\n", cur_dev->product_string);
-	//		printf("  Release:      %hx\n", cur_dev->release_number);
-	//		printf("  Interface:    %d\n", cur_dev->interface_number);
-	//		printf("\n");
-	//		cur_dev = cur_dev->next;
-	//	}
-	//	hid_free_enumeration(devs);
-
-	// Set up the command buffer -- memset() writes 0x00's to buf
-
-	memset(buf, 0x00, sizeof(buf)); // buf initialized to all zeros
+	cbufs(); // clear command and response buffers
 
 	//------------------ Open MCP2210 and display info ---------------
 
@@ -206,9 +211,7 @@ bool hidrawapi_mcp2210_init(void)
 		printf("Unable to read indexed string 1\n");
 	}
 	printf("Indexed String 1: %ls\n\n", wstr);
-	hid_set_nonblocking(handle, 1); // async
-
-	//	return true;
+	hid_set_nonblocking(handle, 1); // async operation, don't block
 
 	//-------------- Set GPIO pin function (0x21) -------------
 	cbufs();
@@ -252,20 +255,24 @@ void setup_mcp23s08_transfer(void)
 	//-------------- Set GPIO pin function (0x21) -------------
 	cbufs();
 	buf[0] = 0x21; // command 21 - set GPIO pin's functions
-	buf[7] = 0x02; // act led
-	buf[8] = 0x01; // GPIO 4 set to 0x01 - SPI CS
+	buf[7] = 0x02; // SPI act led
+	buf[4] = 0x01; // GPIO 0 set to 0x01 - SPI CS
+	buf[5] = 0x01; // GPIO 1 set to 0x01 - SPI CS
+	buf[8] = 0x01; // GPIO 4 set to 0x01 - SPI CS, mcp23s08
+	buf[9] = 0x01; // GPIO 5 set to 0x01 - SPI CS
+	buf[11] = 0x01; // GPIO 7 set to 0x01 - SPI CS
 	res = SendUSBCmd(handle, buf, rbuf);
 
 	cbufs();
 	buf[0] = 0x40; // SPI transfer settings command
 	buf[4] = 0x40; // set SPI transfer bit rate;
 	buf[5] = 0x4b; // 32 bits, lsb = buf[4], msb buf[7]
-	buf[6] = 0x4c; // 5Mhz
+	buf[6] = 0x4c; // 5MHz
 	buf[7] = 0x00;
 	buf[8] = 0xff; // set CS idle values to 1
 	buf[9] = 0x01;
-	buf[10] = 0x00; // set CS active values to 0
-	buf[11] = 0x00;
+	buf[10] = 0b11101111; // set CS active values to 0, set the rest to 1
+	buf[11] = 0b00000001;
 	buf[18] = 0x03; // set no of bytes to transfer = 3
 	buf[20] = 0x00; // spi mode 0
 	res = SendUSBCmd(handle, buf, rbuf);
@@ -275,20 +282,24 @@ void setup_tic12400_transfer(void)
 {
 	cbufs();
 	buf[0] = 0x21; // command 21 - set GPIO pin's functions
-	buf[7] = 0x02; // act led
+	buf[7] = 0x02; // SPI act led
+	buf[4] = 0x01; // GPIO 0 set to 0x01 - SPI CS
+	buf[5] = 0x01; // GPIO 1 set to 0x01 - SPI CS
 	buf[8] = 0x01; // GPIO 4 set to 0x01 - SPI CS
+	buf[9] = 0x01; // GPIO 5 set to 0x01 - SPI CS, tic12400
+	buf[11] = 0x01; // GPIO 7 set to 0x01 - SPI CS
 	res = SendUSBCmd(handle, buf, rbuf);
 
 	cbufs();
 	buf[0] = 0x40; // SPI transfer settings command
-	buf[4] = 0xc0; // set SPI transfer bit rate;
-	buf[5] = 0xc6; // 32 bits, lsb = buf[4], msb buf[7]
-	buf[6] = 0x2d; // 2d
+	buf[4] = 0x00; // set SPI transfer bit rate;
+	buf[5] = 0x09; // 32 bits, lsb = buf[4], msb buf[7]
+	buf[6] = 0x3d; // 4MHz
 	buf[7] = 0x00;
 	buf[8] = 0xff; // set CS idle values to 1
 	buf[9] = 0x01;
-	buf[10] = 0x00; // set CS active values to 0
-	buf[11] = 0x00;
+	buf[10] = 0b11011111; // set CS active values to 0, set the rest to 1
+	buf[11] = 0b00000001;
 	buf[18] = 0x4; // set no of bytes to transfer = 4 // 32-bit transfers
 	buf[20] = 0x01; // spi mode 1
 	res = SendUSBCmd(handle, buf, rbuf);
@@ -322,6 +333,8 @@ void get_tic12400_transfer(void)
 
 int main(int argc, char* argv[])
 {
+	uint32_t fspeed = 20000;
+
 	/*
 	 * setup the hidraw* device to communicate with the MCP2210
 	 */
@@ -329,6 +342,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+	cancel_spi_transfer();
 	/*
 	 * handle the TIC12400 chip MCP2210 SPI setting
 	 */
@@ -338,53 +352,56 @@ int main(int argc, char* argv[])
 	/*
 	 * init and read 24 switch inputs from the TIC12400 chip
 	 */
-	memset(buf, 0, sizeof(buf)); // initialize buf to zeros
-	buf[0] = 0x11; // 0x11 cancel SPI transfer
-	hid_write(handle, buf, 64);
-
 	tic12400_reset();
 
 	if (!tic12400_init()) {
 		printf("tic12400_init failed\n");
 	}
 
-	while (1) {
-		tic12400_interrupt(0, 0);
-		sleep_us(200000);
-	}
+	while (true) { // blink LED loop
+		/*
+		 * handle the MCP23S08 chip MCP2210 SPI setting
+		 */
+		setup_mcp23s08_transfer();
+		/*
+		 * handle the MCP23S08 chip setting
+		 */
+		mcp23s08_init();
+		/*
+		 * SPI data to update the MCP23S08 outputs
+		 */
+		buf[4] = 0x40;
+		buf[5] = 0x0a;
 
-	/*
-	 * handle the MCP23S08 chip MCP2210 SPI setting
-	 */
-	setup_mcp23s08_transfer();
-
-	/*
-	 * handle the MCP23S08 chip setting
-	 */
-	mcp23s08_init();
-
-	/*
-	 * update the MCP23S08 outputs
-	 */
-	buf[4] = 0x40;
-	buf[5] = 0x0a;
-
-	while (1) { // blink LED loop
 		for (int k = 0; k < 10; k++) {
 			//lights up LED0 through LED7 one by one
 			for (int i = 0; i < 8; i++) {
 				buf[6] = 1 << i;
-				res = hid_write(handle, buf, 7);
-				res = hid_read(handle, rbuf, 7);
-				sleep_us(20000ul);
+				SPI_WriteRead(handle, buf, rbuf);
+				sleep_us(fspeed);
 			}
 			//lights up LED7 through LED0 one by one
 			for (int i = 0; i < 8; i++) {
 				buf[6] = 0x80 >> i;
-				res = hid_write(handle, buf, 7);
-				res = hid_read(handle, rbuf, 7);
-				sleep_us(20000ul);
+				SPI_WriteRead(handle, buf, rbuf);
+				sleep_us(fspeed);
 			}
+		}
+		/*
+		 * handle the TIC12400 chip MCP2210 SPI setting
+		 */
+		setup_tic12400_transfer();
+		/*
+		 * read 24 switch inputs after light show sequence
+		 */
+		tic12400_read_sw(0, 0);
+		/*
+		 * look for switch 0 changes
+		 */
+		if (tic12400_get_sw() & raw_mask_0) {
+			fspeed = 20000;
+		} else {
+			fspeed = 2000;
 		}
 	}
 	hid_close(handle);

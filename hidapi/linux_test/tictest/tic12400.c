@@ -165,7 +165,7 @@ uint32_t tic12400_wr(const ticbuf_type * buffer, uint16_t del)
 {
 	static uint32_t rbuffer = 0;
 
-	SPI5_WriteRead((void*) buffer, 4, (void*) &rbuffer, 4);
+	SPI_MCP2210_WriteRead((void*) buffer, 4, (void*) &rbuffer, 4);
 
 	if (ticvalue->parity_fail) { // check for command parity errors
 		tic12400_parity_status = true;
@@ -223,7 +223,7 @@ bool tic12400_parity(uint32_t v)
  * toggles debug led and clears interrupt by reading status
  * sets event flag for user application notification
  */
-void tic12400_interrupt(uint32_t a, uintptr_t b)
+void tic12400_read_sw(uint32_t a, uintptr_t b)
 {
 	tic12400_value = tic12400_wr(&ticread05, 0); // read switch
 	tic12400_status = tic12400_wr(&ticstat02, 0); // read status
