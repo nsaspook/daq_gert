@@ -72,6 +72,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
+          <linkerDepDynSerchKind>0</linkerDepDynSerchKind>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs hidapi-hidraw`</linkerOptionItem>
           </linkerLibItems>
