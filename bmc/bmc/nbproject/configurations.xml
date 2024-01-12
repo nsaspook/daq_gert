@@ -5,6 +5,10 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>daq.h</itemPath>
+      <itemPath>../matesocketcan/mqtt.h</itemPath>
+      <itemPath>../matesocketcan/mqtt_pal.h</itemPath>
+      <itemPath>../matesocketcan/mqtt_pub.h</itemPath>
+      <itemPath>../matesocketcan/pge.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -15,6 +19,9 @@
                    projectFiles="true">
       <itemPath>../bmc.c</itemPath>
       <itemPath>daq.c</itemPath>
+      <itemPath>../matesocketcan/mqtt.c</itemPath>
+      <itemPath>../matesocketcan/mqtt_pal.c</itemPath>
+      <itemPath>../matesocketcan/mqtt_pub.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -45,6 +52,20 @@
         </linkerTool>
       </compileType>
       <item path="../bmc.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt_pal.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt_pal.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt_pub.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt_pub.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../matesocketcan/pge.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="daq.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -79,6 +100,20 @@
         </linkerTool>
       </compileType>
       <item path="../bmc.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt_pal.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt_pal.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt_pub.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../matesocketcan/mqtt_pub.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../matesocketcan/pge.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="daq.c" ex="false" tool="0" flavor2="0">
       </item>
