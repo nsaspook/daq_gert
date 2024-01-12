@@ -56,7 +56,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=`pkg-config --libs comedilib`  
+LDLIBSOPTIONS=`pkg-config --libs comedilib` `pkg-config --libs libcjson`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -69,27 +69,27 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bmc: ${OBJECTFILES}
 ${OBJECTDIR}/_ext/5c0/bmc.o: ../bmc.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/5c0
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/5c0/bmc.o ../bmc.c
+	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` `pkg-config --cflags libcjson` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/5c0/bmc.o ../bmc.c
 
 ${OBJECTDIR}/_ext/4cd45009/mqtt.o: ../matesocketcan/mqtt.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/4cd45009
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/4cd45009/mqtt.o ../matesocketcan/mqtt.c
+	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` `pkg-config --cflags libcjson` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/4cd45009/mqtt.o ../matesocketcan/mqtt.c
 
 ${OBJECTDIR}/_ext/4cd45009/mqtt_pal.o: ../matesocketcan/mqtt_pal.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/4cd45009
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/4cd45009/mqtt_pal.o ../matesocketcan/mqtt_pal.c
+	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` `pkg-config --cflags libcjson` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/4cd45009/mqtt_pal.o ../matesocketcan/mqtt_pal.c
 
 ${OBJECTDIR}/_ext/4cd45009/mqtt_pub.o: ../matesocketcan/mqtt_pub.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/4cd45009
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/4cd45009/mqtt_pub.o ../matesocketcan/mqtt_pub.c
+	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` `pkg-config --cflags libcjson` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/4cd45009/mqtt_pub.o ../matesocketcan/mqtt_pub.c
 
 ${OBJECTDIR}/daq.o: daq.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/daq.o daq.c
+	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` `pkg-config --cflags libcjson` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/daq.o daq.c
 
 # Subprojects
 .build-subprojects:

@@ -97,6 +97,7 @@
         <linkerTool>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs comedilib`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config --libs libcjson`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

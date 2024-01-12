@@ -100,7 +100,7 @@ void led_lightshow(int speed) {
 int main(int argc, char *argv[]) {
     int do_ao_only = false;
     uint8_t i = 0, j = 75;
-    uint32_t speed_go = 0;
+    uint32_t speed_go = 0, sequence = 0;
 
     mqtt_socket();
 
@@ -140,6 +140,7 @@ int main(int argc, char *argv[]) {
                 speed_go = 0;
                 json = cJSON_CreateObject();
                 cJSON_AddStringToObject(json, "name", "ha_comedi");
+                cJSON_AddNumberToObject(json, "sequence", sequence++);
                 cJSON_AddNumberToObject(json, "adc0", get_adc_volts(0));
                 cJSON_AddNumberToObject(json, "adc1", get_adc_volts(1));
                 cJSON_AddNumberToObject(json, "di0", get_dio_bit(0));
@@ -152,7 +153,7 @@ int main(int argc, char *argv[]) {
                 // convert the cJSON object to a JSON string 
                 char *json_str = cJSON_Print(json);
 
-                mqtt_check(json_str);
+                mqtt_check((uint8_t *)json_str);
 
                 cJSON_free(json_str);
                 cJSON_Delete(json);
