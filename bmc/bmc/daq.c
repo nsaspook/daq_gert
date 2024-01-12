@@ -3,9 +3,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <comedilib.h>
-#include <cjson/cJSON.h>
-#include "../matesocketcan/mqtt_pub.h"
-#include "../matesocketcan/pge.h"
 #include "daq.h"
 
 int subdev_ai = 0; /* change this to your input subdevice */
