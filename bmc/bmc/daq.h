@@ -30,6 +30,9 @@ extern "C" {
 #include <stdint.h>
 #include <comedilib.h>
 
+#define DAQ_STR 32
+#define DAQ_STR_M DAQ_STR-1
+  
 	struct didata {
 		uint32_t D0 : 1; // 
 		uint32_t D1 : 1; // 
@@ -60,6 +63,8 @@ extern "C" {
 	extern volatile struct bmcdata bmc;
 	extern struct didata datain;
 	extern struct dodata dataout;
+
+        extern int  channels_ai, channels_ao, channels_di, channels_do, channels_counter;
 
 	int init_daq(double, double, int);
 	int init_dac(double, double, int);

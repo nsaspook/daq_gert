@@ -17,8 +17,45 @@
 #include <cjson/cJSON.h>
 #include "matesocketcan/mqtt_pub.h"
 #include "matesocketcan/pge.h"
+#include "MQTTClient.h"
 
-#define LOG_VERSION            "v00.8"
+#define LOG_VERSION            "v00.9"
+
+#define ADDRESS     "tcp://10.1.1.172:1883"
+#define CLIENTID    "Comedi_Mqtt_HA"
+#define TOPIC_P     "comedi/data/p8055/get"
+#define TOPIC_S     "comedi/data/p8055/set"
+#define PAYLOAD     ""
+#define QOS         1
+#define TIMEOUT     10000L
+
+volatile MQTTClient_deliveryToken deliveredtoken;
+
+void delivered(void *context, MQTTClient_deliveryToken dt) {
+    printf("Message with token value %d delivery confirmed\n", dt);
+    deliveredtoken = dt;
+}
+
+int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
+    int i;
+    char* payloadptr;
+    printf("Message arrived\n");
+    printf("     topic: %s\n", topicName);
+    printf("   message: ");
+    payloadptr = message->payload;
+    for (i = 0; i < message->payloadlen; i++) {
+        putchar(*payloadptr++);
+    }
+    putchar('\n');
+    MQTTClient_freeMessage(&message);
+    MQTTClient_free(topicName);
+    return 1;
+}
+
+void connlost(void *context, char *cause) {
+    printf("\nConnection lost\n");
+    printf("     cause: %s\n", cause);
+}
 
 void led_lightshow(int);
 
@@ -102,7 +139,25 @@ int main(int argc, char *argv[]) {
     uint8_t i = 0, j = 75;
     uint32_t speed_go = 0, sequence = 0;
 
-    mqtt_socket();
+    MQTTClient client;
+    MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
+    MQTTClient_message pubmsg = MQTTClient_message_initializer;
+    MQTTClient_deliveryToken token;
+    int rc;
+
+    MQTTClient_create(&client, ADDRESS, CLIENTID,
+            MQTTCLIENT_PERSISTENCE_NONE, NULL);
+    conn_opts.keepAliveInterval = 20;
+    conn_opts.cleansession = 1;
+
+
+    MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
+    if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
+        printf("Failed to connect, return code %d\n", rc);
+        exit(EXIT_FAILURE);
+    }
+
+    MQTTClient_subscribe(client, TOPIC_S, QOS);
 
     printf("\r\n log version %s : mqtt version %s\r\n", LOG_VERSION, MQTT_VERSION);
 
@@ -136,24 +191,35 @@ int main(int argc, char *argv[]) {
                 led_lightshow(4);
             }
 
-            if (speed_go++ > 500) {
+            if (speed_go++ > 1000) {
+                char chann[DAQ_STR];
+
                 speed_go = 0;
                 json = cJSON_CreateObject();
-                cJSON_AddStringToObject(json, "name", "ha_comedi");
-                cJSON_AddNumberToObject(json, "sequence", sequence++);
-                cJSON_AddNumberToObject(json, "adc0", get_adc_volts(0));
-                cJSON_AddNumberToObject(json, "adc1", get_adc_volts(1));
-                cJSON_AddNumberToObject(json, "di0", get_dio_bit(0));
-                cJSON_AddNumberToObject(json, "di1", get_dio_bit(1));
-                cJSON_AddNumberToObject(json, "di2", get_dio_bit(2));
-                cJSON_AddNumberToObject(json, "di3", get_dio_bit(3));
-                cJSON_AddNumberToObject(json, "di4", get_dio_bit(4));
-                cJSON_AddNumberToObject(json, "di5", get_dio_bit(5));
-                cJSON_AddStringToObject(json, "system", "HA Comedi");
+                cJSON_AddStringToObject(json, "Name", "HA_comedi");
+                cJSON_AddNumberToObject(json, "Sequence", sequence++);
+                for (int i = 0; i < channels_ai; i++) {
+                    snprintf(chann, DAQ_STR_M, "ADC%d", i);
+                    cJSON_AddNumberToObject(json, chann, get_adc_volts(i));
+                }
+                for (int i = 0; i < channels_di; i++) {
+                    snprintf(chann, DAQ_STR_M, "DI%d", i);
+                    cJSON_AddNumberToObject(json, chann, get_dio_bit(i));
+                }
+                cJSON_AddStringToObject(json, "System", "K8055/VM110");
                 // convert the cJSON object to a JSON string 
                 char *json_str = cJSON_Print(json);
 
-                mqtt_check((uint8_t *)json_str);
+                pubmsg.payload = json_str;
+                pubmsg.payloadlen = strlen(json_str);
+                pubmsg.qos = QOS;
+                pubmsg.retained = 0;
+                deliveredtoken = 0;
+                MQTTClient_publishMessage(client, TOPIC_P, &pubmsg, &token);
+                printf("Waiting for publication of %s\n"
+                        "on topic %s for client with ClientID: %s\n",
+                        PAYLOAD, TOPIC_P, CLIENTID);
+                while (deliveredtoken != token);
 
                 cJSON_free(json_str);
                 cJSON_Delete(json);

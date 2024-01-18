@@ -12,12 +12,13 @@
 
 const char* addr;
 const char* port;
-const char* topic;
+const char* topic_p;
+const char* topic_s;
 int sockfd;
 
 struct mqtt_client client;
 uint8_t sendbuf[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
-uint8_t recvbuf[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
+uint8_t recvbuf[2048]; /* recvbuf should be large enough any whole mqtt message expected to be received */
 const char* client_id;
 uint8_t connect_flags;
 pthread_t client_daemon;
@@ -30,7 +31,8 @@ int mqtt_socket(void) {
 
     addr = ADDR_MQTT; // cloud testing server
     port = "1883";
-    topic = DATA_MQTT_SOLAR;
+    topic_p = DATA_MQTT_COMEDI_P;
+    topic_s = DATA_MQTT_COMEDI_S;
 
     /* open the non-blocking TCP socket (connecting to the broker) */
     sockfd = open_nb_socket_mqtt(addr, port);
@@ -57,6 +59,8 @@ int mqtt_socket(void) {
     if (pthread_create(&client_daemon, NULL, client_refresher, &client)) {
         return 1;
     }
+    
+    mqtt_subscribe(&client, topic_s, 0);
 
     return 0;
 
@@ -70,12 +74,14 @@ int mqtt_check(uint8_t * application_message) {
         return -1;
     }
     /* publish the logging data */
-    mqtt_publish(&client, topic, (const char *) application_message, strlen((const char *) application_message), MQTT_PUBLISH_QOS_1);
+    mqtt_publish(&client, topic_p, (const char *) application_message, strlen((const char *) application_message), MQTT_PUBLISH_QOS_1);
 
     /* check for errors */
     if (client.error != MQTT_OK) {
         return client.error;
     }
+
+//    mqtt_subscribe(&client, topic_s, 0);
     return 0;
 }
 

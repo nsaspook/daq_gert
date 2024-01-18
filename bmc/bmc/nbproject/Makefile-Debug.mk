@@ -36,9 +36,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/5c0/bmc.o \
-	${OBJECTDIR}/_ext/4cd45009/mqtt.o \
-	${OBJECTDIR}/_ext/4cd45009/mqtt_pal.o \
-	${OBJECTDIR}/_ext/4cd45009/mqtt_pub.o \
 	${OBJECTDIR}/daq.o
 
 
@@ -70,21 +67,6 @@ ${OBJECTDIR}/_ext/5c0/bmc.o: ../bmc.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/5c0
 	${RM} "$@.d"
 	$(COMPILE.c) -g `pkg-config --cflags libcjson`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/5c0/bmc.o ../bmc.c
-
-${OBJECTDIR}/_ext/4cd45009/mqtt.o: ../matesocketcan/mqtt.c
-	${MKDIR} -p ${OBJECTDIR}/_ext/4cd45009
-	${RM} "$@.d"
-	$(COMPILE.c) -g `pkg-config --cflags libcjson`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/4cd45009/mqtt.o ../matesocketcan/mqtt.c
-
-${OBJECTDIR}/_ext/4cd45009/mqtt_pal.o: ../matesocketcan/mqtt_pal.c
-	${MKDIR} -p ${OBJECTDIR}/_ext/4cd45009
-	${RM} "$@.d"
-	$(COMPILE.c) -g `pkg-config --cflags libcjson`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/4cd45009/mqtt_pal.o ../matesocketcan/mqtt_pal.c
-
-${OBJECTDIR}/_ext/4cd45009/mqtt_pub.o: ../matesocketcan/mqtt_pub.c
-	${MKDIR} -p ${OBJECTDIR}/_ext/4cd45009
-	${RM} "$@.d"
-	$(COMPILE.c) -g `pkg-config --cflags libcjson`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/4cd45009/mqtt_pub.o ../matesocketcan/mqtt_pub.c
 
 ${OBJECTDIR}/daq.o: daq.c
 	${MKDIR} -p ${OBJECTDIR}
