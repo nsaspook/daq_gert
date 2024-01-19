@@ -13,6 +13,12 @@
 #include <string.h>
 #include <stdbool.h>
 #include <comedilib.h>
+#include <signal.h>
+#include <time.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <errno.h>
 #include "bmc/daq.h"
 #include <cjson/cJSON.h>
 #include "matesocketcan/mqtt_pub.h"
@@ -30,6 +36,17 @@
 #define TIMEOUT     10000L
 
 volatile MQTTClient_deliveryToken deliveredtoken, receivedtoken = false;
+volatile bool runner = false;
+
+void timer_callback(int sig);
+
+/*
+ * Comedi data update timer flag
+ */
+void timer_callback(int signum) {
+    signal (signum, timer_callback);
+    runner = true;
+}
 
 void delivered(void *context, MQTTClient_deliveryToken dt) {
     //    printf("Message with token value %d delivery confirmed\n", dt);
@@ -189,6 +206,17 @@ int main(int argc, char *argv[]) {
     uint8_t i = 0, j = 75;
     uint32_t speed_go = 0, sequence = 0;
 
+    struct itimerval new_timer;
+    struct itimerval old_timer;
+
+    new_timer.it_value.tv_sec = 1;
+    new_timer.it_value.tv_usec = 0;
+    new_timer.it_interval.tv_sec = 0;
+    new_timer.it_interval.tv_usec = 500 * 1000;
+
+    setitimer(ITIMER_REAL, &new_timer, &old_timer);
+    signal(SIGALRM, timer_callback);
+
     MQTTClient client;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     MQTTClient_message pubmsg = MQTTClient_message_initializer;
@@ -241,10 +269,11 @@ int main(int argc, char *argv[]) {
                 led_lightshow(4);
             }
 
-            if (speed_go++ > 500) {
+            if (runner || speed_go++ > 500) {
                 char chann[DAQ_STR];
 
                 speed_go = 0;
+                runner = false;
                 json = cJSON_CreateObject();
                 cJSON_AddStringToObject(json, "Name", "HA_comedi");
                 cJSON_AddNumberToObject(json, "Sequence", sequence++);
