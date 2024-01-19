@@ -35,8 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/5c0/bmc.o \
-	${OBJECTDIR}/daq.o
+	${OBJECTDIR}/_ext/5c0/bmc.o
 
 
 # C Compiler Flags
@@ -67,11 +66,6 @@ ${OBJECTDIR}/_ext/5c0/bmc.o: ../bmc.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/5c0
 	${RM} "$@.d"
 	$(COMPILE.c) -g `pkg-config --cflags libcjson`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/5c0/bmc.o ../bmc.c
-
-${OBJECTDIR}/daq.o: daq.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -g `pkg-config --cflags libcjson`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/daq.o daq.c
 
 # Subprojects
 .build-subprojects:
