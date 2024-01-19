@@ -29,30 +29,79 @@
 #define QOS         1
 #define TIMEOUT     10000L
 
-volatile MQTTClient_deliveryToken deliveredtoken;
+volatile MQTTClient_deliveryToken deliveredtoken, receivedtoken = false;
 
 void delivered(void *context, MQTTClient_deliveryToken dt) {
-    printf("Message with token value %d delivery confirmed\n", dt);
+    //    printf("Message with token value %d delivery confirmed\n", dt);
     deliveredtoken = dt;
 }
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
     int i;
     char* payloadptr;
+    char buffer[1024];
+    char chann[DAQ_STR];
+
     printf("Message arrived\n");
-    printf("     topic: %s\n", topicName);
-    printf("   message: ");
     payloadptr = message->payload;
     for (i = 0; i < message->payloadlen; i++) {
-        putchar(*payloadptr++);
+        buffer[i] = *payloadptr++;
     }
-    putchar('\n');
+    buffer[i] = 0; // make C string
+
+    // parse the JSON data 
+    cJSON *json = cJSON_ParseWithLength(buffer, message->payloadlen);
+    if (json == NULL) {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL) {
+            printf("Error: %s\n", error_ptr);
+        }
+        cJSON_Delete(json);
+        return 1;
+    }
+
+    for (int i = 0; i < channels_do; i++) {
+        snprintf(chann, DAQ_STR_M, "DO%d", i);
+
+        // access the JSON data 
+        cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
+        if (cJSON_IsString(name) && (name->valuestring != NULL)) {
+            printf("Name: %s\n", name->valuestring);
+        }
+
+        if (cJSON_IsNumber(name)) {
+            printf("%s Value: %i\n", chann, name->valueint);
+            put_dio_bit(i, name->valueint);
+        }
+    }
+
+    for (int i = 0; i < channels_ao; i++) {
+        snprintf(chann, DAQ_STR_M, "DAC%d", i);
+
+        // access the JSON data 
+        cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
+        if (cJSON_IsString(name) && (name->valuestring != NULL)) {
+            printf("Name: %s\n", name->valuestring);
+        }
+
+        if (cJSON_IsNumber(name)) {
+            printf("%s Value: %f\n", chann, name->valuedouble);
+            set_dac_volts(i, name->valuedouble);
+        }
+    }
+
+    // delete the JSON object 
+    cJSON_Delete(json);
+
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topicName);
+    receivedtoken = true;
+
     return 1;
 }
 
 void connlost(void *context, char *cause) {
+
     printf("\nConnection lost\n");
     printf("     cause: %s\n", cause);
 }
@@ -126,6 +175,7 @@ void led_lightshow(int speed) {
             LED_UP = true;
         } else {
             if (alive_led > 128) {
+
                 alive_led = 128;
                 LED_UP = false;
             }
@@ -191,7 +241,7 @@ int main(int argc, char *argv[]) {
                 led_lightshow(4);
             }
 
-            if (speed_go++ > 1000) {
+            if (speed_go++ > 500) {
                 char chann[DAQ_STR];
 
                 speed_go = 0;
@@ -216,9 +266,9 @@ int main(int argc, char *argv[]) {
                 pubmsg.retained = 0;
                 deliveredtoken = 0;
                 MQTTClient_publishMessage(client, TOPIC_P, &pubmsg, &token);
-                printf("Waiting for publication of %s\n"
-                        "on topic %s for client with ClientID: %s\n",
-                        PAYLOAD, TOPIC_P, CLIENTID);
+                //                printf("Waiting for publication of %s\n"
+                //                        "on topic %s for client with ClientID: %s\n",
+                //                        PAYLOAD, TOPIC_P, CLIENTID);
                 while (deliveredtoken != token);
 
                 cJSON_free(json_str);

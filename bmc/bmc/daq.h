@@ -25,7 +25,7 @@ extern "C" {
 
 #define LPCHANC        16
 	
-#define JUST_BITS	false
+#define JUST_BITS	true
 
 #include <stdint.h>
 #include <comedilib.h>

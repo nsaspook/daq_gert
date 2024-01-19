@@ -9,7 +9,6 @@
         <group>
             <file>file:/public/daq_gert/bmc/bmc/daq.c</file>
             <file>file:/public/daq_gert/bmc/bmc.c</file>
-            <file>file:/public/daq_gert/bmc/matesocketcan/pge.h</file>
             <file>file:/public/daq_gert/bmc/bmc/daq.h</file>
         </group>
     </open-files>
