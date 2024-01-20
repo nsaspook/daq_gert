@@ -32,6 +32,8 @@ extern "C" {
 #define DAQ_STR_M DAQ_STR-1
     
 #define MQTT_TIMEOUT    100
+    
+#define NO_CYLON
 
     /* ripped from http://aquaticus.info/pwm-sine-wave */
 

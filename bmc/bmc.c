@@ -46,7 +46,9 @@ int32_t msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_messag
     char buffer[1024];
     char chann[DAQ_STR];
 
+#ifdef DEBUG_REC
     printf("Message arrived\n");
+#endif
     payloadptr = message->payload;
     for (i = 0; i < message->payloadlen; i++) {
         buffer[i] = *payloadptr++;
@@ -70,11 +72,15 @@ int32_t msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_messag
         // access the JSON data
         cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
         if (cJSON_IsString(name) && (name->valuestring != NULL)) {
+#ifdef DEBUG_REC
             printf("Name: %s\n", name->valuestring);
+#endif
         }
 
         if (cJSON_IsNumber(name)) {
+#ifdef DEBUG_REC
             printf("%s Value: %i\n", chann, name->valueint);
+#endif
             put_dio_bit(i, name->valueint);
         }
     }
@@ -85,11 +91,15 @@ int32_t msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_messag
         // access the JSON data
         cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
         if (cJSON_IsString(name) && (name->valuestring != NULL)) {
+#ifdef DEBUG_REC
             printf("Name: %s\n", name->valuestring);
+#endif
         }
 
         if (cJSON_IsNumber(name)) {
+#ifdef DEBUG_REC
             printf("%s Value: %f\n", chann, name->valuedouble);
+#endif
             set_dac_volts(i, name->valuedouble);
         }
     }
@@ -192,13 +202,18 @@ int main(int argc, char *argv[]) {
         printf("\r\nUse these channel names in JSON formatted data\r\n");
 
         while (true) {
+#ifndef NO_CYLON
             get_data_sample();
             /*
              * testing inputs and outputs
              */
+
             if (!bmc.datain.D0) {
                 led_lightshow(4);
             }
+#else
+            usleep(100);
+#endif
 
             if (runner || speed_go++ > 1500) {
                 speed_go = 0;
