@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
                 speed_go = 0;
                 runner = false;
                 json = cJSON_CreateObject();
-                cJSON_AddStringToObject(json, "Name", "HA_comedi");
+                cJSON_AddStringToObject(json, "Name", "HA_comedi_get");
                 cJSON_AddNumberToObject(json, "Sequence", sequence++);
                 // parse the remote JSON names for DAQ inputs
                 for (int i = 0; i < channels_ai; i++) {
