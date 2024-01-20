@@ -5,6 +5,7 @@
  * other software, as long as proper attribution is given in the
  * source code.
  */
+#define _DEFAULT_SOURCE
 
 #include <stdlib.h>
 #include <stdio.h> /* for printf() */
@@ -22,7 +23,7 @@
 #include <cjson/cJSON.h>
 #include "MQTTClient.h"
 
-#define LOG_VERSION            "v00.9"
+#define LOG_VERSION            "v00.91"
 
 #define ADDRESS     "tcp://10.1.1.172:1883"
 #define CLIENTID    "Comedi_MQTT_HA_SET"
@@ -34,6 +35,7 @@
 
 #define DAQ_STR 32
 #define DAQ_STR_M DAQ_STR-1
+#define MQTT_TIMEOUT    100
 
 #define MQTT_VERSION  "v0.2"
 
@@ -117,8 +119,7 @@ int main(int argc, char *argv[])
 
 	printf("\r\n log version %s : mqtt version %s\r\n", LOG_VERSION, MQTT_VERSION);
 
-
-	while (1) {
+	while (true) {
 		if (runner) {
 			runner = false;
 			json = cJSON_CreateObject();
@@ -140,11 +141,21 @@ int main(int argc, char *argv[])
 			pubmsg.retained = 0;
 			deliveredtoken = 0;
 			MQTTClient_publishMessage(client, TOPIC_P, &pubmsg, &token);
-			while (deliveredtoken != token) {
-			};
+			{
+				uint32_t waiting = 0;
+				while (deliveredtoken != token) {
+					usleep(100);
+					if (waiting++ > MQTT_TIMEOUT) {
+						printf("\r\nStill Waiting, timeout");
+						break;
+					}
+				};
+			}
 
 			cJSON_free(json_str);
 			cJSON_Delete(json);
+		} else {
+			usleep(100);
 		}
 	}
 	return 0;
