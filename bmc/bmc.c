@@ -1,10 +1,11 @@
 /*
- * Demo code for driver testing, a simple console display of data inputs and voltage
+ * Demo code for Comedi to MQTT JSON format data
  *
  * This file may be freely modified, distributed, and combined with
  * other software, as long as proper attribution is given in the
  * source code.
  */
+#define _DEFAULT_SOURCE
 
 #include <stdlib.h>
 #include <stdio.h> /* for printf() */
@@ -21,40 +22,47 @@
 #include <errno.h>
 #include "bmc/daq.h"
 #include <cjson/cJSON.h>
-#include "matesocketcan/mqtt_pub.h"
-#include "matesocketcan/pge.h"
 #include "MQTTClient.h"
 
-#define LOG_VERSION            "v00.9"
-
-#define ADDRESS     "tcp://10.1.1.172:1883"
-#define CLIENTID    "Comedi_Mqtt_HA"
-#define TOPIC_P     "comedi/data/p8055/get"
-#define TOPIC_S     "comedi/data/p8055/set"
-#define PAYLOAD     ""
-#define QOS         1
-#define TIMEOUT     10000L
+#define LOG_VERSION     "v0.1"
+#define MQTT_VERSION    "V0.1"
+#define ADDRESS         "tcp://10.1.1.172:1883"
+#define CLIENTID        "Comedi_Mqtt_HA"
+#define TOPIC_P         "comedi/data/p8055/get"
+#define TOPIC_S         "comedi/data/p8055/set"
+#define PAYLOAD         ""
+#define QOS             1
+#define TIMEOUT         10000L
+#define SPACING_USEC    500 * 1000
 
 volatile MQTTClient_deliveryToken deliveredtoken, receivedtoken = false;
 volatile bool runner = false;
 
-void timer_callback(int sig);
+void timer_callback(int32_t);
+void delivered(void *, MQTTClient_deliveryToken);
+int32_t msgarrvd(void *, char *, int, MQTTClient_message *);
+void connlost(void *, char *);
+
+char *token;
+cJSON *json;
 
 /*
  * Comedi data update timer flag
  */
-void timer_callback(int signum) {
-    signal (signum, timer_callback);
+void timer_callback(int32_t signum) {
+    signal(signum, timer_callback);
     runner = true;
 }
 
 void delivered(void *context, MQTTClient_deliveryToken dt) {
-    //    printf("Message with token value %d delivery confirmed\n", dt);
     deliveredtoken = dt;
 }
 
-int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
-    int i;
+/*
+ * data received on topic from the broker
+ */
+int32_t msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
+    int32_t i;
     char* payloadptr;
     char buffer[1024];
     char chann[DAQ_STR];
@@ -73,11 +81,11 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
         if (error_ptr != NULL) {
             printf("Error: %s\n", error_ptr);
         }
-        cJSON_Delete(json);
+        goto error_exit;
         return 1;
     }
 
-    for (int i = 0; i < channels_do; i++) {
+    for (int32_t i = 0; i < channels_do; i++) {
         snprintf(chann, DAQ_STR_M, "DO%d", i);
 
         // access the JSON data 
@@ -92,7 +100,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
         }
     }
 
-    for (int i = 0; i < channels_ao; i++) {
+    for (int32_t i = 0; i < channels_ao; i++) {
         snprintf(chann, DAQ_STR_M, "DAC%d", i);
 
         // access the JSON data 
@@ -107,13 +115,13 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
         }
     }
 
+    receivedtoken = true;
+error_exit:
     // delete the JSON object 
     cJSON_Delete(json);
 
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topicName);
-    receivedtoken = true;
-
     return 1;
 }
 
@@ -123,7 +131,7 @@ void connlost(void *context, char *cause) {
     printf("     cause: %s\n", cause);
 }
 
-void led_lightshow(int);
+void led_lightshow(int32_t);
 
 volatile struct bmcdata bmc; /* DIO buffer */
 
@@ -164,17 +172,14 @@ uint8_t sine_wave[256] = {
     0x67, 0x6A, 0x6D, 0x70, 0x74, 0x77, 0x7A, 0x7D
 };
 
-char *token;
-cJSON *json;
-
-void led_lightshow(int speed) {
-    static int j = 0;
+void led_lightshow(int32_t speed) {
+    static int32_t j = 0;
     static uint8_t cylon = 0xff;
-    static int alive_led = 0;
+    static int32_t alive_led = 0;
     static bool LED_UP = true;
 
     if (j++ >= speed) { // delay a bit ok
-        if (0) { // screen status feedback
+        if (false) { // screen status feedback
             bmc.dataout.dio_buf = ~cylon; // roll leds cylon style
         } else {
             bmc.dataout.dio_buf = cylon; // roll leds cylon style (inverted)
@@ -192,7 +197,6 @@ void led_lightshow(int speed) {
             LED_UP = true;
         } else {
             if (alive_led > 128) {
-
                 alive_led = 128;
                 LED_UP = false;
             }
@@ -202,32 +206,35 @@ void led_lightshow(int speed) {
 }
 
 int main(int argc, char *argv[]) {
-    int do_ao_only = false;
+    int32_t do_ao_only = false;
     uint8_t i = 0, j = 75;
     uint32_t speed_go = 0, sequence = 0;
-
-    struct itimerval new_timer;
+    char chann[DAQ_STR];
+    struct itimerval new_timer = {
+        .it_value.tv_sec = 1,
+        .it_value.tv_usec = 0,
+        .it_interval.tv_sec = 0,
+        .it_interval.tv_usec = SPACING_USEC,
+    };
     struct itimerval old_timer;
-
-    new_timer.it_value.tv_sec = 1;
-    new_timer.it_value.tv_usec = 0;
-    new_timer.it_interval.tv_sec = 0;
-    new_timer.it_interval.tv_usec = 500 * 1000;
-
-    setitimer(ITIMER_REAL, &new_timer, &old_timer);
-    signal(SIGALRM, timer_callback);
 
     MQTTClient client;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     MQTTClient_message pubmsg = MQTTClient_message_initializer;
     MQTTClient_deliveryToken token;
-    int rc;
+    int32_t rc;
+
+    printf("\r\n LOG Version %s : MQTT Version %s\r\n", LOG_VERSION, MQTT_VERSION);
+    /*
+     * set the timer for MQTT publishing
+     */
+    setitimer(ITIMER_REAL, &new_timer, &old_timer);
+    signal(SIGALRM, timer_callback);
 
     MQTTClient_create(&client, ADDRESS, CLIENTID,
             MQTTCLIENT_PERSISTENCE_NONE, NULL);
     conn_opts.keepAliveInterval = 20;
     conn_opts.cleansession = 1;
-
 
     MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
     if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
@@ -235,23 +242,21 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    /*
+     * on topic received data will trigger the msgarrvd function
+     */
     MQTTClient_subscribe(client, TOPIC_S, QOS);
-
-    printf("\r\n log version %s : mqtt version %s\r\n", LOG_VERSION, MQTT_VERSION);
 
     if (do_ao_only) {
         if (init_dac(0.0, 25.0, false) < 0) {
             printf("Missing Analog AO subdevice\n");
             return -1;
         }
-
-
         while (true) {
             set_dac_raw(0, sine_wave[255 - i++] << 4);
             set_dac_raw(1, sine_wave[255 - j++] << 4);
         }
     } else {
-
         if (init_daq(0.0, 25.0, false) < 0) {
             printf("Missing Analog subdevice(s)\n");
             return -1;
@@ -261,17 +266,28 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        set_dac_raw(0, 255); // show max Voltage
+        printf("\r\n ANALOG OUT channel names");
+        for (int i = 0; i < channels_ao; i++) {
+            snprintf(chann, DAQ_STR_M, "DAC%d", i);
+            printf("\r\n%s", chann);
+        }
+        printf("\r\n DIGITAL OUT channel names");
+        for (int i = 0; i < channels_do; i++) {
+            snprintf(chann, DAQ_STR_M, "DO%d", i);
+            printf("\r\n%s", chann);
+        }
+        printf("\r\nUse these channel names in JSON formatted data\r\n");
 
-        while (1) {
+        while (true) {
             get_data_sample();
+            /*
+             * testing inputs and outputs
+             */
             if (!bmc.datain.D0) {
                 led_lightshow(4);
             }
 
-            if (runner || speed_go++ > 500) {
-                char chann[DAQ_STR];
-
+            if (runner || speed_go++ > 1500) {
                 speed_go = 0;
                 runner = false;
                 json = cJSON_CreateObject();
@@ -295,13 +311,15 @@ int main(int argc, char *argv[]) {
                 pubmsg.retained = 0;
                 deliveredtoken = 0;
                 MQTTClient_publishMessage(client, TOPIC_P, &pubmsg, &token);
-                //                printf("Waiting for publication of %s\n"
-                //                        "on topic %s for client with ClientID: %s\n",
-                //                        PAYLOAD, TOPIC_P, CLIENTID);
                 while (deliveredtoken != token);
 
                 cJSON_free(json_str);
                 cJSON_Delete(json);
+            } else {
+                if (receivedtoken) {
+                    receivedtoken = false;
+                }
+                usleep(100);
             }
         }
     }
