@@ -3,7 +3,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <comedilib.h>
+
 #include "daq.h"
+
+volatile struct bmcdata bmc; /* DIO buffer */
 
 int subdev_ai = 0; /* change this to your input subdevice */
 int chan_ai = 0; /* change this to your channel */

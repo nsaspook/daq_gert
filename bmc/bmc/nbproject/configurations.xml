@@ -4,8 +4,8 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>bmc.h</itemPath>
       <itemPath>daq.h</itemPath>
-      <itemPath>../matesocketcan/pge.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -48,7 +48,7 @@
       </compileType>
       <item path="../bmc.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="../matesocketcan/pge.h" ex="false" tool="3" flavor2="0">
+      <item path="bmc.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="daq.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -86,7 +86,7 @@
       </compileType>
       <item path="../bmc.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="../matesocketcan/pge.h" ex="false" tool="3" flavor2="0">
+      <item path="bmc.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="daq.c" ex="false" tool="0" flavor2="0">
       </item>
