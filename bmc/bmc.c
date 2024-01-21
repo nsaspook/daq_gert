@@ -23,6 +23,7 @@ volatile MQTTClient_deliveryToken deliveredtoken, receivedtoken = false;
 volatile bool runner = false;
 
 char *token;
+const char *board_name = "NO_BOARD", *driver_name = "NO_DRIVER";
 cJSON *json;
 
 /*
@@ -189,7 +190,7 @@ int main(int argc, char *argv[]) {
         }
 
         // parse the remote JSON names for the DAQ outputs
-        printf("\r\n ANALOG OUT channel names");
+        printf("\r\n ANALOG OUT channel names for Board: %s, Driver: %s", board_name, driver_name);
         for (int i = 0; i < channels_ao; i++) {
             snprintf(chann, DAQ_STR_M, "DAC%d", i);
             printf("\r\n%s", chann);
@@ -199,7 +200,7 @@ int main(int argc, char *argv[]) {
             snprintf(chann, DAQ_STR_M, "DO%d", i);
             printf("\r\n%s", chann);
         }
-        printf("\r\nUse these channel names in JSON formatted data\r\n");
+        printf("\r\n Use these channel names in JSON formatted data\r\n");
 
         while (true) {
 #ifndef NO_CYLON
@@ -230,7 +231,7 @@ int main(int argc, char *argv[]) {
                     snprintf(chann, DAQ_STR_M, "DI%d", i);
                     cJSON_AddNumberToObject(json, chann, get_dio_bit(i));
                 }
-                cJSON_AddStringToObject(json, "System", "K8055/VM110");
+                cJSON_AddStringToObject(json, "System", board_name);
                 // convert the cJSON object to a JSON string
                 char *json_str = cJSON_Print(json);
 

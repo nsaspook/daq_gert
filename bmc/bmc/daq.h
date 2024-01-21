@@ -66,6 +66,8 @@ extern "C" {
         int32_t dac_sample[32];
         int32_t utc;
     };
+    
+    extern const char *board_name, *driver_name;
 
     int init_daq(double, double, int);
     int init_dac(double, double, int);

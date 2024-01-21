@@ -56,6 +56,9 @@ int init_daq(double min_range, double max_range, int range_update) {
             return -1;
         }
         DEV_OPEN = true;
+        board_name = comedi_get_board_name(it);
+        driver_name = comedi_get_driver_name(it);
+
     }
 
     subdev_ai = comedi_find_subdevice_by_type(it, COMEDI_SUBD_AI, subdev_ai);
