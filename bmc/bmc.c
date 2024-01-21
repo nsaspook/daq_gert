@@ -1,5 +1,6 @@
 /*
  * Demo code for Comedi to MQTT JSON format data
+ * asynchronous mode using threads
  *
  * This file may be freely modified, distributed, and combined with
  * other software, as long as proper attribution is given in the
@@ -8,13 +9,12 @@
 #define _DEFAULT_SOURCE
 #include "bmc/bmc.h"
 
-#define LOG_VERSION     "v0.1"
-#define MQTT_VERSION    "V0.1"
+#define LOG_VERSION     "v0.20"
+#define MQTT_VERSION    "V0.20"
 #define ADDRESS         "tcp://10.1.1.172:1883"
 #define CLIENTID        "Comedi_Mqtt_HA"
 #define TOPIC_P         "comedi/data/p8055/get"
 #define TOPIC_S         "comedi/data/p8055/set"
-#define PAYLOAD         ""
 #define QOS             1
 #define TIMEOUT         10000L
 #define SPACING_USEC    500 * 1000
@@ -27,6 +27,10 @@ const char *board_name = "NO_BOARD", *driver_name = "NO_DRIVER";
 cJSON *json;
 
 /*
+ * Async processing threads
+ */
+
+/*
  * Comedi data update timer flag
  */
 void timer_callback(int32_t signum) {
@@ -34,6 +38,9 @@ void timer_callback(int32_t signum) {
     runner = true;
 }
 
+/*
+ * set the broker has message token
+ */
 void delivered(void *context, MQTTClient_deliveryToken dt) {
     deliveredtoken = dt;
 }
@@ -119,9 +126,9 @@ error_exit:
  * Broker errors
  */
 void connlost(void *context, char *cause) {
-
     printf("\nConnection lost\n");
     printf("     cause: %s\n", cause);
+    exit(EXIT_FAILURE);
 }
 
 /*
@@ -132,7 +139,6 @@ int main(int argc, char *argv[]) {
     uint8_t i = 0, j = 75;
     uint32_t speed_go = 0, sequence = 0, rc;
     char chann[DAQ_STR];
-
     struct itimerval new_timer = {
         .it_value.tv_sec = 1,
         .it_value.tv_usec = 0,
@@ -241,6 +247,7 @@ int main(int argc, char *argv[]) {
                 pubmsg.retained = 0;
                 deliveredtoken = 0;
                 MQTTClient_publishMessage(client, TOPIC_P, &pubmsg, &token);
+                // a busy, wait loop for the async delivery thread to complete
                 {
                     uint32_t waiting = 0;
                     while (deliveredtoken != token) {
