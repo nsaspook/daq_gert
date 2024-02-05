@@ -36,7 +36,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/5c0/bmc.o \
-	${OBJECTDIR}/daq.o
+	${OBJECTDIR}/daq.o \
+	${OBJECTDIR}/mqtt_rec.o
 
 
 # C Compiler Flags
@@ -72,6 +73,11 @@ ${OBJECTDIR}/daq.o: daq.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` `pkg-config --cflags libcjson` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/daq.o daq.c
+
+${OBJECTDIR}/mqtt_rec.o: mqtt_rec.c
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O3 -Wall `pkg-config --cflags comedilib` `pkg-config --cflags libcjson` -std=c11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/mqtt_rec.o mqtt_rec.c
 
 # Subprojects
 .build-subprojects:

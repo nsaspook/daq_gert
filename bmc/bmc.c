@@ -8,8 +8,10 @@
  */
 #define _DEFAULT_SOURCE
 #include "bmc/bmc.h"
+#include "bmc/mqtt_rec.h"
+#include "bmc/sine_table.h"
 
-#define LOG_VERSION     "v0.21"
+#define LOG_VERSION     "v0.22"
 #define MQTT_VERSION    "V3.11"
 #define ADDRESS         "tcp://10.1.1.172:1883"
 #define CLIENTID        "Comedi_Mqtt_HA"
@@ -19,8 +21,19 @@
 #define TIMEOUT         10000L
 #define SPACING_USEC    500 * 1000
 
-volatile MQTTClient_deliveryToken deliveredtoken, receivedtoken = false;
-volatile bool runner = false;
+//volatile MQTTClient_deliveryToken deliveredtoken, receivedtoken = false;
+//volatile bool runner = false;
+
+/*
+ * for the publish and subscribe topic pair
+ * passed as a context variable
+ */
+struct ha_flag_type ha_flag_vars = {
+    .runner = false,
+    .receivedtoken = false,
+    .deliveredtoken = false,
+    .rec_ok = false,
+};
 
 char *token;
 const char *board_name = "NO_BOARD", *driver_name = "NO_DRIVER";
@@ -35,91 +48,7 @@ cJSON *json;
  */
 void timer_callback(int32_t signum) {
     signal(signum, timer_callback);
-    runner = true;
-}
-
-/*
- * set the broker has message token
- */
-void delivered(void *context, MQTTClient_deliveryToken dt) {
-    deliveredtoken = dt;
-}
-
-/*
- * data received on topic from the broker
- */
-int32_t msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
-    int32_t i;
-    char* payloadptr;
-    char buffer[1024];
-    char chann[DAQ_STR];
-
-#ifdef DEBUG_REC
-    printf("Message arrived\n");
-#endif
-    payloadptr = message->payload;
-    for (i = 0; i < message->payloadlen; i++) {
-        buffer[i] = *payloadptr++;
-    }
-    buffer[i] = 0; // make C string
-
-    // parse the JSON data
-    cJSON *json = cJSON_ParseWithLength(buffer, message->payloadlen);
-    if (json == NULL) {
-        const char *error_ptr = cJSON_GetErrorPtr();
-        if (error_ptr != NULL) {
-            printf("Error: %s\n", error_ptr);
-        }
-        goto error_exit;
-        return 1;
-    }
-
-    for (int32_t i = 0; i < channels_do; i++) {
-        snprintf(chann, DAQ_STR_M, "DO%d", i);
-
-        // access the JSON data
-        cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
-        if (cJSON_IsString(name) && (name->valuestring != NULL)) {
-#ifdef DEBUG_REC
-            printf("Name: %s\n", name->valuestring);
-#endif
-        }
-
-        if (cJSON_IsNumber(name)) {
-#ifdef DEBUG_REC
-            printf("%s Value: %i\n", chann, name->valueint);
-#endif
-            put_dio_bit(i, name->valueint);
-        }
-    }
-
-    for (int32_t i = 0; i < channels_ao; i++) {
-        snprintf(chann, DAQ_STR_M, "DAC%d", i);
-
-        // access the JSON data
-        cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
-        if (cJSON_IsString(name) && (name->valuestring != NULL)) {
-#ifdef DEBUG_REC
-            printf("Name: %s\n", name->valuestring);
-#endif
-        }
-
-        if (cJSON_IsNumber(name)) {
-#ifdef DEBUG_REC
-            printf("%s Value: %f\n", chann, name->valuedouble);
-#endif
-            set_dac_volts(i, name->valuedouble);
-        }
-    }
-
-    receivedtoken = true;
-error_exit:
-    // delete the JSON object
-    cJSON_Delete(json);
-
-    MQTTClient_freeMessage(&message);
-    MQTTClient_free(topicName);
-    return 1;
+    ha_flag_vars.runner = true;
 }
 
 /*
@@ -164,7 +93,7 @@ int main(int argc, char *argv[]) {
     conn_opts.keepAliveInterval = 20;
     conn_opts.cleansession = 1;
 
-    MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
+    MQTTClient_setCallbacks(client, &ha_flag_vars, connlost, msgarrvd, delivered);
     if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
         printf("Failed to connect, return code %d\n", rc);
         exit(EXIT_FAILURE);
@@ -222,9 +151,9 @@ int main(int argc, char *argv[]) {
             usleep(100);
 #endif
 
-            if (runner || speed_go++ > 1500) {
+            if (ha_flag_vars.runner || speed_go++ > 1500) {
                 speed_go = 0;
-                runner = false;
+                ha_flag_vars.runner = false;
                 json = cJSON_CreateObject();
                 cJSON_AddStringToObject(json, "Name", "HA_comedi_get");
                 cJSON_AddNumberToObject(json, "Sequence", sequence++);
@@ -245,12 +174,12 @@ int main(int argc, char *argv[]) {
                 pubmsg.payloadlen = strlen(json_str);
                 pubmsg.qos = QOS;
                 pubmsg.retained = 0;
-                deliveredtoken = 0;
+                ha_flag_vars.deliveredtoken = 0;
                 MQTTClient_publishMessage(client, TOPIC_P, &pubmsg, &token);
                 // a busy, wait loop for the async delivery thread to complete
                 {
                     uint32_t waiting = 0;
-                    while (deliveredtoken != token) {
+                    while (ha_flag_vars.deliveredtoken != token) {
                         usleep(100);
                         if (waiting++ > MQTT_TIMEOUT) {
                             printf("\r\nStill Waiting, timeout");
@@ -262,8 +191,8 @@ int main(int argc, char *argv[]) {
                 cJSON_free(json_str);
                 cJSON_Delete(json);
             } else {
-                if (receivedtoken) {
-                    receivedtoken = false;
+                if (ha_flag_vars.receivedtoken) {
+                    ha_flag_vars.receivedtoken = false;
                 }
             }
         }
