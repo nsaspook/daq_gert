@@ -9,8 +9,8 @@
 #define _DEFAULT_SOURCE
 #include "bmc/bmc.h"
 
-#define LOG_VERSION     "v0.20"
-#define MQTT_VERSION    "V0.20"
+#define LOG_VERSION     "v0.21"
+#define MQTT_VERSION    "V3.11"
 #define ADDRESS         "tcp://10.1.1.172:1883"
 #define CLIENTID        "Comedi_Mqtt_HA"
 #define TOPIC_P         "comedi/data/p8055/get"
