@@ -18,9 +18,17 @@ extern "C" {
 #endif
 #include "bmc.h"
 
+    enum mqtt_id {
+        P8055_ID,
+        FM80_ID,
+        DUMPLOAD_ID,
+        LAST_MQTT_ID,
+    };
+
     struct ha_flag_type {
         volatile MQTTClient_deliveryToken deliveredtoken, receivedtoken;
         volatile bool runner, rec_ok;
+        int32_t ha_id;
     };
 
     int32_t msgarrvd(void *, char *, int, MQTTClient_message *);

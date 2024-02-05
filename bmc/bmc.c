@@ -33,6 +33,7 @@ struct ha_flag_type ha_flag_vars = {
     .receivedtoken = false,
     .deliveredtoken = false,
     .rec_ok = false,
+    .ha_id = P8055_ID,
 };
 
 char *token;

@@ -43,41 +43,43 @@ int32_t msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_messag
         return ret;
     }
 
-    for (int32_t i = 0; i < channels_do; i++) {
-        snprintf(chann, DAQ_STR_M, "DO%d", i);
+    if (ha_flag->ha_id == P8055_ID) {
+        for (int32_t i = 0; i < channels_do; i++) {
+            snprintf(chann, DAQ_STR_M, "DO%d", i);
 
-        // access the JSON data
-        cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
-        if (cJSON_IsString(name) && (name->valuestring != NULL)) {
+            // access the JSON data
+            cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
+            if (cJSON_IsString(name) && (name->valuestring != NULL)) {
 #ifdef DEBUG_REC
-            printf("Name: %s\n", name->valuestring);
+                printf("Name: %s\n", name->valuestring);
 #endif
+            }
+
+            if (cJSON_IsNumber(name)) {
+#ifdef DEBUG_REC
+                printf("%s Value: %i\n", chann, name->valueint);
+#endif
+                put_dio_bit(i, name->valueint);
+            }
         }
 
-        if (cJSON_IsNumber(name)) {
-#ifdef DEBUG_REC
-            printf("%s Value: %i\n", chann, name->valueint);
-#endif
-            put_dio_bit(i, name->valueint);
-        }
-    }
+        for (int32_t i = 0; i < channels_ao; i++) {
+            snprintf(chann, DAQ_STR_M, "DAC%d", i);
 
-    for (int32_t i = 0; i < channels_ao; i++) {
-        snprintf(chann, DAQ_STR_M, "DAC%d", i);
-
-        // access the JSON data
-        cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
-        if (cJSON_IsString(name) && (name->valuestring != NULL)) {
+            // access the JSON data
+            cJSON *name = cJSON_GetObjectItemCaseSensitive(json, chann);
+            if (cJSON_IsString(name) && (name->valuestring != NULL)) {
 #ifdef DEBUG_REC
-            printf("Name: %s\n", name->valuestring);
+                printf("Name: %s\n", name->valuestring);
 #endif
-        }
+            }
 
-        if (cJSON_IsNumber(name)) {
+            if (cJSON_IsNumber(name)) {
 #ifdef DEBUG_REC
-            printf("%s Value: %f\n", chann, name->valuedouble);
+                printf("%s Value: %f\n", chann, name->valuedouble);
 #endif
-            set_dac_volts(i, name->valuedouble);
+                set_dac_volts(i, name->valuedouble);
+            }
         }
     }
 
