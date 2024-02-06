@@ -31,7 +31,7 @@ extern "C" {
 #define DAQ_STR 32
 #define DAQ_STR_M DAQ_STR-1
 
-#define MQTT_TIMEOUT    150
+#define MQTT_TIMEOUT    400
 
 #define NO_CYLON
 

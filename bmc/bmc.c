@@ -21,9 +21,6 @@
 #define TIMEOUT         10000L
 #define SPACING_USEC    500 * 1000
 
-//volatile MQTTClient_deliveryToken deliveredtoken, receivedtoken = false;
-//volatile bool runner = false;
-
 /*
  * for the publish and subscribe topic pair
  * passed as a context variable
@@ -56,8 +53,17 @@ void timer_callback(int32_t signum) {
  * Broker errors
  */
 void connlost(void *context, char *cause) {
+    struct ha_flag_type *ha_flag = context;
+    int32_t id_num;
+
+    // bug-out if no context variables passed to callback
+    if (context == NULL) {
+        id_num = -1;
+    } else {
+        id_num = ha_flag->ha_id;
+    }
     printf("\nConnection lost\n");
-    printf("     cause: %s\n", cause);
+    printf("     cause: %s, %d\n", cause, id_num);
     exit(EXIT_FAILURE);
 }
 
